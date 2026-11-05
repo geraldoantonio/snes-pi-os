@@ -1,0 +1,20 @@
+# Buildroot e artefatos de build
+output/
+dl/
+*.img
+*.img.gz
+*.o
+*.a
+
+# ROMs nunca entram no repositório
+*.sfc
+*.smc
+*.fig
+*.swc
+*.zip
+
+# Editor / sistema
+.vscode/
+.idea/
+*.swp
+.DS_Store
