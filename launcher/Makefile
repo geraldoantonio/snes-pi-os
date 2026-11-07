@@ -14,32 +14,33 @@ LDLIBS += -lm
 PREFIX ?= /usr
 PYTHON ?= python3
 
-COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/ui.c src/shot.c src/main.c
+COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/music.c src/ui.c src/shot.c src/main.c
 HEADERS = $(wildcard src/*.h)
 
 all: snespi-launcher
 
-snespi-launcher: $(COMMON) src/video_fb.c src/input_evdev.c $(HEADERS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/video_fb.c src/input_evdev.c $(LDLIBS)
+snespi-launcher: $(COMMON) src/video_fb.c src/input_evdev.c src/music_alsa.c $(HEADERS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/video_fb.c src/input_evdev.c src/music_alsa.c \
+		-lasound -lpthread $(LDLIBS)
 
 preview: snespi-launcher-preview
 
-snespi-launcher-preview: $(COMMON) src/platform_none.c $(HEADERS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/platform_none.c $(LDLIBS)
+snespi-launcher-preview: $(COMMON) src/platform_none.c src/music_none.c $(HEADERS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/platform_none.c src/music_none.c $(LDLIBS)
 
 SDL2_CONFIG ?= sdl2-config
 
 desktop: snespi-launcher-desktop
 
-snespi-launcher-desktop: $(COMMON) src/platform_sdl.c $(HEADERS)
+snespi-launcher-desktop: $(COMMON) src/platform_sdl.c src/music_sdl.c $(HEADERS)
 	$(CC) $(CFLAGS) $(shell $(SDL2_CONFIG) --cflags) $(LDFLAGS) -o $@ \
-		$(COMMON) src/platform_sdl.c $(shell $(SDL2_CONFIG) --libs) $(LDLIBS)
+		$(COMMON) src/platform_sdl.c src/music_sdl.c $(shell $(SDL2_CONFIG) --libs) $(LDLIBS)
 
 # Abre o launcher numa janela, com ROMs de teste e um emulador falso
 run: snespi-launcher-desktop
 	@test -d build/test-roms || $(PYTHON) -I tests/make-test-roms.py build/test-roms
 	HOME=build/test-roms ./snespi-launcher-desktop --roms build/test-roms \
-		--fonts fonts --emu tests/fake-emu.sh $(ARGS)
+		--fonts fonts --emu tests/fake-emu.sh --music music/menu.wav $(ARGS)
 
 shots: snespi-launcher-preview
 	rm -rf build/test-roms build/empty-roms && mkdir -p build/shots build/empty-roms
@@ -60,11 +61,15 @@ test: snespi-launcher-preview
 	rm -rf build/test-roms
 	$(PYTHON) -I tests/make-test-roms.py build/test-roms
 	$(PYTHON) -I tests/check-headers.py ./snespi-launcher-preview build/test-roms
+	$(CC) -O2 -std=gnu11 -w -o build/music-decode-test tests/music-decode-test.c src/music.c src/music_none.c -lm
+	./build/music-decode-test music/menu.wav 70
 
 install: snespi-launcher
 	install -D -m 0755 snespi-launcher $(DESTDIR)$(PREFIX)/bin/snespi-launcher
 	install -d $(DESTDIR)$(PREFIX)/share/snespi/fonts
 	install -m 0644 fonts/*.ttf fonts/OFL-*.txt $(DESTDIR)$(PREFIX)/share/snespi/fonts/
+	install -D -m 0644 music/menu.wav $(DESTDIR)$(PREFIX)/share/snespi/musica/menu.wav
+	install -D -m 0644 music/LICENCA.txt $(DESTDIR)$(PREFIX)/share/snespi/musica/LICENCA.txt
 
 clean:
 	rm -rf snespi-launcher snespi-launcher-preview snespi-launcher-desktop build

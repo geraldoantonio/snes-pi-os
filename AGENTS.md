@@ -152,6 +152,7 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
   - Pixelify Sans só no logo: no desenho dela, "C" parece "O" e "B"/"Z" parecem "8". Textos e títulos em IBM Plex Mono.
   - Mapeamento: controles com a convenção do kernel (Xbox etc.) confirmam com `BTN_SOUTH` (A do Xbox), voltam com `BTN_EAST`, favoritam com `BTN_WEST`. Controles genéricos estilo SNES confirmam com o botão da direita.
   - Sem relógio no Pi: "recentes" é por ordem de abertura, nunca por data.
+  - Música do menu: o launcher **tem de soltar o ALSA antes de abrir o emulador** (`music_stop()` antes do `fork`), senão o PiSNES encontra o áudio ocupado. A música padrão é CC0 (`launcher/music/`); não troque por faixa sem licença livre.
 - **QEMU** (`raspi1ap`) não emula a GPU VideoCore: o PiSNES não abre lá. O teste de boot cobre kernel, init, montagens e o launcher no framebuffer.
   - O QEMU 8.2 também não emula todo o bloco de energia/watchdog (`/soc/watchdog@7e100000`): o kernel cai em `bcm2835_power_probe` ("external abort"). O `qemu-smoke.sh` desliga esse nó numa **cópia** do device tree só para o teste. Falha no QEMU não significa falha no Pi: leia o `serial.log` do artefato `qemu-boot-*` antes de mexer na imagem.
 - **`gh secret set` via `!` no Claude Code** não é interativo e grava valor vazio; use `pbpaste | gh secret set NOME` ou a interface do GitHub.

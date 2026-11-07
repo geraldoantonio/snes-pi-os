@@ -11,6 +11,7 @@ Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e
 - **Capas:** `/roms/capas/<nome-da-rom>.jpg` ou `.png`. Só a do jogo selecionado é decodificada, 150 ms depois que a navegação para; as 6 últimas ficam em cache.
 - **Jogo:** `fork` + `execl` de `/usr/share/pisnes/snes9x <rom>` por caminho absoluto (o snes9x acha o `snes9x.cfg` pela pasta de `argv[0]`). Na volta: `sync`, framebuffer reconfigurado (o SDL pode ter mudado o modo) e lista relida.
 - **Partição ausente:** tela de erro com nova tentativa a cada 10 s.
+- **Música do menu:** em loop, volume baixo (35%, com fade-in). Usa `/roms/musica.ogg` ou `/roms/musica.wav` se existir; senão a música padrão (`music/menu.wav`, instalada em `/usr/share/snespi/musica/`). `/roms/.snespi/sem-musica` desliga. Para antes de abrir o jogo (o PiSNES precisa do ALSA) e volta na volta ao menu. Saída por ALSA no Pi e SDL no `make run`; OGG decodificado pelo `stb_vorbis`. Para poupar CPU no Pi 1, prefira WAV ou OGG mono a 22 kHz.
 - **Log do emulador:** a saída do PiSNES (asserts, erros de EGL/ALSA) e o código de saída vão para `/roms/.snespi/emulador.log` a cada jogo aberto. Sem controle conectado, o rodapé mostra as teclas do teclado.
 
 ## Controles
@@ -51,5 +52,6 @@ No Pi, o mesmo binário aceita `--list` (o que ele leu de cada ROM) e `--shot ar
 - Código: MIT (`LICENSE`).
 - `third_party/stb_*.h`: domínio público (Sean Barrett), commit `4e9b368b` de nothings/stb.
 - Fontes (OFL 1.1): IBM Plex Mono (google/fonts `01d5d9f0`) e Pixelify Sans (eifetx/Pixelify-Sans `39df74ab`). Licenças em `fonts/`.
+- Música padrão (`music/menu.wav`): "rpgchip01_title_screen" de Aureolus_Omicron, *15 Melodic RPG Chiptunes* no OpenGameArt, **CC0**. Convertida para WAV mono 22 kHz. Detalhes em `music/LICENCA.txt`.
 
 A Pixelify Sans fica só no logo: no desenho dela, o "C" quase fechado parece "O", e o "B", o "Z" e alguns números lembram "8". Títulos e textos usam IBM Plex Mono.

@@ -1,11 +1,16 @@
 config BR2_PACKAGE_SNES_LAUNCHER
 	bool "snes-launcher"
 	depends on BR2_USE_MMU # fork()
+	depends on BR2_TOOLCHAIN_HAS_THREADS # alsa-lib, música
+	select BR2_PACKAGE_ALSA_LIB
 	help
 	  Frontend do snes-pi-os: lista as ROMs de /roms (com capa,
 	  região e aviso de chip não suportado) e executa o PiSNES.
 	  Desenha direto no framebuffer (/dev/fb0) e lê os controles
 	  pelo evdev.
 
-	  Instala /usr/bin/snespi-launcher e as fontes em
-	  /usr/share/snespi/fonts.
+	  Toca música de fundo no menu (ALSA): /roms/musica.ogg ou .wav,
+	  ou a música padrão (CC0) em /usr/share/snespi/musica.
+
+	  Instala /usr/bin/snespi-launcher, as fontes em
+	  /usr/share/snespi/fonts e a música padrão.

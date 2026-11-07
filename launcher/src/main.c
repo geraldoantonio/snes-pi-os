@@ -9,6 +9,7 @@
  *                   [--shot ARQ.png --screen NOME --select N]
  */
 #include "cover.h"
+#include "music.h"
 #include "prefs.h"
 #include "platform.h"
 #include "rom.h"
@@ -61,7 +62,7 @@ static int is_mountpoint(const char *path)
 }
 
 typedef struct {
-	const char *roms_dir, *emu, *fonts_dir, *shot, *shot_screen, *shot_filter;
+	const char *roms_dir, *emu, *fonts_dir, *music, *shot, *shot_screen, *shot_filter;
 	int shot_select, shot_pads, scanlines, require_mount, list;
 	char saves_dir[600], covers_dir[600];
 } config_t;
@@ -69,7 +70,8 @@ typedef struct {
 static void usage(void)
 {
 	fprintf(stderr,
-		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--no-scanlines] [--list]\n"
+		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--music ARQ | --no-music]\n"
+		"                     [--no-scanlines] [--list]\n"
 		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount --select N\n"
 		"                      --filter todos|favoritos|recentes]\n");
 }
@@ -79,6 +81,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 	c->roms_dir = "/roms";
 	c->emu = "/usr/share/pisnes/snes9x";
 	c->fonts_dir = "/usr/share/snespi/fonts";
+	c->music = "/usr/share/snespi/musica/menu.wav";
 	c->scanlines = 1;
 	c->shot_screen = "list";
 	c->shot_filter = "todos";
@@ -89,6 +92,8 @@ static int parse_args(config_t *c, int argc, char **argv)
 		if (!strcmp(a, "--roms") && v) { c->roms_dir = v; i++; }
 		else if (!strcmp(a, "--emu") && v) { c->emu = v; i++; }
 		else if (!strcmp(a, "--fonts") && v) { c->fonts_dir = v; i++; }
+		else if (!strcmp(a, "--music") && v) { c->music = v; i++; }
+		else if (!strcmp(a, "--no-music")) c->music = "";
 		else if (!strcmp(a, "--shot") && v) { c->shot = v; i++; }
 		else if (!strcmp(a, "--screen") && v) { c->shot_screen = v; i++; }
 		else if (!strcmp(a, "--select") && v) { c->shot_select = atoi(v); i++; }
@@ -350,6 +355,9 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	input_open();
+	music_init(cfg.roms_dir, cfg.music);
+	if (mounted)
+		music_play();
 
 	ui_state_t st = { .roms = &roms, .scanlines = cfg.scanlines, .retry_secs = MOUNT_RETRY_S };
 	filter_t filter = FILTER_ALL;
@@ -377,6 +385,7 @@ int main(int argc, char **argv)
 					view_build(&view, &roms, filter);
 					view_to_state(&st, &view, filter);
 					scr = roms.count ? SCR_LIST : SCR_EMPTY;
+					music_play();
 				}
 			}
 			dirty = 1;
@@ -511,12 +520,14 @@ int main(int argc, char **argv)
 			ui_draw(screen, SCR_LAUNCH, &st);
 			video_present();
 
+			music_stop();	/* o emulador precisa do dispositivo de áudio */
 			input_close();
 			video_suspend();
 			int rc = run_game(&cfg, game);
 			sync();	/* saves no FAT */
 			video_resume();
 			input_open();
+			music_play();
 
 			if (rc == 127 || rc < 0) {
 				snprintf(status, sizeof(status), "N\xC3\xA3o foi poss\xC3\xADvel abrir o emulador");
@@ -544,6 +555,7 @@ int main(int argc, char **argv)
 		}
 	}
 
+	music_shutdown();
 	input_close();
 	video_close();
 	free(view.idx);

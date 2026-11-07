@@ -4,6 +4,10 @@ Use apenas jogos que voce tem o direito de usar.
 Os saves ficam na pasta oculta .snes96_snapshots, nesta mesma particao.
 Para sair de um jogo: Select + Start no controle 1.
 
+Musica do menu: coloque aqui um arquivo musica.ogg ou musica.wav para
+trocar a musica padrao. Para desligar, crie o arquivo vazio
+.snespi/sem-musica nesta particao.
+
 Jogos de teste: "Teste - Breakout (OpenSNES)" e "Teste - Controles
 (OpenSNES)" sao exemplos do projeto OpenSNES, licenca MIT (veja
 LICENCA-OpenSNES.txt). Pode apagar quando quiser.

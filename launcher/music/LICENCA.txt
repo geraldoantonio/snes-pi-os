@@ -1,0 +1,11 @@
+Música padrão do menu (menu.wav)
+
+Faixa: "rpgchip01_title_screen", do pacote "15 Melodic RPG Chiptunes"
+Autor: Aureolus_Omicron
+Fonte: https://opengameart.org/content/15-melodic-rpg-chiptunes
+Licença: CC0 1.0 (domínio público). Aviso do autor: "CC0. No credit required."
+         https://creativecommons.org/publicdomain/zero/1.0/
+
+Modificação: convertida de OGG estéreo 44,1 kHz para WAV mono 22.050 Hz,
+16 bits (menos processamento no Raspberry Pi 1). SHA-256 do OGG original:
+c4d1320897916deeb9b6081853ed09272ffd5d2959e744e23eba79fcc5749362
