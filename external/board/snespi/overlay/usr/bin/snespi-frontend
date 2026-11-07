@@ -1,0 +1,23 @@
+#!/bin/sh
+# Frontend do snes-pi-os, iniciado pelo init no tty1 (respawn).
+# Por enquanto é o GUI nativo do PiSNES; depois será o launcher próprio.
+
+# O PiSNES grava SRAM e snapshots em $HOME/.snes96_snapshots, e cai se
+# HOME não estiver definido. A raiz é somente leitura: HOME vai para /roms.
+export HOME=/roms
+
+if ! mountpoint -q /roms; then
+	echo "snes-pi-os: a partição de ROMs (/roms) não está montada."
+	echo "Verifique o cartão SD. Nova tentativa em 10 segundos..."
+	sleep 10
+	exit 1
+fi
+
+# O GUI usa caminhos relativos (roms/, skins/, ./snes9x) a partir da
+# pasta do próprio binário, que ele descobre por argv[0].
+cd /usr/share/pisnes || exit 1
+/usr/share/pisnes/snes9x.gui
+
+# Saves já foram gravados pelo snes9x (flush no /roms); sync por garantia
+sync
+sleep 1

@@ -1,0 +1,27 @@
+#!/bin/sh
+# Prepara o hardware para o jogo. O frontend em si é iniciado pelo init
+# (inittab, tty1::respawn:/usr/bin/snespi-frontend), que o reinicia se
+# ele sair e lhe dá o tty1 como terminal.
+
+case "$1" in
+start)
+	# Áudio e joystick (no bcmrpi_defconfig são módulos). O mdev já
+	# carrega a maioria pelo modalias; aqui é só garantia.
+	modprobe -q snd_bcm2835 || echo "S99game: snd_bcm2835 não carregou"
+	modprobe -q joydev || echo "S99game: joydev não carregou"
+
+	if ! mountpoint -q /roms; then
+		echo "S99game: AVISO: /roms não está montado (3ª partição)"
+	fi
+	;;
+stop)
+	# Garante que saves pendentes vão para o cartão
+	sync
+	;;
+*)
+	echo "Uso: $0 {start|stop}"
+	exit 1
+	;;
+esac
+
+exit 0

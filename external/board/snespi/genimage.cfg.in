@@ -1,0 +1,46 @@
+# Layout do cartão SD do snes-pi-os.
+# #BOOT_FILES# é preenchido pelo post-image.sh.
+
+image boot.vfat {
+	vfat {
+		files = {
+#BOOT_FILES#
+		}
+	}
+
+	size = 32M
+}
+
+# Partição de ROMs e saves (montada em /roms). Pode ser aumentada
+# depois de gravar o cartão, num PC.
+image roms.vfat {
+	vfat {
+		extraargs = "-F 32 -n ROMS"
+		files = {
+			"dir.txt"
+		}
+	}
+
+	size = 512M
+}
+
+image sdcard.img {
+	hdimage {
+	}
+
+	partition boot {
+		partition-type = 0xC
+		bootable = "true"
+		image = "boot.vfat"
+	}
+
+	partition rootfs {
+		partition-type = 0x83
+		image = "rootfs.ext4"
+	}
+
+	partition roms {
+		partition-type = 0xC
+		image = "roms.vfat"
+	}
+}

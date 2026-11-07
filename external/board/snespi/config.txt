@@ -1,0 +1,28 @@
+# config.txt do snes-pi-os (Raspberry Pi 1 Model B+)
+# Referência: https://www.raspberrypi.com/documentation/computers/config_txt.html
+
+start_file=start.elf
+fixup_file=fixup.dat
+kernel=zImage
+
+# Boot rápido e sem tela colorida do firmware
+disable_splash=1
+boot_delay=0
+
+# Memória da GPU: o PiSNES usa EGL/GLES2/dispmanx. Começar em 64 e só
+# reduzir depois de medir (verificar).
+gpu_mem=64
+
+# Imagem até a borda; se cortar em alguma TV, comentar esta linha.
+disable_overscan=1
+
+# Áudio analógico/HDMI pelo driver snd_bcm2835 (verificar se é necessário)
+dtparam=audio=on
+
+# NÃO ativar dtoverlay=vc4-kms-v3d: desliga a pilha GLES legada que o
+# PiSNES usa.
+
+# Overclock sugerido pelo readme do PiSNES (testar estabilidade,
+# temperatura e fonte antes de ativar):
+#arm_freq=900
+#sdram_freq=500

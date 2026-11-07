@@ -1,0 +1,5 @@
+snes-pi-os: coloque aqui suas ROMs de SNES (.sfc, .smc, .fig, .swc).
+
+Use apenas jogos que voce tem o direito de usar.
+Os saves ficam na pasta oculta .snes96_snapshots, nesta mesma particao.
+Para sair de um jogo: Select + Start no controle 1.
