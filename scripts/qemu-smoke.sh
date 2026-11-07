@@ -9,7 +9,7 @@
 # (config.txt/start.elf são ignorados: o QEMU carrega o kernel direto).
 #
 # Uso: qemu-smoke.sh PASTA_DAS_IMAGENS PASTA_DE_SAIDA
-# Precisa de: qemu-system-arm, qemu-img, python3
+# Precisa de: qemu-system-arm, qemu-img, fdtput/fdtget (device-tree-compiler), python3
 set -eu
 
 IMAGES="$1"
@@ -27,12 +27,26 @@ SD="$OUT/sdcard-qemu.img"
 cp "$IMAGES/sdcard.img" "$SD"
 qemu-img resize -f raw "$SD" 1G >/dev/null
 
+# O QEMU (8.2) não emula todo o bloco de energia/watchdog do BCM2835: o
+# driver bcm2835-power lê registradores que não existem lá e o kernel cai
+# ("external abort"). Só para o teste, desligamos esse nó numa cópia do
+# device tree. No Pi de verdade o bloco existe e a imagem não muda.
+DTB="$OUT/qemu.dtb"
+cp "$IMAGES/bcm2708-rpi-b-plus.dtb" "$DTB"
+PM_NODE=/soc/watchdog@7e100000
+if fdtget "$DTB" "$PM_NODE" compatible >/dev/null 2>&1; then
+	fdtput -t s "$DTB" "$PM_NODE" status disabled
+	echo "QEMU: $PM_NODE desligado no device tree do teste"
+else
+	echo "AVISO: nó $PM_NODE não encontrado no device tree"
+fi
+
 # Sem firmware: a linha de comando do kernel vem daqui, não do cmdline.txt
 APPEND="root=/dev/mmcblk0p2 rootfstype=ext4 rootwait ro console=tty1 console=ttyAMA0,115200 consoleblank=0 loglevel=6"
 
 rm -f "$LOG" "$MON"
 qemu-system-arm -M raspi1ap -m 512 \
-	-kernel "$IMAGES/zImage" -dtb "$IMAGES/bcm2708-rpi-b-plus.dtb" \
+	-kernel "$IMAGES/zImage" -dtb "$DTB" \
 	-drive file="$SD",if=sd,format=raw \
 	-append "$APPEND" \
 	-serial file:"$LOG" -monitor unix:"$MON",server,nowait \
@@ -74,5 +88,5 @@ fi
 
 echo "---- partes relevantes do log serial ----"
 grep -E "Linux version|Machine model|mmcblk0|EXT4-fs|vfat|FAT-fs|S99game|snespi|login:|panic|Oops|error" "$LOG" | head -60 || true
-rm -f "$SD"
+rm -f "$SD" "$DTB"
 exit "$result"

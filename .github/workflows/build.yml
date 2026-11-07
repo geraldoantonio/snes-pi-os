@@ -114,7 +114,7 @@ jobs:
         timeout-minutes: 10
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq qemu-system-arm qemu-utils >/dev/null
+          sudo apt-get install -y -qq qemu-system-arm qemu-utils device-tree-compiler >/dev/null
           qemu-system-arm --version | head -1
           sh scripts/qemu-smoke.sh "$RUNNER_TEMP/work/output/images" "$RUNNER_TEMP/qemu"
 
