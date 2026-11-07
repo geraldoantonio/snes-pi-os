@@ -1,0 +1,88 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  BR_VERSION: 2025.02.19
+
+jobs:
+  # Rápido (~1 min): valida a defconfig e o estilo dos pacotes.
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Baixar Buildroot
+        run: git clone -q --depth 1 --branch "$BR_VERSION" https://gitlab.com/buildroot.org/buildroot.git /tmp/br
+
+      - name: check-package
+        run: |
+          sudo apt-get install -y -qq python3-magic >/dev/null
+          /tmp/br/utils/check-package --br2-external \
+            external/Config.in external/external.mk external/external.desc \
+            external/package/*/*
+
+      - name: Validar snespi_defconfig
+        run: |
+          make -C /tmp/br BR2_EXTERNAL="$PWD/external" O=/tmp/out snespi_defconfig
+          make -C /tmp/br O=/tmp/out savedefconfig BR2_DEFCONFIG=/tmp/out/saved
+          grep -q '^BR2_PACKAGE_PISNES=y' /tmp/out/.config
+
+  # Lento (1-3 h): só manual ou em tags, para não gastar à toa.
+  image:
+    needs: check
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Liberar disco
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af >/dev/null
+          df -h /
+
+      - name: Restaurar cache (downloads e ccache)
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ runner.temp }}/work/dl
+            ${{ runner.temp }}/work/ccache
+          key: br-${{ env.BR_VERSION }}-${{ hashFiles('external/**') }}-${{ github.run_id }}
+          restore-keys: |
+            br-${{ env.BR_VERSION }}-${{ hashFiles('external/**') }}-
+            br-${{ env.BR_VERSION }}-
+
+      - name: Build no contêiner Debian 12
+        run: |
+          mkdir -p "$RUNNER_TEMP/work"
+          docker run --rm -e HOST_UID="$(id -u)" \
+            -v "$GITHUB_WORKSPACE":/src:ro \
+            -v "$RUNNER_TEMP/work":/work \
+            debian:12 sh /src/scripts/ci-container.sh
+          df -h /
+
+      - name: Salvar cache
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ runner.temp }}/work/dl
+            ${{ runner.temp }}/work/ccache
+          key: br-${{ env.BR_VERSION }}-${{ hashFiles('external/**') }}-${{ github.run_id }}
+
+      - name: Publicar imagem
+        uses: actions/upload-artifact@v7
+        with:
+          name: snespi-sdcard-${{ github.sha }}
+          path: ${{ runner.temp }}/work/output/images/sdcard.img.xz
+          retention-days: 14
+          compression-level: 0

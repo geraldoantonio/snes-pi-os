@@ -40,10 +40,12 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 
 ## Próximos passos de implementação
 
-1. Criar `external/` (BR2_EXTERNAL) com `external.desc`, `external.mk` e `Config.in`.
-2. Escrever `package/pisnes` com o patch do Makefile.
-3. Criar `snespi_defconfig` e o overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`).
-4. Workflow do GitHub Actions.
-5. Imagem de teste com `hello_triangle`.
-6. Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
-7. Escrever o launcher mínimo.
+1. [x] Criar `external/` (BR2_EXTERNAL) com `external.desc`, `external.mk` e `Config.in`.
+2. [x] Escrever `package/pisnes` com o patch do Makefile (patch testado só com `--dry-run`).
+3. [x] Criar `snespi_defconfig` (validada pelo kconfig; não compilada).
+4. [x] Workflow do GitHub Actions (ainda não executado).
+5. [ ] Primeiro build no CI e correções.
+6. [ ] Overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`) e layout do `genimage` com a 3ª partição.
+7. [ ] Imagem de teste com `hello_triangle`.
+8. [ ] Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
+9. [ ] Escrever o launcher mínimo e o pacote `snes-launcher`.

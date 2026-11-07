@@ -23,13 +23,30 @@ Alternativas descartadas por enquanto: copiar o `rpi-userland` para `external/` 
 
 O Debian 12 traz CMake 3.25, o que evita o problema do CMake ≥ 4 com o `rpi-userland`.
 
+### No GitHub Actions
+
+O workflow `.github/workflows/build.yml` tem dois jobs:
+
+- `check` (a cada push na `main` e em PRs, cerca de 1 min): `check-package` nos pacotes e validação da `snespi_defconfig`.
+- `image` (só manual, pelo botão "Run workflow", ou em tags `v*`): build completo no contêiner Debian 12, com cache de `dl/` e `ccache`. Publica `sdcard.img.xz` como artefato por 14 dias.
+
+### Localmente (Docker)
+
 ```sh
-git clone https://gitlab.com/buildroot.org/buildroot.git
-cd buildroot
-git checkout 2025.02.19
-make BR2_EXTERNAL=/caminho/para/snes-pi-os/external snespi_defconfig
-make
+docker run --rm -e HOST_UID=$(id -u) \
+  -v "$PWD":/src:ro -v snespi-work:/work \
+  debian:12 sh /src/scripts/ci-container.sh
 ```
+
+O volume `snespi-work` guarda Buildroot, downloads, ccache e `output/`. A imagem fica em `/work/output/images/` dentro do volume.
+
+### À mão (num Linux)
+
+```sh
+WORK=/algum/lugar scripts/build.sh
+```
+
+Equivale a clonar o Buildroot 2025.02.19, `make BR2_EXTERNAL=.../external snespi_defconfig` e `make`.
 
 Primeira compilação: estimativa de 1 a 3 horas (toolchain + kernel + pacotes) **(verificar)**.
 

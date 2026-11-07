@@ -34,12 +34,15 @@ Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num me
 ```
 snes-pi-os/
 ├── README.md
+├── LICENSE                    # MIT
 ├── docs/
-├── external/                  # árvore BR2_EXTERNAL do Buildroot (a criar)
+├── .github/workflows/         # build no GitHub Actions
+├── scripts/                   # build.sh e ci-container.sh (Debian 12)
+├── external/                  # árvore BR2_EXTERNAL do Buildroot
 │   ├── package/pisnes/
-│   ├── package/snes-launcher/
+│   ├── package/snes-launcher/ # (a criar)
 │   ├── configs/snespi_defconfig
-│   └── board/snespi/overlay/  # S99game, config.txt, cmdline.txt, fstab
+│   └── board/snespi/overlay/  # S99game, config.txt, cmdline.txt, fstab (a criar)
 └── launcher/                  # código C do launcher (a criar)
 ```
 
