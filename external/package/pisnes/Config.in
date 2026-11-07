@@ -1,0 +1,30 @@
+config BR2_PACKAGE_PISNES
+	bool "pisnes"
+	depends on BR2_arm # rpi-userland (EGL/GLES legado da Broadcom)
+	depends on BR2_INSTALL_LIBSTDCPP # rpi-userland
+	depends on BR2_TOOLCHAIN_HAS_THREADS # rpi-userland, alsa-lib, libglib2
+	depends on !BR2_STATIC_LIBS # rpi-userland
+	depends on BR2_USE_WCHAR # libglib2
+	depends on BR2_USE_MMU # libglib2
+	select BR2_PACKAGE_RPI_USERLAND
+	select BR2_PACKAGE_SDL
+	select BR2_PACKAGE_SDL_FBCON
+	select BR2_PACKAGE_ALSA_LIB
+	select BR2_PACKAGE_LIBGLIB2
+	select BR2_PACKAGE_JPEG
+	select BR2_PACKAGE_ZLIB
+	help
+	  PiSNES: emulador de SNES baseado no SNES9X 1.39, com vídeo
+	  GLES2/dispmanx, áudio ALSA e entrada por SDL 1.2. Feito para
+	  o Raspberry Pi 1.
+
+	  Instala snes9x, snes9x.gui, snes9x.cfg e skins/ em
+	  /usr/share/pisnes. O link roms/ aponta para /roms.
+
+	  https://github.com/RetroPie/pisnes
+
+comment "pisnes needs a toolchain w/ C++, threads, wchar, dynamic library"
+	depends on BR2_arm
+	depends on BR2_USE_MMU
+	depends on !BR2_INSTALL_LIBSTDCPP || !BR2_TOOLCHAIN_HAS_THREADS || \
+		!BR2_USE_WCHAR || BR2_STATIC_LIBS

@@ -1,0 +1,69 @@
+From 5656c34880bd9a0724c4576caabfd4a78e9c95f1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 13:16:18 -0300
+Subject: [PATCH] Makefile: allow cross-compilation
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Replace hard-coded host include and library paths (/usr/include,
+/usr/lib/arm-linux-gnueabihf, /opt/vc) with pkg-config, so the build
+uses the sysroot of the cross toolchain. Also honour LDFLAGS when
+linking.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ Makefile | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index f8eca85..bd28dcd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -64,20 +64,17 @@ CCC = g++
+ CC = gcc
+ NASM = nasm
+ 
+-INCLUDES=-I/usr/include -I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads \
+-    -I/opt/vc/include/interface/vmcs_host/linux 
++PKG_CONFIG ?= pkg-config
++
++INCLUDES=$(shell $(PKG_CONFIG) --cflags bcm_host sdl glib-2.0)
+ 
+ 
+ #OPTIMISE= -D_ZAURUS -O3 -march=armv6zk -mcpu=arm1176jzf-s -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -ffast-math -fstrict-aliasing -fomit-frame-pointer 
+ OPTIMISE = $(CFLAGS) -D_ZAURUS -O3 -ffast-math
+ 
+ CCFLAGS = $(OPTIMISE) \
+--I/usr/include \
+--I/usr/include/SDL \
+ -I. \
+ -Iunzip \
+--Isdl \
+--I/usr/include/glib-2.0 -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include \
+ -D__linux \
+ -DZLIB \
+ -DVAR_CYCLES \
+@@ -98,15 +95,15 @@ $(GUIDEFINES) \
+ 
+ .SUFFIXES: .o .cpp .c .cc .h .m .i .S .asm .obj
+ 
+-LDLIBS = -L/usr/lib/arm-linux-gnueabihf -L/opt/vc/lib -lbcm_host -lbrcmGLESv2 -lbrcmEGL -lglib-2.0 -lrt -lm -lasound -ljpeg
++LDLIBS = $(shell $(PKG_CONFIG) --libs bcm_host glib-2.0) -lbrcmGLESv2 -lbrcmEGL -lrt -lm -lasound -ljpeg
+ 
+ all: snes9x snes9x.gui
+ 
+-snes9x: $(OBJECTS) 
+-	$(CC) $(INCLUDES) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread 
++snes9x: $(OBJECTS)
++	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread
+ 
+ snes9x.gui: unix/frontend.o
+-	$(CC) $(INCLUDES) -o $@ unix/frontend.o $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread 
++	$(CC) $(LDFLAGS) -o $@ unix/frontend.o $(EXTRALIBS) $(LDLIBS) -lSDL -lstdc++ -lz -lpthread
+ 
+ .cpp.o:
+ 	$(CCC) $(INCLUDES) -c $(CCFLAGS) $*.cpp -o $@

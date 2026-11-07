@@ -1,0 +1,5 @@
+menu "snes-pi-os"
+
+source "$BR2_EXTERNAL_SNESPI_PATH/package/pisnes/Config.in"
+
+endmenu
