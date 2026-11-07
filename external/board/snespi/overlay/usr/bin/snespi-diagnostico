@@ -1,0 +1,90 @@
+#!/bin/sh
+# Grava em /roms/.snespi/diagnostico.txt um retrato do sistema, para
+# depurar sem cabo serial: basta abrir o arquivo no computador.
+# Chamado pelo snespi-frontend a cada boot (sobrescreve o anterior).
+
+OUT_DIR=/roms/.snespi
+OUT="$OUT_DIR/diagnostico.txt"
+
+mountpoint -q /roms || exit 0
+mkdir -p "$OUT_DIR" || exit 0
+
+# Roda um comando por no máximo N segundos (o BusyBox não tem "timeout")
+run_for() {
+	secs="$1"; shift
+	"$@" &
+	pid=$!
+	i=0
+	while kill -0 "$pid" 2>/dev/null && [ "$i" -lt "$secs" ]; do
+		sleep 1
+		i=$((i + 1))
+	done
+	if kill -0 "$pid" 2>/dev/null; then
+		kill "$pid" 2>/dev/null
+		wait "$pid" 2>/dev/null
+		echo "(ainda rodando após ${secs}s: interrompido; isso indica que iniciou)"
+	else
+		wait "$pid"
+		echo "(saiu com código $?)"
+	fi
+}
+
+section() {
+	echo
+	echo "===== $1 ====="
+}
+
+{
+	echo "snes-pi-os: diagnóstico do boot"
+	section "sistema"
+	uname -a
+	uptime
+	cat /proc/cmdline
+
+	section "firmware e GPU (vcgencmd)"
+	if command -v vcgencmd >/dev/null 2>&1; then
+		vcgencmd version
+		vcgencmd get_mem arm
+		vcgencmd get_mem gpu
+		vcgencmd get_config int 2>&1 | grep -iE 'gpu_mem|hdmi|framebuffer'
+		vcgencmd hdmi_timings 2>&1
+		vcgencmd dispmanx_list 2>&1
+	else
+		echo "vcgencmd não encontrado"
+	fi
+
+	section "dispositivos"
+	ls -l /dev/vchiq /dev/vcsm /dev/vcsm-cma /dev/fb0 /dev/dri 2>&1
+	ls -l /dev/input 2>&1
+	cat /sys/class/graphics/fb0/virtual_size /sys/class/graphics/fb0/bits_per_pixel 2>&1
+
+	section "áudio"
+	cat /proc/asound/cards 2>&1
+
+	section "módulos carregados"
+	lsmod 2>&1
+
+	section "memória"
+	cat /proc/meminfo 2>&1 | head -5
+
+	section "teste de GPU: hello_triangle (4 s)"
+	if [ -x /usr/bin/hello_triangle.bin ]; then
+		cd /tmp && run_for 4 /usr/bin/hello_triangle.bin 2>&1
+	else
+		echo "hello_triangle.bin não encontrado"
+	fi
+
+	section "teste de GPU: hello_triangle2 (4 s)"
+	if [ -x /usr/bin/hello_triangle2.bin ]; then
+		cd /tmp && run_for 4 /usr/bin/hello_triangle2.bin 2>&1
+	else
+		echo "hello_triangle2.bin não encontrado"
+	fi
+
+	section "kernel (últimas 150 linhas do dmesg)"
+	dmesg 2>&1 | tail -150
+} > "$OUT.tmp" 2>&1
+
+sync
+mv -f "$OUT.tmp" "$OUT"
+sync

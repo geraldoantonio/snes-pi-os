@@ -15,6 +15,7 @@
 #include "ui.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +62,7 @@ static int is_mountpoint(const char *path)
 
 typedef struct {
 	const char *roms_dir, *emu, *fonts_dir, *shot, *shot_screen, *shot_filter;
-	int shot_select, scanlines, require_mount, list;
+	int shot_select, shot_pads, scanlines, require_mount, list;
 	char saves_dir[600], covers_dir[600];
 } config_t;
 
@@ -81,6 +82,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 	c->scanlines = 1;
 	c->shot_screen = "list";
 	c->shot_filter = "todos";
+	c->shot_pads = 1;
 	for (int i = 1; i < argc; i++) {
 		const char *a = argv[i];
 		const char *v = i + 1 < argc ? argv[i + 1] : NULL;
@@ -91,6 +93,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--screen") && v) { c->shot_screen = v; i++; }
 		else if (!strcmp(a, "--select") && v) { c->shot_select = atoi(v); i++; }
 		else if (!strcmp(a, "--filter") && v) { c->shot_filter = v; i++; }
+		else if (!strcmp(a, "--pads") && v) { c->shot_pads = atoi(v); i++; }
 		else if (!strcmp(a, "--no-scanlines")) c->scanlines = 0;
 		else if (!strcmp(a, "--list")) c->list = 1;
 		else { usage(); return -1; }
@@ -105,23 +108,61 @@ static int parse_args(config_t *c, int argc, char **argv)
 }
 
 /* Executa o emulador e espera; devolve o status de saída ou -1 */
+/*
+ * Executa o emulador e espera; devolve o status de saída ou -1.
+ * A saída do emulador (stdout e stderr, onde aparecem asserts e erros de
+ * EGL/ALSA) vai para <roms>/.snespi/emulador.log, que dá para ler no PC.
+ */
 static int run_game(const config_t *c, const rom_t *r)
 {
+	char logdir[700], logpath[720];
+	snprintf(logdir, sizeof(logdir), "%s/.snespi", c->roms_dir);
+	snprintf(logpath, sizeof(logpath), "%s/emulador.log", logdir);
+	mkdir(logdir, 0755);
+	int logfd = open(logpath, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+	if (logfd >= 0)
+		dprintf(logfd, "snespi-launcher: %s \"%s\"\n\n", c->emu, r->path);
+
 	pid_t pid = fork();
-	if (pid < 0)
+	if (pid < 0) {
+		if (logfd >= 0)
+			close(logfd);
 		return -1;
+	}
 	if (pid == 0) {
 		signal(SIGTERM, SIG_DFL);
 		signal(SIGINT, SIG_DFL);
+		if (logfd >= 0) {
+			dup2(logfd, STDOUT_FILENO);
+			dup2(logfd, STDERR_FILENO);
+		}
 		/* caminho absoluto: o snes9x acha snes9x.cfg pela pasta de argv[0] */
 		execl(c->emu, c->emu, r->path, (char *)NULL);
+		dprintf(STDERR_FILENO, "execl: %s\n", strerror(errno));
 		_exit(127);
 	}
-	int st;
+	int st, rc;
 	while (waitpid(pid, &st, 0) < 0)
-		if (errno != EINTR)
-			return -1;
-	return WIFEXITED(st) ? WEXITSTATUS(st) : 128 + (WIFSIGNALED(st) ? WTERMSIG(st) : 0);
+		if (errno != EINTR) {
+			st = -1;
+			break;
+		}
+	if (st == -1)
+		rc = -1;
+	else if (WIFEXITED(st))
+		rc = WEXITSTATUS(st);
+	else
+		rc = 128 + (WIFSIGNALED(st) ? WTERMSIG(st) : 0);
+	if (logfd >= 0) {
+		if (rc > 128)
+			dprintf(logfd, "\nsnespi-launcher: emulador terminou pelo sinal %d (código %d)\n",
+				rc - 128, rc);
+		else
+			dprintf(logfd, "\nsnespi-launcher: emulador saiu com código %d\n", rc);
+		fsync(logfd);
+		close(logfd);
+	}
+	return rc;
 }
 
 /* ---- lista filtrada (todos / favoritos / recentes) ---- */
@@ -240,7 +281,7 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 
 	surface_t *s = gfx_surface_new(UI_W, UI_H);
 	ui_state_t st = {
-		.roms = roms, .pads = 1, .load_cover = 1, .scanlines = c->scanlines,
+		.roms = roms, .pads = c->shot_pads, .load_cover = 1, .scanlines = c->scanlines,
 		.retry_secs = MOUNT_RETRY_S,
 	};
 	st.sel = c->shot_select < 0 ? 0 : c->shot_select;
@@ -482,7 +523,7 @@ int main(int argc, char **argv)
 				st.status = status;
 				status_until = now_ms() + STATUS_MS;
 			} else if (rc != 0) {
-				snprintf(status, sizeof(status), "O emulador fechou com erro (c\xC3\xB3""digo %d)", rc);
+				snprintf(status, sizeof(status), "Emulador fechou com erro (c\xC3\xB3""digo %d) \xC2\xB7 veja .snespi/emulador.log", rc);
 				st.status = status;
 				status_until = now_ms() + STATUS_MS;
 			}

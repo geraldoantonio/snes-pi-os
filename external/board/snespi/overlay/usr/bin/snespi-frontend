@@ -8,6 +8,13 @@
 # HOME não estiver definido. A raiz é somente leitura: HOME vai para /roms.
 export HOME=/roms
 
+# Diagnóstico em /roms/.snespi/diagnostico.txt, uma vez por boot (o init
+# reinicia este script se o launcher sair; não precisa repetir)
+if [ ! -e /tmp/.snespi-diagnostico ]; then
+	touch /tmp/.snespi-diagnostico
+	/usr/bin/snespi-diagnostico
+fi
+
 if [ -x /usr/bin/snespi-launcher ] && [ ! -e /roms/usar-gui-nativo ]; then
 	# O launcher trata sozinho a partição ausente (tela de erro e nova tentativa)
 	/usr/bin/snespi-launcher
