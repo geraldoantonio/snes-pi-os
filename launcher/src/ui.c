@@ -452,24 +452,38 @@ static void details(surface_t *s, const ui_state_t *st)
 static void footer_list(surface_t *s, const ui_state_t *st)
 {
 	const int cy = 688;
+	/* sem controle conectado, as dicas mostram as teclas do teclado */
+	const int kb = st->pads == 0;
 	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
 	int x = 40;
-	gfx_pixmap(s, &ICON_DPAD, x, cy - 13, 2, C_TEXT, 0);
-	x += 26 + 10;
-	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Navegar", 0) + 36;
+	if (kb) {
+		x += keycap(s, x, cy, "SETAS") + 10;
+	} else {
+		gfx_pixmap(s, &ICON_DPAD, x, cy - 13, 2, C_TEXT, 0);
+		x += 26 + 10;
+	}
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Navegar", 0) + 32;
 	if (st->filter == FILTER_ALL) {
-		x += keycap(s, x, cy, "L") + 10;
-		x += keycap(s, x, cy, "R") + 10;
+		x += keycap(s, x, cy, kb ? "A" : "L") + 10;
+		x += keycap(s, x, cy, kb ? "F" : "R") + 10;
 		x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Letra", 0) + 32;
 	}
-	round_btn(s, x + 15, cy, "A", 1, C_TEXT);
-	x += 30 + 10;
+	if (kb) {
+		x += keycap(s, x, cy, "ENTER") + 10;
+	} else {
+		round_btn(s, x + 15, cy, "A", 1, C_TEXT);
+		x += 30 + 10;
+	}
 	x += txt_mid(s, MONO_REG, 16, x, cy, C_TEXT, "Jogar", 0) + 32;
-	round_btn(s, x + 15, cy, "X", 0, C_TEXT);
-	x += 30 + 10;
+	if (kb) {
+		x += keycap(s, x, cy, "S") + 10;
+	} else {
+		round_btn(s, x + 15, cy, "X", 0, C_TEXT);
+		x += 30 + 10;
+	}
 	const rom_t *r = cur_rom(st);
 	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, r && r->fav ? "Desfavoritar" : "Favoritar", 0) + 32;
-	x += keycap(s, x, cy, "SELECT") + 10;
+	x += keycap(s, x, cy, kb ? "TAB" : "SELECT") + 10;
 	txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Filtro", 0);
 
 	if (st->status) {
@@ -478,7 +492,7 @@ static void footer_list(surface_t *s, const ui_state_t *st)
 		txt_mid(s, MONO_SEMI, 16, 1240 - w, cy, C_ACCENT, st->status, 0);
 		return;
 	}
-	const char *b = "Select+Start", *c = " sai do jogo";
+	const char *b = kb ? "Esc" : "Select+Start", *c = " sai do jogo";
 	int rx = 1240 - tw(MONO_REG, 16, c, 0);
 	txt_mid(s, MONO_REG, 16, rx, cy, C_MUTED, c, 0);
 	rx -= tw(MONO_SEMI, 16, b, 0);

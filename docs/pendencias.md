@@ -25,6 +25,11 @@
 - [ ] Se o CMake do contêiner (3.25) compila o `rpi-userland` sem problemas.
 - [ ] Espaço em disco e tempo do build no GitHub Actions.
 
+## Resultado do primeiro teste no hardware (v0.1.0)
+
+- [x] Boot, framebuffer 1280×720, montagem de `/roms`, launcher e teclado USB: funcionam.
+- [ ] PiSNES: aborta ao abrir qualquer jogo (código 134, SIGABRT), num `assert` de EGL em `unix/graphics.cpp`. Testar `gpu_mem=128`/`256` e ler `emulador.log`/`diagnostico.txt` na próxima imagem.
+
 ## A testar no hardware
 
 - [ ] **Primeiro de tudo:** `hello_triangle` (pilha GLES legada com kernel 6.6 no Pi 1).

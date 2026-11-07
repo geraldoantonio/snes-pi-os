@@ -23,14 +23,14 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 > Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-07**.
 
 - **Versão publicada:** `v0.1.0` (Release em pré-lançamento, criada pela tag). Download também pelo site.
-- **Hardware:** **nada testado ainda.** O dono vai gravar a `v0.1.0` manualmente num cartão SD de 32 GB e testar num Pi 1 Model B rev 2 com controle de Xbox 360.
+- **Hardware (primeiro teste da `v0.1.0`, HDMI + teclado USB, cartão de 32 GB classe 4):** boot, framebuffer, montagem de `/roms`, launcher e teclado **funcionam**. Ao abrir um jogo, o PiSNES **aborta (código 134 = SIGABRT)**: um dos `assert` de EGL em `unix/graphics.cpp` (linhas 185 a 267) falha. Primeira suspeita: `gpu_mem=64` pouco para a superfície EGL em 1080p; o dono vai testar `gpu_mem=128`/`256` editando o `config.txt` da partição de boot. Para a próxima imagem foram preparados: log do emulador (`/roms/.snespi/emulador.log`), diagnóstico do boot com `vcgencmd` e `hello_triangle` (`/roms/.snespi/diagnostico.txt`) e o patch `0003` (rodar sem som se o ALSA falhar).
 - **Pronto (testado só fora do Pi):** imagem compila no CI; PiSNES compila e linka; launcher com lista, capas, favoritos/recentes, aviso de chip e telas de erro; jogos de teste na partição ROMS; teste de boot no QEMU no CI; página pública no ar.
 - **QEMU:** o teste de boot passa (~10 s até o login; o launcher aparece no framebuffer com os 2 jogos de teste e a partição ROMS montada). A captura do QEMU revelou um bug de layout com nomes longos no painel de detalhes, corrigido depois da `v0.1.0`: entra na próxima versão.
 - **Maior risco em aberto:** a pilha gráfica legada (GLES2/dispmanx via `rpi-userland`) com o kernel 6.6 no Pi 1. Se o jogo não abrir ou a tela ficar preta, é o primeiro suspeito.
 
 ## Próximos passos (em ordem)
 
-1. **Validar a `v0.1.0` no hardware**, com os jogos de teste da partição ROMS. Lista de verificação:
+1. **Fazer o PiSNES abrir no hardware** (o launcher já funciona): resultado do teste com `gpu_mem` maior; depois, com a próxima imagem, ler `emulador.log` e `diagnostico.txt` na partição ROMS para saber qual chamada de EGL falha. Lista de verificação completa:
    - o launcher aparece na TV (boot, framebuffer 1280×720, montagem de `/roms`);
    - o controle navega no menu (A do Xbox confirma, B volta, X favorita, Back troca o filtro);
    - **Teste - Controles** acende os botões dos jogadores 1 e 2 no emulador;
@@ -156,6 +156,9 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
   - O QEMU 8.2 também não emula todo o bloco de energia/watchdog (`/soc/watchdog@7e100000`): o kernel cai em `bcm2835_power_probe` ("external abort"). O `qemu-smoke.sh` desliga esse nó numa **cópia** do device tree só para o teste. Falha no QEMU não significa falha no Pi: leia o `serial.log` do artefato `qemu-boot-*` antes de mexer na imagem.
 - **`gh secret set` via `!` no Claude Code** não é interativo e grava valor vazio; use `pbpaste | gh secret set NOME` ou a interface do GitHub.
 - **`README.md`** às vezes fica com permissão 444 no disco local; o git não guarda isso. Se precisar editar, `chmod u+w` e restaure depois.
+
+- **Depurar no hardware sem cabo serial:** a partição ROMS recebe `/.snespi/diagnostico.txt` (a cada boot, via `snespi-diagnostico`) e `/.snespi/emulador.log` (a cada jogo aberto, pelo launcher). Peça esses arquivos ao dono antes de supor a causa.
+- **Código de saída do emulador no rodapé:** 134 = SIGABRT (assert, geralmente EGL), 139 = SIGSEGV, 127 = não executou (binário ou biblioteca faltando).
 
 ## Antes de dar algo por pronto
 
