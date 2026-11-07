@@ -1,0 +1,58 @@
+From 2433ec21a3ea0bb02598d53b1d571ac7c929a003 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 18:53:45 -0300
+Subject: [PATCH] unix: run without sound when ALSA fails
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+InitTimer() used the result of alsa_init() without checking it, and
+S9xExit() dereferenced g_alsa unconditionally. With no usable ALSA
+device (or when exiting before the sound thread starts) the emulator
+crashed right after starting. Run muted instead, and only stop the
+sound thread if it was started.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ unix/unix.cpp | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/unix/unix.cpp b/unix/unix.cpp
+index 94e7795..5d17c66 100644
+--- a/unix/unix.cpp
++++ b/unix/unix.cpp
+@@ -421,9 +421,13 @@ void S9xAutoSaveSRAM ()
+ void S9xExit ()
+ {
+ 	S9xSetSoundMute (TRUE);
+-	g_alsa->thread_running=0;
+-	pthread_join(thread, NULL);
+-	alsa_free(g_alsa);
++	if (g_alsa)
++	{
++		g_alsa->thread_running=0;
++		pthread_join(thread, NULL);
++		alsa_free(g_alsa);
++		g_alsa = NULL;
++	}
+ 	S9xDeinitDisplay ();
+ 	Memory.SaveSRAM (S9xGetFilename (".srm"));
+ //    S9xSaveCheatFile (S9xGetFilename (".cht"));
+@@ -754,7 +758,13 @@ void StopTimer ()
+ void InitTimer ()
+ {
+ 	//Open sound device and start ALSA sound thread
+-	g_alsa = alsa_init();	
++	g_alsa = alsa_init();
++	if (!g_alsa)
++	{
++		printf("ALSA: no sound device, running without sound\n");
++		S9xSetSoundMute (TRUE);
++		return;
++	}
+ 
+ 	g_alsa->thread_running = 1;
+ 	pthread_create (&thread, NULL, S9xProcessSound, NULL);
