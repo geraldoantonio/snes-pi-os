@@ -1,0 +1,33 @@
+From b43bc80f7c8a3fad672e3640d2a034c89e0b452a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 13:25:13 -0300
+Subject: [PATCH] frontend: free the right scandir entry
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+game_list_init_nocache() freed namelist[n], one past the end of the
+array returned by scandir(), on every iteration, instead of
+namelist[i]. That is undefined behaviour and can abort the GUI.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ unix/frontend.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/unix/frontend.cpp b/unix/frontend.cpp
+index b88b8ed..35c97bb 100644
+--- a/unix/frontend.cpp
++++ b/unix/frontend.cpp
+@@ -278,7 +278,7 @@ static void game_list_init_nocache(void)
+ 				if (strcasecmp(namelist[i]->d_name, "dir.txt") != 0)
+ 					strcpy(fe_drivers[game_num_avail++].name,  namelist[i]->d_name);
+ 			}
+-			free(namelist[n]);
++			free(namelist[i]);
+ 		}
+ 		free(namelist);
+ 	}
