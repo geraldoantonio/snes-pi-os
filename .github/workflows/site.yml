@@ -1,0 +1,29 @@
+name: site
+
+# Publica site/ em https://snespi.geraldojunior.dev (Cloudflare Workers,
+# só arquivos estáticos). Precisa dos secrets CLOUDFLARE_API_TOKEN e
+# CLOUDFLARE_ACCOUNT_ID no repositório.
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/site.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: site
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Publicar no Cloudflare
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site
+          wranglerVersion: '4.158.0'
+          command: deploy

@@ -4,6 +4,8 @@ Sistema Linux mínimo e dedicado para rodar jogos de Super Nintendo (SNES) no **
 
 Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num menu de ROMs e jogar, com o menor boot e o menor uso de recursos possível.
 
+**Página do projeto (para quem vai usar):** https://snespi.geraldojunior.dev (fonte em `site/`, publicada pelo workflow `site.yml` no Cloudflare).
+
 > Status: **planejamento / documentação**. Ainda não há código nem imagem compilada. Veja [docs/pendencias.md](docs/pendencias.md).
 
 ## Visão geral
@@ -38,7 +40,8 @@ snes-pi-os/
 ├── LICENSE                    # MIT
 ├── docs/
 ├── .github/workflows/         # build no GitHub Actions
-├── scripts/                   # build.sh e ci-container.sh (Debian 12)
+├── scripts/                   # build, contêiner Debian 12 e teste no QEMU
+├── site/                      # página pública (Cloudflare Workers, estático)
 ├── external/                  # árvore BR2_EXTERNAL do Buildroot
 │   ├── package/pisnes/
 │   ├── package/snes-launcher/

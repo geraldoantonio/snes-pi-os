@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>snes-pi-os: Super Nintendo no Raspberry Pi 1</title>
+<meta name="description" content="Um sistema mínimo que transforma o Raspberry Pi 1 num console de Super Nintendo: liga direto num menu de jogos, com capas, favoritos e saves automáticos.">
+<meta name="theme-color" content="#0E1116">
+<meta property="og:title" content="snes-pi-os: Super Nintendo no Raspberry Pi 1">
+<meta property="og:description" content="Liga, escolhe o jogo, joga. Um sistema mínimo para o Raspberry Pi 1.">
+<meta property="og:image" content="https://snespi.geraldojunior.dev/img/lista.png">
+<meta property="og:url" content="https://snespi.geraldojunior.dev/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="top">
+	<div class="wrap">
+		<a class="logo" href="#inicio" aria-label="snes-pi-os, início">
+			<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect x="2" y="1" width="12" height="11" fill="#F2A93B"/><rect x="4" y="3" width="8" height="5" fill="#0E1116"/><rect x="3" y="12" width="2" height="3" fill="#F2A93B"/><rect x="7" y="12" width="2" height="3" fill="#F2A93B"/><rect x="11" y="12" width="2" height="3" fill="#F2A93B"/></svg>
+			<span>snes-pi-os</span>
+		</a>
+		<nav aria-label="Seções">
+			<a href="#precisa">O que precisa</a>
+			<a href="#instalar">Instalar</a>
+			<a href="#controles">Controles</a>
+			<a href="#compatibilidade">Compatibilidade</a>
+			<a href="#duvidas">Dúvidas</a>
+		</nav>
+	</div>
+</header>
+
+<main id="inicio">
+
+<section class="hero">
+	<div class="wrap">
+		<div>
+			<span class="status"><i aria-hidden="true"></i>EM DESENVOLVIMENTO</span>
+			<h1>Liga, escolhe o jogo, <em>joga.</em></h1>
+			<p class="lead">O snes-pi-os transforma um Raspberry Pi 1 num console de Super Nintendo. Sem área de trabalho, sem configurar nada: o aparelho liga direto num menu com seus jogos, capas e saves.</p>
+			<div class="cta">
+				<a class="btn primary" href="https://github.com/geraldoantonio/snes-pi-os/releases/latest">
+					<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 2h2v9h3v2h-2v2h-1v1H9v-1H8v-2H6v-2h3zM3 16h2v2h10v-2h2v4H3z"/></svg>
+					Baixar a imagem
+				</a>
+				<a class="btn" href="https://github.com/geraldoantonio/snes-pi-os">Código no GitHub</a>
+			</div>
+			<p class="hint">Gratuito e de código aberto. Ainda não foi testado em um Raspberry Pi de verdade: a primeira versão para testes está saindo agora.</p>
+		</div>
+		<figure class="screen">
+			<img src="img/lista.png" width="1280" height="720" alt="Menu do snes-pi-os: lista de jogos à esquerda e, à direita, a capa, a região, o save e a compatibilidade do jogo selecionado.">
+			<figcaption>Tela real do menu, gerada com jogos de teste.</figcaption>
+		</figure>
+	</div>
+</section>
+
+<section class="block">
+	<div class="wrap">
+		<p class="eyebrow">POR QUE USAR</p>
+		<h2>Feito para um aparelho só, e só para jogar</h2>
+		<p class="intro">Em vez de uma distribuição Linux inteira, o snes-pi-os leva apenas o necessário para o Pi 1 rodar jogos de SNES. O resultado é um boot curto e um sistema que aguenta ser desligado direto na tomada.</p>
+		<div class="grid c3">
+			<div class="card">
+				<svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M7 1h2v6H7zM3 4h2v2H3v6h10V6h-2V4h2v2h1v6h-1v1H3v-1H2V6h1z"/></svg>
+				<h3>Direto no menu</h3>
+				<p>Liga e cai na lista de jogos. Ao sair de um jogo, volta para ela.</p>
+			</div>
+			<div class="card">
+				<svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M2 2h12v12H2zm2 2v6l3-3 2 2 1-1 2 2V4z"/></svg>
+				<h3>Capas dos jogos</h3>
+				<p>Coloque uma imagem com o mesmo nome da ROM e ela aparece no menu.</p>
+			</div>
+			<div class="card">
+				<svg class="ico" viewBox="0 0 9 9" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M4 0h1v1h1v2h3v1H8v1H7v2h1v1H6V7H3v1H1V7h1V5H1V4H0V3h3V1h1z"/></svg>
+				<h3>Favoritos e recentes</h3>
+				<p>Marque seus jogos preferidos e volte rápido aos 5 últimos que abriu.</p>
+			</div>
+			<div class="card">
+				<svg class="ico" viewBox="0 0 7 7" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M0 0h6l1 1v6H0zm1 1v2h4V1zm0 4v1h5V5z"/></svg>
+				<h3>Saves automáticos</h3>
+				<p>O progresso salvo no jogo é gravado no cartão ao sair, sem menu nenhum.</p>
+			</div>
+			<div class="card">
+				<svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M6 1h4v3h2v5h-1v3H9v3H7v-3H5V9H4V4h2zm0 5v2h4V6z"/></svg>
+				<h3>Pode tirar da tomada</h3>
+				<p>O sistema fica protegido contra escrita; só a pasta de jogos e saves é gravada.</p>
+			</div>
+			<div class="card">
+				<svg class="ico" viewBox="0 0 18 16" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true"><path d="M8 0h2v2h1v2h1v2h1v2h1v2h1v2h1v2h1v2H0v-2h1v-2h1V8h1V6h1V4h1V2h1V0zm0 5v5h2V5zm0 6v2h2v-2z"/></svg>
+				<h3>Avisa antes de travar</h3>
+				<p>Jogos com chips que o emulador não suporta mostram um aviso antes de abrir.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="block" id="precisa">
+	<div class="wrap">
+		<p class="eyebrow">ANTES DE COMEÇAR</p>
+		<h2>O que você precisa</h2>
+		<ul class="need">
+			<li><b>Raspberry Pi 1</b><span>Model B de 512 MB (o de 2 portas USB). O Model B+ também deve funcionar.</span></li>
+			<li><b>Cartão SD</b><span>De 2 GB ou mais. O Model B usa o cartão SD de tamanho normal (um microSD com adaptador também serve).</span></li>
+			<li><b>Fonte</b><span>Micro-USB de 5 V. Prefira uma de 2 A, principalmente com controle de Xbox, que puxa bastante energia.</span></li>
+			<li><b>TV ou monitor</b><span>Com entrada HDMI. O menu foi feito para 720p e a imagem é ajustada à tela.</span></li>
+			<li><b>Controle</b><span>Controle USB (o de Xbox 360 com fio é o mais garantido) ou um teclado USB.</span></li>
+			<li><b>Um computador</b><span>Para gravar a imagem no cartão e copiar os jogos.</span></li>
+		</ul>
+	</div>
+</section>
+
+<section class="block" id="instalar">
+	<div class="wrap">
+		<p class="eyebrow">INSTALAÇÃO</p>
+		<h2>Do download ao primeiro jogo, em 4 passos</h2>
+		<p class="intro">Não precisa saber Linux. Tudo é feito no seu computador, gravando um arquivo no cartão SD.</p>
+		<ol class="steps">
+			<li>
+				<div>
+					<h3>Baixe a imagem</h3>
+					<p>Na página de <a href="https://github.com/geraldoantonio/snes-pi-os/releases/latest">versões no GitHub</a>, baixe o arquivo <code>sdcard.img.xz</code> (cerca de 30 MB).</p>
+				</div>
+			</li>
+			<li>
+				<div>
+					<h3>Grave no cartão SD</h3>
+					<p>Use o <a href="https://www.raspberrypi.com/software/">Raspberry Pi Imager</a> (opção “Usar personalizado”) ou o <a href="https://etcher.balena.io/">balenaEtcher</a>. Os dois aceitam o arquivo <code>.xz</code> direto, sem descompactar.</p>
+					<p>Atenção: tudo o que estiver no cartão será apagado.</p>
+				</div>
+			</li>
+			<li>
+				<div>
+					<h3>Ligue e teste</h3>
+					<p>Coloque o cartão no Pi, ligue o HDMI e o controle, e então a energia. O menu já vem com dois jogos de teste gratuitos:</p>
+					<ul>
+						<li><b>Teste - Controles:</b> acende na tela cada botão que você aperta.</li>
+						<li><b>Teste - Breakout:</b> um jogo completo para conferir imagem e som.</li>
+					</ul>
+				</div>
+			</li>
+			<li>
+				<div>
+					<h3>Coloque seus jogos</h3>
+					<p>Desligue o Pi e ponha o cartão no computador. Aparece uma unidade chamada <b>ROMS</b>: copie para ela os seus jogos (<code>.sfc</code>, <code>.smc</code>, <code>.fig</code> ou <code>.swc</code>).</p>
+					<p>Para ter capas, crie a pasta <code>capas</code> e coloque imagens <code>.jpg</code> ou <code>.png</code> com o mesmo nome da ROM. Exemplo: <code>Meu Jogo.sfc</code> e <code>capas/Meu Jogo.jpg</code>.</p>
+				</div>
+			</li>
+		</ol>
+	</div>
+</section>
+
+<section class="block">
+	<div class="wrap">
+		<p class="eyebrow">O MENU</p>
+		<h2>Simples de usar com o controle</h2>
+		<p class="intro">Todas as telas abaixo são do menu de verdade, geradas com jogos de teste.</p>
+		<div class="gallery">
+			<figure class="screen">
+				<img src="img/favoritos.png" width="1280" height="720" loading="lazy" alt="Aba Favoritos do menu, com três jogos marcados com estrela.">
+				<figcaption>Favoritos: aperte X para marcar um jogo; Select troca entre Todos, Favoritos e Recentes.</figcaption>
+			</figure>
+			<figure class="screen">
+				<img src="img/aviso.png" width="1280" height="720" loading="lazy" alt="Aviso dizendo que o jogo usa o chip SA-1, não emulado, com as opções Voltar à lista e Tentar mesmo assim.">
+				<figcaption>Aviso de chip: o menu avisa quando um jogo provavelmente não vai funcionar.</figcaption>
+			</figure>
+			<figure class="screen">
+				<img src="img/iniciando.png" width="1280" height="720" loading="lazy" alt="Tela de carregamento com a capa do jogo, o nome e o lembrete de que Select e Start voltam para a lista.">
+				<figcaption>Iniciando: a capa, e o lembrete de como voltar para o menu.</figcaption>
+			</figure>
+			<figure class="screen">
+				<img src="img/lista.png" width="1280" height="720" loading="lazy" alt="Lista de jogos com a capa do jogo selecionado.">
+				<figcaption>Lista: capa, região, save e compatibilidade de cada jogo.</figcaption>
+			</figure>
+		</div>
+	</div>
+</section>
+
+<section class="block" id="controles">
+	<div class="wrap">
+		<p class="eyebrow">CONTROLES</p>
+		<h2>Controle de Xbox ou teclado</h2>
+		<p class="intro">No menu, os botões seguem o controle de Xbox: <b>A</b> confirma e <b>B</b> volta. Dentro do jogo vale o layout do Super Nintendo, pela posição dos botões.</p>
+		<div class="table-box">
+			<table>
+				<thead><tr><th scope="col">AÇÃO NO MENU</th><th scope="col">CONTROLE DE XBOX</th><th scope="col">TECLADO</th></tr></thead>
+				<tbody>
+					<tr><td>Navegar na lista</td><td>Direcional</td><td>Setas</td></tr>
+					<tr><td>Jogar</td><td><span class="k">A</span></td><td><span class="k">Enter</span></td></tr>
+					<tr><td>Voltar (no aviso)</td><td><span class="k">B</span></td><td><span class="k">Esc</span></td></tr>
+					<tr><td>Favoritar / desfavoritar</td><td><span class="k">X</span></td><td><span class="k">S</span></td></tr>
+					<tr><td>Todos / Favoritos / Recentes</td><td><span class="k">Back</span></td><td><span class="k">Tab</span></td></tr>
+					<tr><td>Letra anterior / seguinte</td><td><span class="k">LB</span> <span class="k">RB</span></td><td><span class="k">A</span> <span class="k">F</span></td></tr>
+				</tbody>
+			</table>
+		</div>
+		<div style="height: 20px"></div>
+		<div class="table-box">
+			<table>
+				<thead><tr><th scope="col">NO JOGO (SUPER NINTENDO)</th><th scope="col">CONTROLE DE XBOX</th><th scope="col">TECLADO</th></tr></thead>
+				<tbody>
+					<tr><td>A / B / X / Y</td><td><span class="k">B</span> <span class="k">A</span> <span class="k">Y</span> <span class="k">X</span></td><td><span class="k">D</span> <span class="k">C</span> <span class="k">S</span> <span class="k">X</span></td></tr>
+					<tr><td>L / R</td><td><span class="k">LB</span> <span class="k">RB</span></td><td><span class="k">A</span> <span class="k">F</span></td></tr>
+					<tr><td>Start / Select</td><td><span class="k">Start</span> <span class="k">Back</span></td><td><span class="k">Enter</span> <span class="k">Tab</span></td></tr>
+					<tr><td><b>Sair do jogo e voltar ao menu</b></td><td><span class="k">Back</span> + <span class="k">Start</span></td><td><span class="k">Esc</span></td></tr>
+				</tbody>
+			</table>
+		</div>
+		<div style="height: 20px"></div>
+		<div class="note blue">
+			<svg viewBox="0 0 16 16" fill="#6CB6FF" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 3h2v2H7zm0 3h2v7H7z"/></svg>
+			<span>Dois jogadores: use dois controles. O teclado funciona só para o jogador 1.</span>
+		</div>
+	</div>
+</section>
+
+<section class="block" id="compatibilidade">
+	<div class="wrap">
+		<p class="eyebrow">COMPATIBILIDADE</p>
+		<h2>O que roda (e o que não roda)</h2>
+		<p class="intro">O emulador é o PiSNES, baseado no SNES9X 1.39: uma versão antiga, escolhida porque é leve o bastante para o processador de 700 MHz do Pi 1. A maioria dos jogos funciona, mas a precisão é menor que a de emuladores recentes.</p>
+		<div class="grid c2">
+			<div class="card">
+				<h3>Não funcionam</h3>
+				<p>Jogos com estes chips especiais no cartucho. O menu avisa antes de abrir:</p>
+				<ul class="chips">
+					<li>Super FX</li><li>SA-1</li><li>SDD-1</li><li>C4</li><li>SPC7110</li><li>S-RTC</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>Funcionam</h3>
+				<p>Jogos sem chip especial e os que usam o DSP-1, emulado pelo PiSNES:</p>
+				<ul class="chips ok">
+					<li>Sem chip</li><li>DSP-1</li>
+				</ul>
+			</div>
+		</div>
+		<div style="height: 20px"></div>
+		<div class="note">
+			<svg viewBox="0 0 18 16" fill="#F2A93B" shape-rendering="crispEdges" aria-hidden="true"><path d="M8 0h2v2h1v2h1v2h1v2h1v2h1v2h1v2h1v2H0v-2h1v-2h1V8h1V6h1V4h1V2h1V0zm0 5v5h2V5zm0 6v2h2v-2z"/></svg>
+			<span>Este projeto não inclui nem distribui jogos comerciais. Use apenas jogos que você tem o direito de usar. Os dois jogos de teste incluídos são exemplos gratuitos do projeto <a href="https://github.com/k0b3n4irb/opensnes">OpenSNES</a> (licença MIT).</span>
+		</div>
+	</div>
+</section>
+
+<section class="block" id="duvidas">
+	<div class="wrap">
+		<p class="eyebrow">DÚVIDAS E PROBLEMAS</p>
+		<h2>Perguntas frequentes</h2>
+		<details>
+			<summary>A tela fica preta ao ligar</summary>
+			<div class="ans">
+				<p>Confira se o HDMI estava ligado antes de ligar o Pi e se a TV está na entrada certa. Se o menu aparece mas a tela fica preta ao abrir um jogo, avise no GitHub: o vídeo dos jogos depende da parte gráfica do Pi, que ainda está sendo validada.</p>
+			</div>
+		</details>
+		<details>
+			<summary>O controle não responde</summary>
+			<div class="ans">
+				<p>Ligue o controle antes de ligar o Pi, ou espere alguns segundos depois de conectar. Se o Pi reiniciar ou o controle desconectar sozinho, a fonte ou as portas USB podem não estar dando conta: use uma fonte de 2 A ou um hub USB com alimentação própria.</p>
+			</div>
+		</details>
+		<details>
+			<summary>Aparece “A partição de jogos não abriu”</summary>
+			<div class="ans">
+				<p>O cartão provavelmente foi desligado no meio de uma gravação. Ponha o cartão no computador e verifique a unidade ROMS (Windows: “Verificar erros”; macOS: Utilitário de Disco › Primeiros socorros). Se a unidade não aparecer, grave a imagem de novo.</p>
+			</div>
+		</details>
+		<details>
+			<summary>Como saio de um jogo?</summary>
+			<div class="ans"><p>Aperte <b>Back + Start</b> juntos no controle (ou Esc no teclado). O jogo grava o save e você volta ao menu.</p></div>
+		</details>
+		<details>
+			<summary>Posso desligar direto na tomada?</summary>
+			<div class="ans"><p>Pode, desde que esteja no menu e não no meio de um jogo salvando. O sistema fica protegido contra escrita; só a unidade ROMS (jogos, capas e saves) é gravada.</p></div>
+		</details>
+		<details>
+			<summary>Funciona com Wi-Fi ou Bluetooth?</summary>
+			<div class="ans"><p>Não. O Raspberry Pi 1 não tem Wi-Fi nem Bluetooth. Controles sem fio só funcionam com receptor USB próprio (como o receptor de controle de Xbox 360). Um modo para enviar jogos pela rede, por cabo, está nos planos.</p></div>
+		</details>
+		<details>
+			<summary>A unidade ROMS ficou pequena</summary>
+			<div class="ans"><p>Ela vem com 512 MB, suficiente para muitos jogos de SNES. Para mais espaço, aumente a partição ROMS no computador depois de gravar o cartão, com um programa como o GParted.</p></div>
+		</details>
+		<details>
+			<summary>Onde consigo jogos?</summary>
+			<div class="ans"><p>Use cópias dos seus próprios cartuchos ou jogos independentes (homebrew) distribuídos gratuitamente pelos autores. O projeto não indica nem distribui jogos comerciais.</p></div>
+		</details>
+	</div>
+</section>
+
+<section class="block">
+	<div class="wrap">
+		<p class="eyebrow">EM BREVE</p>
+		<h2>Enviar jogos pela rede</h2>
+		<p class="intro" style="margin-bottom: 0">Com um cabo de rede, o menu vai mostrar um endereço e um código QR: abra no celular, escolha os arquivos e eles vão direto para o cartão, sem tirar o cartão do Pi.</p>
+	</div>
+</section>
+
+</main>
+
+<footer>
+	<div class="wrap">
+		<p>snes-pi-os é um projeto de código aberto (licença MIT) de <a href="https://github.com/geraldoantonio">Geraldo Júnior</a>. <a href="https://github.com/geraldoantonio/snes-pi-os">Código e documentação no GitHub</a>.</p>
+		<p>Usa o emulador <a href="https://github.com/RetroPie/pisnes">PiSNES</a> (licença do SNES9X, uso não comercial), o <a href="https://buildroot.org/">Buildroot</a> e as fontes IBM Plex Mono e Pixelify Sans (OFL).</p>
+		<p>Super Nintendo e Super NES são marcas da Nintendo. Este projeto não tem relação com a Nintendo.</p>
+	</div>
+</footer>
+
+</body>
+</html>

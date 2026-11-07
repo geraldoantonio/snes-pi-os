@@ -1,0 +1,15 @@
+{
+  // Página pública do snes-pi-os: Worker só com arquivos estáticos
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "snespi-site",
+  "compatibility_date": "2026-11-07",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  },
+  // O Cloudflare cria o registro DNS e o certificado do subdomínio
+  "routes": [
+    { "pattern": "snespi.geraldojunior.dev", "custom_domain": true }
+  ],
+  "workers_dev": false
+}
