@@ -1,0 +1,102 @@
+From 7a8e10b83797131623e9308b7603ed14392eaa37 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 19:18:38 -0300
+Subject: [PATCH] graphics: report which EGL step fails
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Every EGL call in S9xInitDisplay() was guarded only by assert(), so a
+failure just aborted (SIGABRT) with no hint of the cause when stderr is
+not visible. Print the failing step and eglGetError() before asserting,
+and log the display size reported by the firmware.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ unix/graphics.cpp | 29 +++++++++++++++++++++--------
+ 1 file changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/unix/graphics.cpp b/unix/graphics.cpp
+index d166b83..cdb31a5 100644
+--- a/unix/graphics.cpp
++++ b/unix/graphics.cpp
+@@ -64,6 +64,17 @@
+ #include <EGL/egl.h>
+ #include <EGL/eglext.h>
+ #include <assert.h>
++#include <stdio.h>
++
++/* Log which EGL step failed, and the EGL error, before asserting */
++#define EGL_CHECK(cond, what) do { \
++	if (!(cond)) { \
++		fprintf(stderr, "snes9x: %s failed (eglGetError=0x%04x)\n", \
++			what, (unsigned) eglGetError()); \
++		fflush(stderr); \
++	} \
++	assert(cond); \
++} while (0)
+ 
+ 
+ #define COUNT(a) (sizeof(a) / sizeof(a[0]))
+@@ -180,13 +191,14 @@ void S9xInitDisplay (int height)
+     	VC_RECT_T dst_rect;
+     	VC_RECT_T src_rect;
+     
++    	fprintf(stderr, "snes9x: initialising EGL\n");
+     	// get an EGL display connection
+     	display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+-    	assert(display != EGL_NO_DISPLAY);
++    	EGL_CHECK(display != EGL_NO_DISPLAY, "eglGetDisplay");
+     
+     	// initialize the EGL display connection
+     	EGLBoolean result = eglInitialize(display, NULL, NULL);
+-    	assert(EGL_FALSE != result);
++    	EGL_CHECK(EGL_FALSE != result, "eglInitialize");
+     
+     	// get an appropriate EGL frame buffer configuration
+     	EGLint num_config;
+@@ -201,10 +213,10 @@ void S9xInitDisplay (int height)
+     	    EGL_NONE
+     	};
+     	result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
+-    	assert(EGL_FALSE != result);
++    	EGL_CHECK(EGL_FALSE != result, "eglChooseConfig");
+     
+     	result = eglBindAPI(EGL_OPENGL_ES_API);
+-    	assert(EGL_FALSE != result);
++    	EGL_CHECK(EGL_FALSE != result, "eglBindAPI");
+     
+     	// create an EGL rendering context
+     	static const EGLint context_attributes[] =
+@@ -213,11 +225,12 @@ void S9xInitDisplay (int height)
+     	    EGL_NONE
+     	};
+     	context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attributes);
+-    	assert(context != EGL_NO_CONTEXT);
++    	EGL_CHECK(context != EGL_NO_CONTEXT, "eglCreateContext");
+     
+     	// create an EGL window surface
+     	int32_t success = graphics_get_display_size(0, &display_width, &display_height);
+-    	assert(success >= 0);
++    	EGL_CHECK(success >= 0, "graphics_get_display_size");
++    	fprintf(stderr, "snes9x: display %dx%d\n", display_width, display_height);
+     
+     	vc_dispmanx_rect_set( &src_rect, 0, 0, display_width << 16, display_height << 16);
+     	vc_dispmanx_rect_set( &dst_rect, 0, 0, display_width, display_height);
+@@ -260,11 +273,11 @@ void S9xInitDisplay (int height)
+     	vc_dispmanx_update_submit_sync(dispman_update);
+     
+     	surface = eglCreateWindowSurface(display, config, &nativewindow, NULL);
+-    	assert(surface != EGL_NO_SURFACE);
++    	EGL_CHECK(surface != EGL_NO_SURFACE, "eglCreateWindowSurface");
+     
+     	// connect the context to the surface
+     	result = eglMakeCurrent(display, surface, surface, context);
+-    	assert(EGL_FALSE != result);
++    	EGL_CHECK(EGL_FALSE != result, "eglMakeCurrent");
+     
+     //sqdebug   eglSwapInterval(display, 0);
+     
