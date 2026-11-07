@@ -1,9 +1,11 @@
 /* Saída de áudio pelo ALSA (Pi), numa thread própria. */
 #include "music.h"
 
+#define _GNU_SOURCE
 #include <alsa/asoundlib.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <time.h>
 
 static pthread_t thread;
 static volatile int running;
@@ -62,7 +64,21 @@ void mout_stop(void)
 		return;
 	/* a thread confere "running" a cada bloco (~46 ms a 22 kHz) */
 	running = 0;
-	pthread_join(thread, NULL);
+	/*
+	 * O áudio do Pi passa pela GPU (VCHIQ): se o driver travar, o writei
+	 * pode não voltar nunca. Espera no máximo 2 s e, se for preciso,
+	 * abandona a thread em vez de travar o launcher antes do jogo.
+	 */
+	struct timespec limit;
+	clock_gettime(CLOCK_REALTIME, &limit);
+	limit.tv_sec += 2;
+	if (pthread_timedjoin_np(thread, NULL, &limit) != 0) {
+		fprintf(stderr, "snespi-launcher: áudio sem resposta, música abandonada\n");
+		pthread_detach(thread);
+		pcm = NULL;	/* não fecha: a thread presa ainda o usa */
+		dec = NULL;
+		return;
+	}
 	snd_pcm_drop(pcm);
 	snd_pcm_close(pcm);	/* libera o dispositivo para o emulador */
 	pcm = NULL;

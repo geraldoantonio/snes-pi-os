@@ -1,18 +1,38 @@
 #!/bin/sh
 # Grava em /roms/.snespi/diagnostico.txt um retrato do sistema, para
 # depurar sem cabo serial: basta abrir o arquivo no computador.
-# Chamado pelo snespi-frontend a cada boot (sobrescreve o anterior).
+#
+# Roda em segundo plano (o snespi-frontend não espera por ele) e grava com
+# sync depois de cada seção: se algo travar (chamadas à GPU podem travar
+# quando a pilha gráfica falha), o que veio antes já está no cartão e a
+# última seção escrita mostra onde parou.
+#
+# Testes que desenham na tela (hello_triangle) só rodam se existir o
+# arquivo /roms/.snespi/testar-gpu.
 
 OUT_DIR=/roms/.snespi
 OUT="$OUT_DIR/diagnostico.txt"
 
 mountpoint -q /roms || exit 0
 mkdir -p "$OUT_DIR" || exit 0
+: > "$OUT"
+sync
 
-# Roda um comando por no máximo N segundos (o BusyBox não tem "timeout")
+log() { echo "$*" >> "$OUT"; }
+
+section() {
+	sync
+	log ""
+	log "===== $1 ====="
+	sync
+}
+
+# Roda um comando por no máximo N segundos, com a saída no arquivo. Se não
+# terminar, mata com SIGKILL e segue SEM esperar: um processo preso num
+# ioctl da GPU pode nunca sair, e esperar travaria o diagnóstico.
 run_for() {
 	secs="$1"; shift
-	"$@" &
+	"$@" >> "$OUT" 2>&1 &
 	pid=$!
 	i=0
 	while kill -0 "$pid" 2>/dev/null && [ "$i" -lt "$secs" ]; do
@@ -20,71 +40,69 @@ run_for() {
 		i=$((i + 1))
 	done
 	if kill -0 "$pid" 2>/dev/null; then
-		kill "$pid" 2>/dev/null
-		wait "$pid" 2>/dev/null
-		echo "(ainda rodando após ${secs}s: interrompido; isso indica que iniciou)"
+		kill -9 "$pid" 2>/dev/null
+		log "(sem resposta após ${secs}s: abandonado; pode ter travado esperando a GPU)"
 	else
 		wait "$pid"
-		echo "(saiu com código $?)"
+		log "(saiu com código $?)"
 	fi
+	sync
 }
 
-section() {
-	echo
-	echo "===== $1 ====="
-}
+log "snes-pi-os: diagnóstico do boot"
 
-{
-	echo "snes-pi-os: diagnóstico do boot"
-	section "sistema"
-	uname -a
-	uptime
-	cat /proc/cmdline
+section "sistema"
+uname -a >> "$OUT" 2>&1
+uptime >> "$OUT" 2>&1
+cat /proc/cmdline >> "$OUT" 2>&1
 
-	section "firmware e GPU (vcgencmd)"
-	if command -v vcgencmd >/dev/null 2>&1; then
-		vcgencmd version
-		vcgencmd get_mem arm
-		vcgencmd get_mem gpu
-		vcgencmd get_config int 2>&1 | grep -iE 'gpu_mem|hdmi|framebuffer'
-		vcgencmd hdmi_timings 2>&1
-		vcgencmd dispmanx_list 2>&1
-	else
-		echo "vcgencmd não encontrado"
-	fi
+section "dispositivos"
+ls -l /dev/vchiq /dev/vcsm /dev/vcsm-cma /dev/fb0 /dev/dri >> "$OUT" 2>&1
+ls -l /dev/input >> "$OUT" 2>&1
+cat /sys/class/graphics/fb0/virtual_size /sys/class/graphics/fb0/bits_per_pixel >> "$OUT" 2>&1
 
-	section "dispositivos"
-	ls -l /dev/vchiq /dev/vcsm /dev/vcsm-cma /dev/fb0 /dev/dri 2>&1
-	ls -l /dev/input 2>&1
-	cat /sys/class/graphics/fb0/virtual_size /sys/class/graphics/fb0/bits_per_pixel 2>&1
+section "áudio"
+cat /proc/asound/cards >> "$OUT" 2>&1
 
-	section "áudio"
-	cat /proc/asound/cards 2>&1
+section "módulos carregados"
+lsmod >> "$OUT" 2>&1
 
-	section "módulos carregados"
-	lsmod 2>&1
+section "memória"
+head -5 /proc/meminfo >> "$OUT" 2>&1
 
-	section "memória"
-	cat /proc/meminfo 2>&1 | head -5
+section "kernel (últimas 150 linhas do dmesg)"
+dmesg 2>&1 | tail -150 >> "$OUT"
 
-	section "teste de GPU: hello_triangle (4 s)"
+# Daqui para baixo, comandos que falam com a GPU pela VCHIQ e podem travar
+section "firmware e GPU (vcgencmd)"
+if command -v vcgencmd >/dev/null 2>&1; then
+	for args in "version" "get_mem arm" "get_mem gpu" "get_config int" "hdmi_timings" "dispmanx_list"; do
+		log "--- vcgencmd $args"
+		# shellcheck disable=SC2086
+		run_for 3 vcgencmd $args
+	done
+else
+	log "vcgencmd não encontrado"
+fi
+
+if [ -e "$OUT_DIR/testar-gpu" ]; then
+	section "teste de GPU: hello_triangle (5 s)"
 	if [ -x /usr/bin/hello_triangle.bin ]; then
-		cd /tmp && run_for 4 /usr/bin/hello_triangle.bin 2>&1
+		cd /tmp && run_for 5 /usr/bin/hello_triangle.bin
 	else
-		echo "hello_triangle.bin não encontrado"
+		log "hello_triangle.bin não encontrado"
 	fi
-
-	section "teste de GPU: hello_triangle2 (4 s)"
+	section "teste de GPU: hello_triangle2 (5 s)"
 	if [ -x /usr/bin/hello_triangle2.bin ]; then
-		cd /tmp && run_for 4 /usr/bin/hello_triangle2.bin 2>&1
+		cd /tmp && run_for 5 /usr/bin/hello_triangle2.bin
 	else
-		echo "hello_triangle2.bin não encontrado"
+		log "hello_triangle2.bin não encontrado"
 	fi
+else
+	section "teste de GPU"
+	log "não rodado (crie /roms/.snespi/testar-gpu para rodar o hello_triangle)"
+fi
 
-	section "kernel (últimas 150 linhas do dmesg)"
-	dmesg 2>&1 | tail -150
-} > "$OUT.tmp" 2>&1
-
-sync
-mv -f "$OUT.tmp" "$OUT"
+section "fim"
+log "diagnóstico completo"
 sync

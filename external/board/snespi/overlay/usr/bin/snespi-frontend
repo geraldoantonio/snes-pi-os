@@ -9,10 +9,11 @@
 export HOME=/roms
 
 # Diagnóstico em /roms/.snespi/diagnostico.txt, uma vez por boot (o init
-# reinicia este script se o launcher sair; não precisa repetir)
+# reinicia este script se o launcher sair; não precisa repetir). Em segundo
+# plano: chamadas à GPU podem travar e nunca devem impedir o menu de abrir.
 if [ ! -e /tmp/.snespi-diagnostico ]; then
 	touch /tmp/.snespi-diagnostico
-	/usr/bin/snespi-diagnostico
+	/usr/bin/snespi-diagnostico </dev/null >/dev/null 2>&1 &
 fi
 
 if [ -x /usr/bin/snespi-launcher ] && [ ! -e /roms/usar-gui-nativo ]; then
