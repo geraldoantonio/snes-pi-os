@@ -25,6 +25,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Versão publicada:** `v0.1.0` (Release em pré-lançamento, criada pela tag). Download também pelo site.
 - **Hardware:** **nada testado ainda.** O dono vai gravar a `v0.1.0` manualmente num cartão SD de 32 GB e testar num Pi 1 Model B rev 2 com controle de Xbox 360.
 - **Pronto (testado só fora do Pi):** imagem compila no CI; PiSNES compila e linka; launcher com lista, capas, favoritos/recentes, aviso de chip e telas de erro; jogos de teste na partição ROMS; teste de boot no QEMU no CI; página pública no ar.
+- **QEMU:** o teste de boot passa (~10 s até o login; o launcher aparece no framebuffer com os 2 jogos de teste e a partição ROMS montada). A captura do QEMU revelou um bug de layout com nomes longos no painel de detalhes, corrigido depois da `v0.1.0`: entra na próxima versão.
 - **Maior risco em aberto:** a pilha gráfica legada (GLES2/dispmanx via `rpi-userland`) com o kernel 6.6 no Pi 1. Se o jogo não abrir ou a tela ficar preta, é o primeiro suspeito.
 
 ## Próximos passos (em ordem)

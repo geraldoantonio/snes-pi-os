@@ -381,13 +381,32 @@ static void details(surface_t *s, const ui_state_t *st)
 		pill(s, px, y, &ICON_STAR, "Favorito", C_ACCENT, C_ACCENT, 0);
 	y += 30 + 16;
 
-	/* nome (até 2 linhas) e arquivo */
-	int lines = txt_wrap(s, MONO_SEMI, 28, ix, y, iw, 34, C_TEXT, r->stem);
-	if (lines > 2)
-		lines = 2;	/* (nomes muito longos ficam cortados pelo painel) */
-	y += lines * 34 + 6;
-	txt_fit(s, MONO_REG, 14, ix, y + 9, iw, C_MUTED, r->file);
-	y += 18 + 16;
+	/*
+	 * Nome e arquivo, sempre na mesma altura (74 px) para não invadir
+	 * os campos de baixo:
+	 *  - cabe numa linha a 28 px: nome + arquivo;
+	 *  - cabe em 2 linhas a 22 px: só o nome (o arquivo some);
+	 *  - maior que isso: 1 linha a 22 px cortada com "…" + arquivo.
+	 */
+	if (tw(MONO_SEMI, 28, r->stem, 0) <= iw) {
+		txt(s, MONO_SEMI, 28, ix, y, C_TEXT, r->stem, 0);
+		y += 34 + 6;
+		txt_fit(s, MONO_REG, 14, ix, y + 9, iw, C_MUTED, r->file);
+		y += 18 + 16;
+	} else {
+		surface_t *scratch = gfx_surface_new(1, 1);
+		int lines = scratch ? txt_wrap(scratch, MONO_SEMI, 22, 0, -1000, iw, 27, 0, r->stem) : 3;
+		gfx_surface_free(scratch);
+		if (lines <= 2) {
+			txt_wrap(s, MONO_SEMI, 22, ix, y, iw, 27, C_TEXT, r->stem);
+			y += 2 * 27 + 20;
+		} else {
+			txt_fit(s, MONO_SEMI, 22, ix, y + 13, iw, C_TEXT, r->stem);
+			y += 27 + 6;
+			txt_fit(s, MONO_REG, 14, ix, y + 9, iw, C_MUTED, r->file);
+			y += 18 + 23;
+		}
+	}
 
 	/* tamanho e mapa */
 	char size[32];

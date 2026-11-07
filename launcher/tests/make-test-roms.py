@@ -25,6 +25,8 @@ ROMS = [
     ("Labirinto Zero.sfc", 0x20, 0x00, False, 1 * MB, 0, False, False, False),
     ("Mina Profunda.sfc", 0x32, 0x43, True, 4 * MB, 0, False, True, True),
     ("Noite de Neon.smc", 0x21, 0x00, True, 3 * MB, 2, False, False, False),
+    ("Odisseia das Estrelas Perdidas.sfc", 0x20, 0x00, False, 1 * MB, 1, False, False, False),
+    ("Super Aventura Extremamente Longa do Heroi Que Nunca Termina (Rev 1).sfc", 0x20, 0x00, False, 1 * MB, 1, False, False, False),
 ]
 
 

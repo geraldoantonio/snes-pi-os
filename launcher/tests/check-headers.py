@@ -23,6 +23,8 @@ EXPECTED = {
     "Labirinto Zero": ("LoROM", "-", 1, "NTSC", 0, 1 * MB),
     "Mina Profunda": ("HiROM", "SDD-1", 0, "NTSC", 1, 4 * MB),
     "Noite de Neon": ("HiROM", "-", 1, "PAL", 0, 3 * MB),
+    "Odisseia das Estrelas Perdidas": ("LoROM", "-", 1, "NTSC", 0, 1 * MB),
+    "Super Aventura Extremamente Longa do Heroi Que Nunca Termina (Rev 1)": ("LoROM", "-", 1, "NTSC", 0, 1 * MB),
 }
 
 
