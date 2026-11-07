@@ -87,3 +87,25 @@ jobs:
           path: ${{ runner.temp }}/work/output/images/sdcard.img.xz
           retention-days: 14
           compression-level: 0
+
+      # Boota a imagem no QEMU (raspi1ap, mesmo SoC do Pi 1). Não testa a GPU
+      # (PiSNES) nem áudio, mas pega erros de kernel, init, montagens e se o
+      # launcher desenha. A imagem já foi publicada antes deste passo.
+      - name: Teste de boot no QEMU
+        timeout-minutes: 10
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq qemu-system-arm qemu-utils >/dev/null
+          qemu-system-arm --version | head -1
+          sh scripts/qemu-smoke.sh "$RUNNER_TEMP/work/output/images" "$RUNNER_TEMP/qemu"
+
+      - name: Publicar resultado do QEMU
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: qemu-boot-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/qemu/tela.png
+            ${{ runner.temp }}/qemu/serial.log
+          retention-days: 14
+          if-no-files-found: ignore
