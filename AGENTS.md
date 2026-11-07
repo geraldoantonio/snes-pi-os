@@ -6,6 +6,82 @@ Orientações para agentes de IA (e pessoas) que trabalham neste repositório. L
 
 Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga direto num launcher próprio em C e roda jogos de SNES no **PiSNES** (SNES9X 1.39, vídeo GLES2/dispmanx). Nada foi testado em hardware ainda.
 
+## Retomando o trabalho numa nova sessão
+
+1. Leia este arquivo inteiro, depois `docs/pendencias.md` (decisões e o que falta) e `git log --oneline -20`.
+2. Veja o estado do CI e das versões:
+   ```sh
+   gh run list --limit 10
+   gh release list
+   ```
+3. Confira a seção **Estado atual** abaixo e pergunte ao dono se houve teste no hardware desde então (é a informação que mais muda as prioridades).
+4. Antes de mexer em pacotes ou no board, valide a defconfig (ver **Comandos úteis**). Antes de mexer no launcher, rode `make test` e `make shots`.
+5. Ao terminar a sessão, **atualize a seção Estado atual** e `docs/pendencias.md`.
+
+## Estado atual
+
+> Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-07**.
+
+- **Versão publicada:** `v0.1.0` (Release em pré-lançamento, criada pela tag). Download também pelo site.
+- **Hardware:** **nada testado ainda.** O dono vai gravar a `v0.1.0` manualmente num cartão SD de 32 GB e testar num Pi 1 Model B rev 2 com controle de Xbox 360.
+- **Pronto (testado só fora do Pi):** imagem compila no CI; PiSNES compila e linka; launcher com lista, capas, favoritos/recentes, aviso de chip e telas de erro; jogos de teste na partição ROMS; teste de boot no QEMU no CI; página pública no ar.
+- **Maior risco em aberto:** a pilha gráfica legada (GLES2/dispmanx via `rpi-userland`) com o kernel 6.6 no Pi 1. Se o jogo não abrir ou a tela ficar preta, é o primeiro suspeito.
+
+## Próximos passos (em ordem)
+
+1. **Validar a `v0.1.0` no hardware**, com os jogos de teste da partição ROMS. Lista de verificação:
+   - o launcher aparece na TV (boot, framebuffer 1280×720, montagem de `/roms`);
+   - o controle navega no menu (A do Xbox confirma, B volta, X favorita, Back troca o filtro);
+   - **Teste - Controles** acende os botões dos jogadores 1 e 2 no emulador;
+   - **Teste - Breakout** tem imagem e som; Back + Start volta ao menu; o save aparece;
+   - desligar na tomada e ligar de novo não corrompe a partição ROMS.
+   Sem saída na TV, a depuração precisa de adaptador USB-serial (login em `ttyAMA0`, 115200).
+2. Corrigir o que o teste mostrar. Tudo isso está em `docs/pendencias.md`, na seção "A testar no hardware".
+3. **Modo rede** (especificado em `docs/launcher.md` e desenhado no canvas): programa `snespi-upload` em C, QR code (ex.: `qrcodegen`), tela no launcher acionada por Start, Ethernet + `udhcpc` só sob demanda.
+4. Limpeza antes de uma versão estável: tirar o login na serial e o `hello_pi` da defconfig; avaliar `fsck.fat` no boot para a partição ROMS; um `snes9x.cfg` para controles genéricos.
+5. Quando o hardware estiver validado: Releases deixam de ser pré-lançamento (ver **Releases**).
+
+## Releases
+
+Releases são **públicas** e viram o download da página do projeto. Só crie uma quando o dono pedir.
+
+**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256` e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (o manual só gera um artefato temporário de 14 dias).
+
+**Passo a passo:**
+
+1. Confirme com o dono a versão e se pode publicar.
+2. Garanta a `main` verde (`gh run list --branch main --limit 3`) e os docs em dia.
+3. Se precisar, ajuste `.github/release-notes.md` (texto genérico, vale para qualquer versão) e faça commit.
+4. Crie e envie a tag anotada:
+   ```sh
+   git tag -a v0.2.0 -m "snes-pi-os v0.2.0"
+   git push origin v0.2.0
+   ```
+5. Acompanhe o build da tag (`gh run list --limit 3`, ~25–30 min com cache) e confira a Release:
+   ```sh
+   gh release view v0.2.0
+   ```
+6. Atualize **Estado atual** neste arquivo.
+
+**Versionamento:** `0.x.y` enquanto não houver teste completo no hardware. Novo recurso sobe o `x`; só correções sobem o `y`.
+
+**Pré-lançamento:** o passo "Criar release" usa `--prerelease`. Quando o hardware for validado, tire o `--prerelease` do `build.yml`; aí o link `releases/latest` passa a funcionar e o botão do site pode apontar para ele.
+
+**Release com problema:** não reaproveite a tag. Corrija e publique a próxima versão. Para apagar uma Release, só com autorização do dono:
+```sh
+gh release delete v0.2.0 --cleanup-tag
+```
+
+## Serviços e infraestrutura
+
+| Serviço | Detalhes |
+|---|---|
+| GitHub | `geraldoantonio/snes-pi-os`, público. Actions grátis nos runners padrão. Cache de `dl/` e `ccache` (~1,4 GB) entre builds. |
+| Secrets | `CLOUDFLARE_API_TOKEN` (modelo "Edit Cloudflare Workers", conta + zona `geraldojunior.dev`) e `CLOUDFLARE_ACCOUNT_ID`. Quem cria e troca o token é o dono. |
+| Página | Worker `snespi-site` (só arquivos estáticos), domínio `snespi.geraldojunior.dev`. Publicada pelo `site.yml` a cada push que mude `site/`. Validar sem publicar: `cd site && npx wrangler@4.158.0 deploy --dry-run`. |
+| Design | Canvas "Launcher snes-pi-os" no claude.ai (privado do dono): telas do launcher, modo rede e página de upload. As fontes do canvas ainda usam Pixelify nos títulos; o launcher real usa IBM Plex Mono. |
+| Artefatos do CI | `snespi-sdcard-<sha>` (imagem) e `qemu-boot-<sha>` (`tela.png` + `serial.log`), 14 dias. |
+
 ## Regras de trabalho
 
 - **Idioma:** docs, comentários de docs, mensagens de commit e textos da interface em **português do Brasil**. Exceção: arquivos `.mk` do Buildroot e patches para projetos de terceiros ficam em inglês e em **ASCII** (o `check-package` recusa UTF-8 em `.mk`).
@@ -30,6 +106,8 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 | `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py` |
 | `site/` | Página pública estática (`public/`) e `wrangler.jsonc` (Cloudflare Workers, domínio `snespi.geraldojunior.dev`) |
 | `.github/workflows/` | `build.yml` (check, imagem, Release em tags, QEMU) e `site.yml` (deploy do site) |
+| `.github/release-notes.md` | Texto das Releases (instruções de instalação) |
+| `CLAUDE.md` | Só importa este arquivo, para o Claude Code carregá-lo sozinho |
 
 ## Comandos úteis
 

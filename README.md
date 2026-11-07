@@ -82,7 +82,7 @@ Detalhes em [launcher/README.md](launcher/README.md).
 
 ```
 snes-pi-os/
-├── README.md, AGENTS.md, LICENSE
+├── README.md, AGENTS.md, CLAUDE.md, LICENSE
 ├── docs/                      # arquitetura, hardware, buildroot, launcher, pendências
 ├── external/                  # árvore BR2_EXTERNAL do Buildroot
 │   ├── configs/snespi_defconfig
