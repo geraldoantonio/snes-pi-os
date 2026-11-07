@@ -33,6 +33,9 @@
 - [ ] Jogos com chips especiais: pelo Makefile, Super FX, SA-1, C4, SDD-1, SPC7110 e S-RTC não são compilados. Ver [hardware-e-limites.md](hardware-e-limites.md).
 - [ ] Efeito de raiz somente leitura + `HOME=/roms` nos saves.
 - [ ] Se um link simbólico `snes9x.cfg` → `/roms/snes9x.cfg` funciona.
+- [ ] Se o FAT de `/roms` monta depois de desligar na tomada (sem `fsck.fat` por enquanto) e se `utf8` mostra acentos.
+- [ ] Gamepad USB genérico: se carrega pelo `mdev` e qual `snes9x.cfg` ele precisa.
+- [ ] Remover depois: login na serial `ttyAMA0` e `hello_pi`.
 
 ## Plano B
 
@@ -45,7 +48,7 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 3. [x] Criar `snespi_defconfig` (validada pelo kconfig; não compilada).
 4. [x] Workflow do GitHub Actions (ainda não executado).
 5. [ ] Primeiro build no CI e correções.
-6. [ ] Overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`) e layout do `genimage` com a 3ª partição.
+6. [x] Overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`) e layout do `genimage` com a 3ª partição (não compilados).
 7. [ ] Imagem de teste com `hello_triangle`.
 8. [ ] Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
 9. [ ] Escrever o launcher mínimo e o pacote `snes-launcher`.

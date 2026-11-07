@@ -71,25 +71,31 @@ O Makefile original precisa de **patch** para cross-compilar:
 - Não há alvo `install`: o `.mk` instala `snes9x`, `snes9x.gui`, `snes9x.cfg` e `skins/` em `/usr/share/pisnes/`.
 - Possível erro com GCC recente no C antigo de `unzip/` **(verificar)**.
 
-## 5. Arquivos de inicialização (overlay)
+## 5. Board `external/board/snespi/`
 
-- `S99game`: carrega os módulos `snd_bcm2835` e `joydev` (no `bcmrpi_defconfig` eles são `=m`), define `HOME=/roms` e inicia o launcher.
-- `config.txt`: `gpu_mem=64`, `disable_splash=1`, `boot_delay=0`, `dtparam=audio=on` **(verificar se é necessário)**, overclock opcional. **Não** ativar `dtoverlay=vc4-kms-v3d`: ele desliga a pilha legada.
-- `cmdline.txt`: `quiet loglevel=0 ro` e a raiz correta (`/dev/mmcblk0p2`).
-- `fstab`: `/roms` em FAT32 (rw, `flush`), raiz em `ro`.
+| Arquivo | Função |
+|---|---|
+| `config.txt` | `gpu_mem=64`, `disable_splash=1`, `boot_delay=0`, `disable_overscan=1`, `dtparam=audio=on` **(verificar se é necessário)**, overclock comentado. **Não** ativar `dtoverlay=vc4-kms-v3d`: ele desliga a pilha legada. |
+| `cmdline.txt` | Raiz `/dev/mmcblk0p2` `ro`, consoles `ttyAMA0` e `tty1`, `consoleblank=0`, `vt.global_cursor_default=0`, `loglevel=3`. |
+| `genimage.cfg.in` | 3 partições: boot (FAT, 32M), rootfs (ext4, 120M), roms (FAT32, 512M, rótulo `ROMS`). |
+| `dir.txt` | Instruções que vão na partição de ROMs. O GUI do PiSNES ignora esse nome. |
+| `post-build.sh` | Cria `/roms` e põe o frontend no `inittab`. **Não** chama o `post-build.sh` do raspberrypi, que coloca login no `tty1`. |
+| `post-image.sh` | Gera o `genimage.cfg` e a `sdcard.img` (baseado no do raspberrypi). |
+| `overlay/etc/fstab` | O do skeleton, com a raiz `ro` em ext4 e `/roms` em vfat (`rw,noatime,flush,utf8`). |
+| `overlay/etc/init.d/S99game` | Carrega `snd_bcm2835` e `joydev` (são `=m` no `bcmrpi_defconfig`) e avisa se `/roms` não montou. No `stop`, faz `sync`. |
+| `overlay/usr/bin/snespi-frontend` | Define `HOME=/roms` e executa o GUI nativo a partir de `/usr/share/pisnes`. |
 
-Exemplo inicial de `config.txt` (valores a testar):
+Como o frontend sobe: `inittab` → `tty1::respawn:/usr/bin/snespi-frontend`. Pelo init (e não pelo `S99game`), o frontend ganha o `tty1` como terminal e é reiniciado se sair ou cair, sem travar o `rcS`.
 
-```
-gpu_mem=64
-disable_splash=1
-boot_delay=0
-dtparam=audio=on
-# arm_freq=900      # readme do PiSNES; testar estabilidade e temperatura
-# sdram_freq=500
-```
+Outras escolhas da defconfig:
+
+- `mdev`, para carregar módulos de gamepads (ex.: `xpad`, `hid-sony`) pelo modalias.
+- Login (`getty`) só na serial `ttyAMA0` a 115200, para depuração; remover no fim.
+- Sem `urandom-scripts` (o `seedrng` grava em `/var/lib`, na raiz somente leitura).
 
 > `gpu_mem=16` é arriscado: o PiSNES usa EGL/GLES2/dispmanx e precisa de memória de GPU. Começar com 64 e reduzir só depois de medir. O `config_default.txt` do Buildroot usa 100.
+
+Pontos a verificar no hardware: se `dtparam=audio=on` é necessário; se o FAT montado com `utf8` mostra nomes com acento; se o cartão "sujo" (desligado na tomada) monta sem `fsck.fat` (ainda não incluído).
 
 ## 6. Ordem de validação no hardware
 
@@ -99,7 +105,7 @@ dtparam=audio=on
 
 ## 7. Gravação no cartão SD
 
-O Buildroot gera `sdcard.img` (via `genimage`). A partição `/roms` (FAT32, 3ª) precisa ser adicionada ao layout do `genimage` **(verificar)**, ou criada manualmente após gravar a imagem.
+O Buildroot gera `sdcard.img` (via `genimage`) já com a 3ª partição (FAT32, 512M, rótulo `ROMS`). Para mais espaço, aumentar a partição num PC depois de gravar (ex.: GParted), ou mudar o `size` em `genimage.cfg.in`.
 
 ## 8. Primeiro boot
 
