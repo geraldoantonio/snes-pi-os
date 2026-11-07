@@ -1,10 +1,11 @@
 /*
  * Entrada pelo evdev (/dev/input/event*): teclado e controles USB.
  *
- * Mapeamento por posição, como no SNES: o botão da direita confirma (A) e
- * o de baixo volta (B). Segue a convenção do kernel (BTN_EAST/BTN_SOUTH) e,
- * para controles genéricos que só expõem BTN_TRIGGER.., o layout comum dos
- * controles USB estilo SNES.
+ * Controles com a convenção do kernel (Xbox, PlayStation, 8BitDo em modo
+ * XInput): botão de baixo (A do Xbox) confirma, o da direita (B) volta e o
+ * da esquerda (X) favorita, para os rótulos da tela baterem com o Xbox.
+ * Controles genéricos estilo SNES (só BTN_TRIGGER..) seguem o layout do
+ * SNES: botão da direita (A) confirma. O PiSNES tem mapeamento próprio.
  */
 #include "platform.h"
 
@@ -71,10 +72,10 @@ static int map_key(int code)
 	case KEY_SPACE: return IN_START;
 	case KEY_TAB: return IN_SELECT;
 	/* controles pela convenção do kernel */
-	case BTN_EAST: return IN_A;
-	case BTN_SOUTH: return IN_B;
-	case BTN_NORTH: return IN_X;
-	case BTN_WEST: return IN_Y;
+	case BTN_SOUTH: return IN_A;
+	case BTN_EAST: return IN_B;
+	case BTN_WEST: return IN_X;
+	case BTN_NORTH: return IN_Y;
 	case BTN_TL: return IN_L;
 	case BTN_TR: return IN_R;
 	case BTN_START: return IN_START;

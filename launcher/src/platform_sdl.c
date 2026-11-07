@@ -108,14 +108,14 @@ static int map_key(SDL_Keycode k)
 	}
 }
 
-/* Por posição, como no Pi: botão da direita = A, de baixo = B */
+/* Como no Pi: A do Xbox (baixo) confirma, B volta, X favorita */
 static int map_button(Uint8 b)
 {
 	switch (b) {
-	case SDL_CONTROLLER_BUTTON_B: return IN_A;
-	case SDL_CONTROLLER_BUTTON_A: return IN_B;
-	case SDL_CONTROLLER_BUTTON_Y: return IN_X;
-	case SDL_CONTROLLER_BUTTON_X: return IN_Y;
+	case SDL_CONTROLLER_BUTTON_A: return IN_A;
+	case SDL_CONTROLLER_BUTTON_B: return IN_B;
+	case SDL_CONTROLLER_BUTTON_X: return IN_X;
+	case SDL_CONTROLLER_BUTTON_Y: return IN_Y;
 	case SDL_CONTROLLER_BUTTON_LEFTSHOULDER: return IN_L;
 	case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return IN_R;
 	case SDL_CONTROLLER_BUTTON_START: return IN_START;
