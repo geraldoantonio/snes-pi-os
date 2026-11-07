@@ -1,0 +1,45 @@
+# snespi-launcher
+
+Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e executa o PiSNES (`snes9x`), voltando ao menu quando o jogo termina. O layout segue o canvas "Launcher snes-pi-os".
+
+## Como funciona
+
+- **Vídeo:** desenha em memória (RGB565, 1280×720) e copia para `/dev/fb0`. O framebuffer é pedido em 1280×720 a 16 bpp; com a pilha gráfica legada do Pi, a GPU escala para a TV. Se o driver recusar, a imagem fica centralizada.
+- **Entrada:** evdev (`/dev/input/event*`), com controles conectados depois detectados a cada 2 s. Mapeamento por posição, como no SNES: botão da direita = A (confirma), de baixo = B (volta). Teclado: setas, Enter/`d` = A, Esc/`c` = B, PageUp/`a` = L, PageDown/`f` = R.
+- **ROMs:** `.sfc`, `.smc`, `.fig`, `.swc` na raiz de `/roms`, em ordem alfabética sem diferenciar acentos. Do cabeçalho do cartucho saem região, LoROM/HiROM e chip (mesma pontuação do SNES9X 1.39). Jogos com Super FX, SA-1, SDD-1, S-RTC, C4, SPC7110 ou outro chip especial mostram aviso antes de abrir.
+- **Saves:** existe save se houver `$HOME/.snes96_snapshots/<nome>.srm` (o frontend usa `HOME=/roms`).
+- **Capas:** `/roms/capas/<nome-da-rom>.jpg` ou `.png`. Só a do jogo selecionado é decodificada, 150 ms depois que a navegação para; as 6 últimas ficam em cache.
+- **Jogo:** `fork` + `execl` de `/usr/share/pisnes/snes9x <rom>` por caminho absoluto (o snes9x acha o `snes9x.cfg` pela pasta de `argv[0]`). Na volta: `sync`, framebuffer reconfigurado (o SDL pode ter mudado o modo) e lista relida.
+- **Partição ausente:** tela de erro com nova tentativa a cada 10 s.
+
+## Controles
+
+| Botão | Lista | Aviso de chip |
+|---|---|---|
+| Cima/baixo | Jogo anterior/seguinte (segurar repete) | |
+| Esquerda/direita | Página anterior/seguinte | |
+| L / R | Letra anterior/seguinte | |
+| A | Jogar | Tentar mesmo assim (após 0,5 s) |
+| B | | Voltar à lista |
+
+No jogo, Select + Start volta ao menu (fixo no PiSNES).
+
+## Desenvolvimento fora do Pi
+
+```sh
+make preview      # binário que só gera capturas (macOS ou Linux)
+make test         # gera ROMs de teste e confere a leitura dos cabeçalhos
+make shots        # capturas de todas as telas em build/shots/
+```
+
+As ROMs de teste (`tests/make-test-roms.py`) são arquivos falsos, só com o cabeçalho do cartucho preenchido.
+
+No Pi, o mesmo binário aceita `--list` (o que ele leu de cada ROM) e `--shot arquivo.png --screen list|warn|launch|empty|nomount` para depurar.
+
+## Licenças
+
+- Código: MIT (`LICENSE`).
+- `third_party/stb_*.h`: domínio público (Sean Barrett), commit `4e9b368b` de nothings/stb.
+- Fontes (OFL 1.1): IBM Plex Mono (google/fonts `01d5d9f0`) e Pixelify Sans (eifetx/Pixelify-Sans `39df74ab`). Licenças em `fonts/`.
+
+A Pixelify Sans fica só no logo: no desenho dela, o "C" quase fechado parece "O", e o "B", o "Z" e alguns números lembram "8". Títulos e textos usam IBM Plex Mono.
