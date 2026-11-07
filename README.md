@@ -18,6 +18,7 @@ Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num me
 | Áudio | ALSA (HDMI ou jack 3,5 mm) |
 | Controles | Gamepad USB (evdev/SDL 1.2); GPIO opcional via `mk_arcade_joystick_rpi` |
 | ROMs e saves | Terceira partição FAT32 do cartão SD, montada em `/roms` |
+| Envio de ROMs | Pelo cartão SD, ou pelo modo rede do launcher (página web, Ethernet, só sob demanda) |
 | Raiz do sistema | Somente leitura (seguro contra desligar na tomada) |
 | Build | GitHub Actions (repositório público), em contêiner Debian 12 |
 

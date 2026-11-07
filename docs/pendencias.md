@@ -4,7 +4,9 @@
 
 - [ ] **Controle:** USB (assumido) ou GPIO (`mk_arcade_joystick_rpi`)?
 - [x] **Licença do código original:** MIT (arquivo `LICENSE`). O PiSNES deriva do SNES9X, cuja licença é não comercial; os patches nele seguem a licença do PiSNES, e o launcher continua um programa separado, sem linkar com o emulador.
-- [ ] **Saída de vídeo principal:** HDMI ou composto?
+- [x] **Saída de vídeo principal:** HDMI. O design do launcher é 1280×720 (720p); composto fica sem layout próprio por enquanto.
+- [x] **Placa:** Raspberry Pi 1 Model B rev 2 (2 USB, Ethernet), não B+.
+- [x] **Envio de ROMs:** cartão SD sempre funciona; além disso, um **modo rede** opcional no launcher, com página web de upload pela Ethernet. Desligado por padrão: a rede só sobe enquanto esse modo está aberto. Ver [launcher.md](launcher.md).
 - [ ] **Launcher:** começar com o GUI nativo do PiSNES e trocar depois, ou já escrever o launcher próprio?
 - [x] **Versão do Buildroot:** 2025.02.19 LTS, a última com `rpi-userland` (removido na 2026.02). Ver [buildroot.md](buildroot.md).
 - [x] **Onde compilar:** GitHub Actions (repositório público), em contêiner Debian 12.
@@ -36,6 +38,8 @@
 - [ ] Se o FAT de `/roms` monta depois de desligar na tomada (sem `fsck.fat` por enquanto) e se `utf8` mostra acentos.
 - [ ] Gamepad USB genérico: se carrega pelo `mdev` e qual `snes9x.cfg` ele precisa.
 - [ ] Remover depois: login na serial `ttyAMA0` e `hello_pi`.
+- [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
+- [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
 
 ## Plano B
 
