@@ -19,10 +19,16 @@ PISNES_DEPENDENCIES = \
 
 # The Makefile names the C++ compiler CCC (not CXX) and only reads
 # CFLAGS. Pass everything on the command line to override its defaults.
+#
+# _FORTIFY_SOURCE is turned off: this 2017-era code was always built
+# without it (RetroPie, Raspbian), and glibc aborts at startup on
+# patterns it flags ("buffer overflow detected"). Patch 0005 fixes the
+# one hit on the Pi; disabling it keeps other untested spots from
+# aborting the emulator.
 PISNES_MAKE_OPTS = \
 	CC="$(TARGET_CC)" \
 	CCC="$(TARGET_CXX)" \
-	CFLAGS="$(TARGET_CFLAGS)" \
+	CFLAGS="$(TARGET_CFLAGS) -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0" \
 	LDFLAGS="$(TARGET_LDFLAGS)" \
 	PKG_CONFIG="$(PKG_CONFIG_HOST_BINARY)"
 

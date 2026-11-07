@@ -1,0 +1,53 @@
+From 13e2471cea10847ca0981b211b6e3090a646a0df Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Sat, 7 Nov 2026 20:24:18 -0300
+Subject: [PATCH] unix: use PATH_MAX buffers for realpath()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+main() in unix.cpp and frontend.cpp passed a 1000-byte buffer to
+realpath(argv[0], ...). realpath() may write up to PATH_MAX bytes, and
+with _FORTIFY_SOURCE glibc checks that and aborts with "buffer overflow
+detected" right at startup.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ unix/frontend.cpp | 3 ++-
+ unix/unix.cpp     | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/unix/frontend.cpp b/unix/frontend.cpp
+index 35c97bb..d037400 100644
+--- a/unix/frontend.cpp
++++ b/unix/frontend.cpp
+@@ -1,3 +1,4 @@
++#include <limits.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -645,7 +646,7 @@ int main (int argc, char **argv)
+ 	char *arg1;
+ 	arg1 = "snes9x";
+ 
+-    char abspath[1000];
++    char abspath[PATH_MAX];
+ 
+ 	//create options string for later passing to runtime
+ 	options[0]=0;
+diff --git a/unix/unix.cpp b/unix/unix.cpp
+index 5d17c66..e884ca3 100644
+--- a/unix/unix.cpp
++++ b/unix/unix.cpp
+@@ -263,7 +263,7 @@ int main (int argc, char **argv)
+ 	if (argc < 2)
+ 		S9xUsage ();
+ 
+-	char abspath[1000];
++	char abspath[PATH_MAX];
+ 
+ 	//Set the directory to where the binary is
+ 	realpath(argv[0], abspath);

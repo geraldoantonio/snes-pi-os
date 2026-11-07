@@ -28,7 +28,9 @@
 ## Resultado do primeiro teste no hardware (v0.1.0)
 
 - [x] Boot, framebuffer 1280×720, montagem de `/roms`, launcher e teclado USB: funcionam.
-- [ ] PiSNES: aborta ao abrir qualquer jogo (código 134, SIGABRT), num `assert` de EGL em `unix/graphics.cpp`. Testar `gpu_mem=128`/`256` e ler `emulador.log`/`diagnostico.txt` na próxima imagem.
+- [x] Causa do código 134: não era EGL nem memória da GPU. O `emulador.log` mostrou `*** buffer overflow detected ***`: `realpath()` com buffer de 1000 bytes no `main()` do PiSNES, abortado pelo `_FORTIFY_SOURCE`. Corrigido (patch `0005`, FORTIFY desligado no PiSNES); falta confirmar no Pi.
+- [x] GPU funciona: `hello_triangle` e `hello_triangle2` desenham (cubo girando e fractal).
+- [x] Áudio: placas HDMI e fone de ouvido detectadas.
 
 ## A testar no hardware
 
