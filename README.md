@@ -1,6 +1,6 @@
 # snes-pi-os
 
-Sistema Linux mínimo e dedicado para rodar jogos de Super Nintendo (SNES) no **Raspberry Pi 1 Model B+** (BCM2835, ARM1176 @ 700 MHz, 512 MB de RAM).
+Sistema Linux mínimo e dedicado para rodar jogos de Super Nintendo (SNES) no **Raspberry Pi 1 Model B** (revisão 2) (BCM2835, ARM1176 @ 700 MHz, 512 MB de RAM).
 
 Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num menu de ROMs e jogar, com o menor boot e o menor uso de recursos possível.
 
@@ -10,7 +10,7 @@ Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num me
 
 | Camada | Escolha |
 |---|---|
-| Hardware alvo | Raspberry Pi 1 B+ (ARMv6, hard-float) |
+| Hardware alvo | Raspberry Pi 1 Model B rev 2 (ARMv6, hard-float) |
 | Sistema base | Linux montado com [Buildroot](https://buildroot.org/) 2025.02.19 LTS (BusyBox init, sem systemd) |
 | Emulador | [PiSNES](https://github.com/RetroPie/pisnes) (baseado no SNES9X 1.39) |
 | Frontend | Launcher mínimo próprio (lista ROMs, executa o emulador, volta ao menu) |

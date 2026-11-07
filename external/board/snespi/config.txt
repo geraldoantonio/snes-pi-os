@@ -1,4 +1,4 @@
-# config.txt do snes-pi-os (Raspberry Pi 1 Model B+)
+# config.txt do snes-pi-os (Raspberry Pi 1 Model B rev 2)
 # Referência: https://www.raspberrypi.com/documentation/computers/config_txt.html
 
 start_file=start.elf

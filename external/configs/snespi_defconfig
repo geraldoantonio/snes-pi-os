@@ -1,4 +1,4 @@
-# snes-pi-os: Raspberry Pi 1 Model B+ (BCM2835, ARM1176JZF-S)
+# snes-pi-os: Raspberry Pi 1 Model B rev 2 (BCM2835, ARM1176JZF-S, 512 MB)
 # Baseado em configs/raspberrypi_defconfig do Buildroot 2025.02.19.
 # Usar exatamente essa versão: o rpi-userland não existe na 2026.02+.
 
@@ -35,7 +35,9 @@ BR2_LINUX_KERNEL_CUSTOM_TARBALL=y
 BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION="$(call github,raspberrypi,linux,576cc10e1ed50a9eacffc7a05c796051d7343ea4)/linux-576cc10e1ed50a9eacffc7a05c796051d7343ea4.tar.gz"
 BR2_LINUX_KERNEL_DEFCONFIG="bcmrpi"
 BR2_LINUX_KERNEL_DTS_SUPPORT=y
-BR2_LINUX_KERNEL_INTREE_DTS_NAME="broadcom/bcm2708-rpi-b-plus"
+# O firmware escolhe o DTB pela revisão da placa. Alvo: Model B rev 2
+# (bcm2708-rpi-b); os outros Pi 1 ficam por compatibilidade (poucos KB).
+BR2_LINUX_KERNEL_INTREE_DTS_NAME="broadcom/bcm2708-rpi-b broadcom/bcm2708-rpi-b-rev1 broadcom/bcm2708-rpi-b-plus"
 BR2_LINUX_KERNEL_NEEDS_HOST_OPENSSL=y
 
 # Firmware

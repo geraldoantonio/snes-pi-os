@@ -4,14 +4,20 @@
 
 | Item | Valor |
 |---|---|
-| Placa | Raspberry Pi 1 Model B+ |
+| Placa | Raspberry Pi 1 Model B, revisão 2 (512 MB) |
 | SoC | Broadcom BCM2835 |
 | CPU | ARM1176JZF-S (ARMv6, VFP, sem NEON) @ 700 MHz |
 | RAM | 512 MB |
-| Armazenamento | cartão microSD |
-| Saída de vídeo | HDMI, composto |
+| Armazenamento | cartão SD (tamanho padrão, não microSD) |
+| Saída de vídeo | HDMI, composto (conector RCA amarelo) |
 | Áudio | HDMI, jack 3,5 mm |
-| USB | 4 portas (gamepads) |
+| USB | 2 portas |
+| Rede | Ethernet 10/100 (sem Wi-Fi) |
+| GPIO | 26 pinos |
+
+Com só 2 portas USB, dois controles ocupam as duas. Para usar também um pendrive (importar ROMs), é preciso um hub USB, de preferência com fonte própria, porque as portas do Model B fornecem pouca corrente **(verificar com os seus acessórios)**.
+
+O firmware escolhe o device tree pela revisão da placa (`bcm2708-rpi-b.dtb` no Model B). A defconfig gera também os DTBs do Model B rev 1 e do B+, então a mesma imagem deve servir nos três **(verificar)**.
 
 Por ser ARMv6, o Buildroot deve ser configurado para `arm1176jzf-s` com hard-float (o `raspberrypi_defconfig` já faz isso).
 
