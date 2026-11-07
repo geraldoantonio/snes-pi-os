@@ -27,12 +27,15 @@ No jogo, Select + Start volta ao menu (fixo no PiSNES).
 ## Desenvolvimento fora do Pi
 
 ```sh
+make run          # abre o launcher numa janela (precisa de SDL2: brew install sdl2)
 make preview      # binário que só gera capturas (macOS ou Linux)
 make test         # gera ROMs de teste e confere a leitura dos cabeçalhos
 make shots        # capturas de todas as telas em build/shots/
 ```
 
 As ROMs de teste (`tests/make-test-roms.py`) são arquivos falsos, só com o cabeçalho do cartucho preenchido.
+
+No `make run`, "jogar" executa `tests/fake-emu.sh`, que espera 2 s, grava um save falso e sai: dá para testar o ciclo completo (aviso de chip, iniciando, volta ao menu, save aparecendo). `SNESPI_FAKE_RC=1 make run` simula o emulador saindo com erro. Fechar a janela encerra o launcher. Com um controle conectado ao computador, o SDL o reconhece com o mesmo mapeamento por posição do Pi.
 
 No Pi, o mesmo binário aceita `--list` (o que ele leu de cada ROM) e `--shot arquivo.png --screen list|warn|launch|empty|nomount` para depurar.
 
