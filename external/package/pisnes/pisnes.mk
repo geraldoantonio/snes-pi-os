@@ -6,7 +6,7 @@
 
 PISNES_VERSION = a5b427f255f922cfa65e29c4285b3d565a4c9044
 PISNES_SITE = $(call github,RetroPie,pisnes,$(PISNES_VERSION))
-PISNES_LICENSE = Snes9x (uso não comercial)
+PISNES_LICENSE = Snes9x (non-commercial)
 PISNES_LICENSE_FILES = copyright.h
 PISNES_DEPENDENCIES = \
 	host-pkgconf \
@@ -17,8 +17,8 @@ PISNES_DEPENDENCIES = \
 	jpeg \
 	zlib
 
-# O Makefile chama o compilador C++ de CCC (não CXX) e só lê CFLAGS.
-# Passamos tudo pela linha de comando para sobrescrever os valores fixos.
+# The Makefile names the C++ compiler CCC (not CXX) and only reads
+# CFLAGS. Pass everything on the command line to override its defaults.
 PISNES_MAKE_OPTS = \
 	CC="$(TARGET_CC)" \
 	CCC="$(TARGET_CXX)" \
@@ -30,9 +30,9 @@ define PISNES_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) $(PISNES_MAKE_OPTS) snes9x snes9x.gui
 endef
 
-# O snes9x lê snes9x.cfg da pasta do próprio binário, e o GUI procura
-# roms/, skins/ e preview/ nessa mesma pasta. Por isso tudo fica junto
-# em /usr/share/pisnes, com roms/ apontando para a partição /roms.
+# snes9x reads snes9x.cfg from its own directory, and the GUI looks for
+# roms/, skins/ and preview/ there too. Keep everything together in
+# /usr/share/pisnes, with roms/ pointing to the /roms partition.
 define PISNES_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/snes9x $(TARGET_DIR)/usr/share/pisnes/snes9x
 	$(INSTALL) -D -m 0755 $(@D)/snes9x.gui $(TARGET_DIR)/usr/share/pisnes/snes9x.gui
