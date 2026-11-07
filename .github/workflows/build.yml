@@ -22,7 +22,8 @@ jobs:
 
       - name: check-package
         run: |
-          sudo apt-get install -y -qq python3-magic >/dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq python3-magic python3-flake8 shellcheck >/dev/null
           /tmp/br/utils/check-package --br2-external \
             external/Config.in external/external.mk external/external.desc \
             external/package/*/*
