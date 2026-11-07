@@ -18,11 +18,19 @@ KERNEL=$(sed -n 's/^kernel=//p' "${BINARIES_DIR}/rpi-firmware/config.txt")
 FILES+=( "${KERNEL}" )
 
 BOOT_FILES=$(printf '\\t\\t\\t"%s",\\n' "${FILES[@]}")
-sed "s|#BOOT_FILES#|${BOOT_FILES}|" "${BOARD_DIR}/genimage.cfg.in" \
-	> "${GENIMAGE_CFG}"
 
-# Conteúdo inicial da partição de ROMs (o GUI do PiSNES ignora dir.txt)
+# Conteúdo inicial da partição de ROMs: instruções (dir.txt, que o GUI do
+# PiSNES ignora) e o que o pacote snespi-homebrew deixou em roms-extra/
+# (jogos de teste e licença). O genimage copia cada um para a raiz.
 cp "${BOARD_DIR}/dir.txt" "${BINARIES_DIR}/dir.txt"
+RFILES=( "dir.txt" )
+for i in "${BINARIES_DIR}"/roms-extra/*; do
+	[ -f "$i" ] && RFILES+=( "${i#"${BINARIES_DIR}"/}" )
+done
+ROMS_FILES=$(printf '\\t\\t\\t"%s",\\n' "${RFILES[@]}")
+
+sed -e "s|#BOOT_FILES#|${BOOT_FILES}|" -e "s|#ROMS_FILES#|${ROMS_FILES}|" \
+	"${BOARD_DIR}/genimage.cfg.in" > "${GENIMAGE_CFG}"
 
 trap 'rm -rf "${ROOTPATH_TMP}"' EXIT
 ROOTPATH_TMP="$(mktemp -d)"

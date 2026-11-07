@@ -56,5 +56,5 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 7. [ ] Imagem de teste com `hello_triangle`.
 8. [ ] Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
 9. [x] Launcher em C e pacote `snes-launcher` (primeira versão; testado só com capturas fora do Pi).
-10. [ ] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador.
+10. [ ] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
 11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher.

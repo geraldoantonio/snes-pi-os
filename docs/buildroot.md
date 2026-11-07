@@ -110,5 +110,9 @@ O Buildroot gera `sdcard.img` (via `genimage`) já com a 3ª partição (FAT32, 
 ## 8. Primeiro boot
 
 1. Gravar a imagem no SD.
-2. Copiar ROMs (`.sfc`/`.smc`) para a partição `/roms`.
-3. Ligar com um gamepad USB conectado e HDMI ligado.
+2. Ligar com um gamepad USB conectado e HDMI ligado. A partição ROMS já vem com dois jogos de teste livres (pacote `snespi-homebrew`, exemplos do [OpenSNES](https://github.com/k0b3n4irb/opensnes), licença MIT), para validar sem procurar ROMs:
+   - **Teste - Controles (OpenSNES):** mostra os dois controles e acende cada botão apertado. Valida a entrada dos jogadores 1 e 2 no emulador.
+   - **Teste - Breakout (OpenSNES):** jogo completo. Valida vídeo (GLES2/dispmanx), som, Select + Start voltando ao menu e o save.
+3. Depois, copiar as suas ROMs (`.sfc`/`.smc`) para a partição ROMS pelo PC. Os jogos de teste podem ser apagados.
+
+Os jogos de teste não ficam no repositório: o pacote baixa o release fixo do OpenSNES (com hash conferido) e o `post-image.sh` copia o que estiver em `images/roms-extra/` para a partição ROMS. Compatibilidade com o SNES9X 1.39 **(verificar)**: são homebrews recentes.

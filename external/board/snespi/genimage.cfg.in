@@ -17,7 +17,7 @@ image roms.vfat {
 	vfat {
 		extraargs = "-F 32 -n ROMS"
 		files = {
-			"dir.txt"
+#ROMS_FILES#
 		}
 	}
 

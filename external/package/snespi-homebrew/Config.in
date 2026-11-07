@@ -1,0 +1,16 @@
+config BR2_PACKAGE_SNESPI_HOMEBREW
+	bool "snespi-homebrew"
+	help
+	  Coloca na partição ROMS da imagem dois jogos de teste de
+	  licença livre (exemplos do OpenSNES, MIT), para validar o
+	  aparelho logo depois de gravar o cartão:
+
+	  - Teste - Breakout (OpenSNES): jogo completo (vídeo, som,
+	    jogar e voltar ao menu)
+	  - Teste - Controles (OpenSNES): mostra os dois controles e
+	    acende cada botão apertado
+
+	  Nada é instalado na raiz: os arquivos vão para a imagem do
+	  cartão pelo post-image.sh.
+
+	  https://github.com/k0b3n4irb/opensnes

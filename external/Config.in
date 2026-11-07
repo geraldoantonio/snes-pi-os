@@ -2,5 +2,6 @@ menu "snes-pi-os"
 
 source "$BR2_EXTERNAL_SNESPI_PATH/package/pisnes/Config.in"
 source "$BR2_EXTERNAL_SNESPI_PATH/package/snes-launcher/Config.in"
+source "$BR2_EXTERNAL_SNESPI_PATH/package/snespi-homebrew/Config.in"
 
 endmenu
