@@ -29,6 +29,7 @@ typedef struct {
 	region_t region;
 	chip_t chip;
 	int has_save;
+	int fav;		/* favorito (preenchido pelo main a partir de prefs) */
 	char letter;		/* 'A'..'Z' ou '#' */
 } rom_t;
 

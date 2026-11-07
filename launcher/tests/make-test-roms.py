@@ -110,6 +110,12 @@ def main():
         if save:
             with open(os.path.join(out, ".snes96_snapshots", stem + ".srm"), "wb") as f:
                 f.write(b"\0" * 8192)
+    # favoritos e recentes (o que o launcher grava em /roms/.snespi)
+    os.makedirs(os.path.join(out, ".snespi"), exist_ok=True)
+    with open(os.path.join(out, ".snespi", "favoritos.txt"), "w") as f:
+        f.write("Castelo de Névoa\nIlha Perdida\nKart Lendário\nROM que foi apagada\n")
+    with open(os.path.join(out, ".snespi", "recentes.txt"), "w") as f:
+        f.write("Ilha Perdida\nDragão de Cobalto\nCastelo de Névoa\n")
     # um arquivo que não é ROM, para garantir que é ignorado
     with open(os.path.join(out, "dir.txt"), "w") as f:
         f.write("teste\n")

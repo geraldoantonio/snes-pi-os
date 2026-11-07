@@ -35,6 +35,12 @@ Código em [`launcher/`](../launcher/README.md), pacote `snes-launcher` no Build
 
 Feito: lista com capa e detalhes, aviso de chip, tela de iniciando, telas sem jogos e sem partição, execução do emulador e volta ao menu. Testado só fora do Pi: leitura de cabeçalhos com ROMs de teste e capturas de tela geradas no macOS. **Não testado no hardware** (framebuffer, controles, volta do emulador).
 
+Depois da primeira versão:
+
+- **Favoritos e recentes:** filtros Todos · Favoritos · Recentes (Select), X favorita. Gravados em `/roms/.snespi/`. Recentes = 5 últimos abertos, por ordem (sem relógio).
+- **Teclado USB:** funciona no launcher (setas, Enter = A, Esc = B, `a`/`f` = L/R, `s` = X, Tab = Select) e no PiSNES (teclas padrão `d c s x a f`, Enter = Start, Tab = Select, Esc sai), só para o jogador 1. No PiSNES, a entrada do teclado vem pelo SDL no `tty1` **(verificar no hardware)**.
+- **Modo janela (SDL2)** para testar no computador: `make run` em `launcher/`.
+
 Diferenças em relação ao canvas:
 
 - Títulos e textos em IBM Plex Mono; a Pixelify Sans ficou só no logo, porque no desenho dela "C" parece "O", e "B", "Z" e alguns números parecem "8".

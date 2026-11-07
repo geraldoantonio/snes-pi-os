@@ -14,7 +14,7 @@ LDLIBS += -lm
 PREFIX ?= /usr
 PYTHON ?= python3
 
-COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/ui.c src/shot.c src/main.c
+COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/ui.c src/shot.c src/main.c
 HEADERS = $(wildcard src/*.h)
 
 all: snespi-launcher
@@ -48,6 +48,8 @@ shots: snespi-launcher-preview
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/list-sem-capa.png --screen list --select 3
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/warn.png --screen warn --select 2
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/launch.png --screen launch --select 1
+	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/favoritos.png --screen list --filter favoritos --select 1
+	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/recentes.png --screen list --filter recentes --select 0
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/empty.png --screen empty
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/nomount.png --screen nomount
 

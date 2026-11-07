@@ -17,9 +17,14 @@ typedef enum {
 	SCR_NOMOUNT,	/* partição de ROMs não montou */
 } screen_t;
 
+typedef enum { FILTER_ALL, FILTER_FAV, FILTER_RECENT, FILTER_COUNT } filter_t;
+
 typedef struct {
 	const rom_list_t *roms;
-	int sel;		/* índice selecionado */
+	const int *view;	/* índices em roms->items mostrados pelo filtro */
+	int view_count;
+	filter_t filter;
+	int sel;		/* posição selecionada em view */
 	int pads;		/* controles conectados */
 	int load_cover;		/* 1: pode decodificar a capa agora (fora da navegação rápida) */
 	int scanlines;

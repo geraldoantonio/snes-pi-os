@@ -199,19 +199,59 @@ int ui_list_top(int sel, int count)
 	return top;
 }
 
+/* ROM selecionada, ou NULL se o filtro está vazio */
+static const rom_t *cur_rom(const ui_state_t *st)
+{
+	if (st->view_count <= 0 || st->sel < 0 || st->sel >= st->view_count)
+		return NULL;
+	return &st->roms->items[st->view[st->sel]];
+}
+
+static void tabs(surface_t *s, const ui_state_t *st, int x, int cy)
+{
+	static const char *const names[FILTER_COUNT] = { "TODOS", "FAVORITOS", "RECENTES" };
+	for (int i = 0; i < FILTER_COUNT; i++) {
+		int w = tw(MONO_SEMI, 15, names[i], 2);
+		int on = st->filter == (filter_t)i;
+		txt_mid(s, MONO_SEMI, 15, x, cy, on ? C_ACCENT : C_MUTED, names[i], 2);
+		if (on)
+			gfx_fill(s, x, cy + 12, w, 2, C_ACCENT);
+		x += w + 28;
+	}
+}
+
+static void list_empty(surface_t *s, const ui_state_t *st, int x, int y)
+{
+	if (st->filter == FILTER_FAV) {
+		gfx_pixmap(s, &ICON_STAR, x, y + 4, 3, C_ACCENT, 0);
+		txt(s, MONO_SEMI, 20, x + 40, y, C_TEXT, "Nenhum favorito ainda", 0);
+		txt(s, MONO_REG, 16, x + 40, y + 34, C_MUTED,
+		    "Na lista TODOS, aperte X num jogo para marc\xC3\xA1-lo.", 0);
+	} else {
+		txt(s, MONO_SEMI, 20, x, y, C_TEXT, "Nenhum jogo aberto ainda", 0);
+		txt(s, MONO_REG, 16, x, y + 34, C_MUTED,
+		    "Os 5 \xC3\xBAltimos jogos abertos aparecem aqui.", 0);
+	}
+}
+
 static void list_rows(surface_t *s, const ui_state_t *st)
 {
 	const rom_list_t *l = st->roms;
 	const int x = 40, w = 664, y0 = 132;
 
-	txt_mid(s, MONO_SEMI, 15, x, 96 + 18, C_MUTED, "JOGOS \xC2\xB7 A\xE2\x80\x93Z", 2);
+	tabs(s, st, x, 96 + 18);
 	char counter[32];
-	snprintf(counter, sizeof(counter), "%02d / %02zu", st->sel + 1, l->count);
+	snprintf(counter, sizeof(counter), "%02d / %02d", st->view_count ? st->sel + 1 : 0, st->view_count);
 	txt_mid(s, MONO_REG, 14, x + w - tw(MONO_REG, 14, counter, 2), 96 + 18, C_MUTED, counter, 2);
 
-	int top = ui_list_top(st->sel, (int)l->count);
-	for (int k = 0; k < UI_VISIBLE_ROWS && top + k < (int)l->count; k++) {
-		const rom_t *r = &l->items[top + k];
+	if (st->view_count == 0) {
+		list_empty(s, st, x + 8, y0 + 28);
+		return;
+	}
+
+	int top = ui_list_top(st->sel, st->view_count);
+	for (int k = 0; k < UI_VISIBLE_ROWS && top + k < st->view_count; k++) {
+		const rom_t *r = &l->items[st->view[top + k]];
 		int y = y0 + k * 48, cy = y + 24;
 		int sel = (top + k) == st->sel;
 		int right = x + w - 16;
@@ -242,7 +282,12 @@ static void list_rows(surface_t *s, const ui_state_t *st)
 
 		if (sel)
 			gfx_pixmap(s, &ICON_ARROW, x + 16, cy - 8, 2, C_INK, 0);
-		txt_fit(s, sel ? MONO_SEMI : MONO_REG, 20, x + 46, cy, right - (x + 46),
+		int tx = x + 46;
+		if (r->fav) {
+			gfx_pixmap(s, &ICON_STAR, tx, cy - 9, 2, sel ? C_INK : C_ACCENT, 0);
+			tx += 18 + 10;
+		}
+		txt_fit(s, sel ? MONO_SEMI : MONO_REG, 20, tx, cy, right - tx,
 			sel ? C_INK : C_TEXT, r->stem);
 	}
 }
@@ -256,7 +301,8 @@ static void letter_rail(surface_t *s, const ui_state_t *st)
 		if (c >= 'A' && c <= 'Z')
 			used[c - 'A'] = 1;
 	}
-	char cur = st->roms->items[st->sel].letter;
+	const rom_t *cr = cur_rom(st);
+	char cur = cr ? cr->letter : 0;
 	for (int i = 0; i < 26; i++) {
 		char l[2] = { (char)('A' + i), 0 };
 		int y = y0 + i * (y1 - y0 - 18) / 25;
@@ -281,12 +327,23 @@ static void letter_tile(surface_t *s, int x, int y, int size, int border, int px
 
 static void details(surface_t *s, const ui_state_t *st)
 {
-	const rom_t *r = &st->roms->items[st->sel];
+	const rom_t *r = cur_rom(st);
 	const int ax = 780, ay = 96, aw = 460, ah = 536;
 	gfx_fill(s, ax, ay, aw, ah, C_PANEL);
 	gfx_frame(s, ax, ay, aw, ah, 2, C_LINE);
 	const int ix = ax + 28, iw = aw - 56;
 	int y = ay + 28;
+
+	if (!r) {	/* filtro vazio */
+		const pixmap_t *icon = st->filter == FILTER_FAV ? &ICON_STAR : &ICON_PAD;
+		int sc = st->filter == FILTER_FAV ? 12 : 8;
+		int iy = ay + 150;
+		gfx_pixmap(s, icon, ax + (aw - icon->w * sc) / 2, iy, sc, C_LINE2, 0);
+		const char *hint = "Select troca o filtro";
+		txt_mid(s, MONO_REG, 16, ax + (aw - tw(MONO_REG, 16, hint, 0)) / 2,
+			iy + icon->h * sc + 40, C_MUTED, hint, 0);
+		return;
+	}
 
 	/* capa */
 	const int bh = 254, iw2 = iw - 4, ih2 = bh - 4;
@@ -317,9 +374,11 @@ static void details(surface_t *s, const ui_state_t *st)
 	int px = ix;
 	px += pill(s, px, y, NULL, region_long(r->region), C_LINE2, C_TEXT, 0) + 8;
 	if (r->has_save)
-		pill(s, px, y, &ICON_SAVE, "Save encontrado", C_BLUE, C_BLUE, 0);
+		px += pill(s, px, y, &ICON_SAVE, "Save", C_BLUE, C_BLUE, 0) + 8;
 	else
-		pill(s, px, y, NULL, "Sem save ainda", C_LINE2, C_MUTED, 1);
+		px += pill(s, px, y, NULL, "Sem save", C_LINE2, C_MUTED, 1) + 8;
+	if (r->fav)
+		pill(s, px, y, &ICON_STAR, "Favorito", C_ACCENT, C_ACCENT, 0);
 	y += 30 + 16;
 
 	/* nome (até 2 linhas) e arquivo */
@@ -379,25 +438,32 @@ static void footer_list(surface_t *s, const ui_state_t *st)
 	gfx_pixmap(s, &ICON_DPAD, x, cy - 13, 2, C_TEXT, 0);
 	x += 26 + 10;
 	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Navegar", 0) + 36;
-	x += keycap(s, x, cy, "L") + 10;
-	x += keycap(s, x, cy, "R") + 10;
-	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Letra", 0) + 36;
+	if (st->filter == FILTER_ALL) {
+		x += keycap(s, x, cy, "L") + 10;
+		x += keycap(s, x, cy, "R") + 10;
+		x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Letra", 0) + 32;
+	}
 	round_btn(s, x + 15, cy, "A", 1, C_TEXT);
 	x += 30 + 10;
-	txt_mid(s, MONO_REG, 16, x, cy, C_TEXT, "Jogar", 0);
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_TEXT, "Jogar", 0) + 32;
+	round_btn(s, x + 15, cy, "X", 0, C_TEXT);
+	x += 30 + 10;
+	const rom_t *r = cur_rom(st);
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, r && r->fav ? "Desfavoritar" : "Favoritar", 0) + 32;
+	x += keycap(s, x, cy, "SELECT") + 10;
+	txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Filtro", 0);
 
 	if (st->status) {
 		int w = tw(MONO_SEMI, 16, st->status, 0);
+		gfx_fill(s, 1240 - w - 16, 660, w + 16, 56, C_BG);
 		txt_mid(s, MONO_SEMI, 16, 1240 - w, cy, C_ACCENT, st->status, 0);
 		return;
 	}
-	const char *a = "No jogo, ", *b = "Select + Start", *c = " volta para c\xC3\xA1";
+	const char *b = "Select+Start", *c = " sai do jogo";
 	int rx = 1240 - tw(MONO_REG, 16, c, 0);
 	txt_mid(s, MONO_REG, 16, rx, cy, C_MUTED, c, 0);
 	rx -= tw(MONO_SEMI, 16, b, 0);
 	txt_mid(s, MONO_SEMI, 16, rx, cy, C_TEXT, b, 0);
-	rx -= tw(MONO_REG, 16, a, 0);
-	txt_mid(s, MONO_REG, 16, rx, cy, C_MUTED, a, 0);
 }
 
 static void draw_list(surface_t *s, const ui_state_t *st)
@@ -405,7 +471,8 @@ static void draw_list(surface_t *s, const ui_state_t *st)
 	gfx_clear(s, C_BG);
 	header(s, st, 1);
 	list_rows(s, st);
-	letter_rail(s, st);
+	if (st->filter == FILTER_ALL && st->view_count > 0)
+		letter_rail(s, st);
 	details(s, st);
 	footer_list(s, st);
 }
@@ -414,7 +481,9 @@ static void draw_list(surface_t *s, const ui_state_t *st)
 
 static void draw_warn(surface_t *s, const ui_state_t *st)
 {
-	const rom_t *r = &st->roms->items[st->sel];
+	const rom_t *r = cur_rom(st);
+	if (!r)
+		return;
 	ui_state_t under = *st;
 	under.status = NULL;
 	draw_list(s, &under);
@@ -477,7 +546,9 @@ static void draw_warn(surface_t *s, const ui_state_t *st)
 
 static void draw_launch(surface_t *s, const ui_state_t *st)
 {
-	const rom_t *r = &st->roms->items[st->sel];
+	const rom_t *r = cur_rom(st);
+	if (!r)
+		return;
 	gfx_clear(s, C_BG);
 
 	const surface_t *cv = cover_get(r->stem, 336, 240);

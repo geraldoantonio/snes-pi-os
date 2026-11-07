@@ -9,6 +9,7 @@
  *                   [--shot ARQ.png --screen NOME --select N]
  */
 #include "cover.h"
+#include "prefs.h"
 #include "platform.h"
 #include "rom.h"
 #include "ui.h"
@@ -59,7 +60,7 @@ static int is_mountpoint(const char *path)
 }
 
 typedef struct {
-	const char *roms_dir, *emu, *fonts_dir, *shot, *shot_screen;
+	const char *roms_dir, *emu, *fonts_dir, *shot, *shot_screen, *shot_filter;
 	int shot_select, scanlines, require_mount, list;
 	char saves_dir[600], covers_dir[600];
 } config_t;
@@ -68,7 +69,8 @@ static void usage(void)
 {
 	fprintf(stderr,
 		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--no-scanlines] [--list]\n"
-		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount --select N]\n");
+		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount --select N\n"
+		"                      --filter todos|favoritos|recentes]\n");
 }
 
 static int parse_args(config_t *c, int argc, char **argv)
@@ -78,6 +80,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 	c->fonts_dir = "/usr/share/snespi/fonts";
 	c->scanlines = 1;
 	c->shot_screen = "list";
+	c->shot_filter = "todos";
 	for (int i = 1; i < argc; i++) {
 		const char *a = argv[i];
 		const char *v = i + 1 < argc ? argv[i + 1] : NULL;
@@ -87,6 +90,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--shot") && v) { c->shot = v; i++; }
 		else if (!strcmp(a, "--screen") && v) { c->shot_screen = v; i++; }
 		else if (!strcmp(a, "--select") && v) { c->shot_select = atoi(v); i++; }
+		else if (!strcmp(a, "--filter") && v) { c->shot_filter = v; i++; }
 		else if (!strcmp(a, "--no-scanlines")) c->scanlines = 0;
 		else if (!strcmp(a, "--list")) c->list = 1;
 		else { usage(); return -1; }
@@ -120,33 +124,89 @@ static int run_game(const config_t *c, const rom_t *r)
 	return WIFEXITED(st) ? WEXITSTATUS(st) : 128 + (WIFSIGNALED(st) ? WTERMSIG(st) : 0);
 }
 
-static int find_stem(const rom_list_t *l, const char *stem)
+/* ---- lista filtrada (todos / favoritos / recentes) ---- */
+
+typedef struct {
+	int *idx;	/* índices em roms->items */
+	int n;
+} view_t;
+
+static void apply_favs(rom_list_t *l)
+{
+	for (size_t i = 0; i < l->count; i++)
+		l->items[i].fav = prefs_is_fav(l->items[i].stem);
+}
+
+static int rom_index(const rom_list_t *l, const char *stem)
 {
 	for (size_t i = 0; i < l->count; i++)
 		if (strcmp(l->items[i].stem, stem) == 0)
 			return (int)i;
+	return -1;
+}
+
+static void view_build(view_t *v, const rom_list_t *l, filter_t f)
+{
+	free(v->idx);
+	v->idx = malloc((l->count ? l->count : 1) * sizeof(int));
+	v->n = 0;
+	if (!v->idx)
+		return;
+	if (f == FILTER_RECENT) {	/* ordem de uso, do mais recente */
+		for (int i = 0; i < prefs_recent_count(); i++) {
+			int k = rom_index(l, prefs_recent(i));
+			if (k >= 0)
+				v->idx[v->n++] = k;
+		}
+		return;
+	}
+	for (size_t i = 0; i < l->count; i++)
+		if (f == FILTER_ALL || l->items[i].fav)
+			v->idx[v->n++] = (int)i;
+}
+
+/* Posição do jogo na lista filtrada (0 se não está nela) */
+static int view_find(const view_t *v, const rom_list_t *l, const char *stem)
+{
+	for (int i = 0; i < v->n; i++)
+		if (strcmp(l->items[v->idx[i]].stem, stem) == 0)
+			return i;
 	return 0;
 }
 
-/* Pula para o primeiro jogo da letra anterior/seguinte */
-static int jump_letter(const rom_list_t *l, int sel, int dir)
+static char view_letter(const view_t *v, const rom_list_t *l, int pos)
 {
-	char cur = l->items[sel].letter;
+	return l->items[v->idx[pos]].letter;
+}
+
+/* Pula para o primeiro jogo da letra anterior/seguinte */
+static int jump_letter(const view_t *v, const rom_list_t *l, int sel, int dir)
+{
+	char cur = view_letter(v, l, sel);
 	int i = sel;
 	if (dir > 0) {
-		while (i < (int)l->count && l->items[i].letter == cur)
+		while (i < v->n && view_letter(v, l, i) == cur)
 			i++;
-		return i < (int)l->count ? i : sel;
+		return i < v->n ? i : sel;
 	}
 	/* volta ao início do grupo; se já está nele, ao início do grupo anterior */
-	while (i > 0 && l->items[i - 1].letter == cur)
+	while (i > 0 && view_letter(v, l, i - 1) == cur)
 		i--;
 	if (i == sel && i > 0) {
-		char prev = l->items[i - 1].letter;
-		while (i > 0 && l->items[i - 1].letter == prev)
+		char prev = view_letter(v, l, i - 1);
+		while (i > 0 && view_letter(v, l, i - 1) == prev)
 			i--;
 	}
 	return i;
+}
+
+static void view_to_state(ui_state_t *st, const view_t *v, filter_t f)
+{
+	st->view = v->idx;
+	st->view_count = v->n;
+	st->filter = f;
+	if (st->sel >= v->n)
+		st->sel = v->n ? v->n - 1 : 0;
 }
 
 static int shot_mode(config_t *c, rom_list_t *roms)
@@ -170,17 +230,31 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 		fprintf(stderr, "snespi-launcher: nenhuma ROM em %s\n", c->roms_dir);
 		return 1;
 	}
+	filter_t f = FILTER_ALL;
+	if (!strcmp(c->shot_filter, "favoritos"))
+		f = FILTER_FAV;
+	else if (!strcmp(c->shot_filter, "recentes"))
+		f = FILTER_RECENT;
+	view_t v = { 0 };
+	view_build(&v, roms, f);
+
 	surface_t *s = gfx_surface_new(UI_W, UI_H);
 	ui_state_t st = {
 		.roms = roms, .pads = 1, .load_cover = 1, .scanlines = c->scanlines,
 		.retry_secs = MOUNT_RETRY_S,
 	};
-	if (roms->count)
-		st.sel = c->shot_select < 0 ? 0 :
-			 (c->shot_select >= (int)roms->count ? (int)roms->count - 1 : c->shot_select);
+	st.sel = c->shot_select < 0 ? 0 : c->shot_select;
+	view_to_state(&st, &v, f);
+	if ((scr == SCR_WARN || scr == SCR_LAUNCH) && v.n == 0) {
+		fprintf(stderr, "snespi-launcher: filtro vazio\n");
+		free(v.idx);
+		gfx_surface_free(s);
+		return 1;
+	}
 	ui_draw(s, scr, &st);
 	int rc = shot_write_png(s, c->shot) == 0 ? 0 : 1;
 	gfx_surface_free(s);
+	free(v.idx);
 	return rc;
 }
 
@@ -193,11 +267,15 @@ int main(int argc, char **argv)
 	if (ui_init(cfg.fonts_dir) != 0)
 		return 1;
 	cover_init(cfg.covers_dir);
+	prefs_init(cfg.roms_dir);
 
 	rom_list_t roms = { 0 };
 	int mounted = !cfg.require_mount || is_mountpoint(cfg.roms_dir);
-	if (mounted)
+	if (mounted) {
+		prefs_load();
 		rom_scan(&roms, cfg.roms_dir, cfg.saves_dir);
+		apply_favs(&roms);
+	}
 
 	if (cfg.list) {
 		/* nome<TAB>mapa<TAB>chip<TAB>suportado<TAB>região<TAB>save<TAB>tamanho */
@@ -233,6 +311,10 @@ int main(int argc, char **argv)
 	input_open();
 
 	ui_state_t st = { .roms = &roms, .scanlines = cfg.scanlines, .retry_secs = MOUNT_RETRY_S };
+	filter_t filter = FILTER_ALL;
+	view_t view = { 0 };
+	view_build(&view, &roms, filter);
+	view_to_state(&st, &view, filter);
 	screen_t scr = !mounted ? SCR_NOMOUNT : (roms.count ? SCR_LIST : SCR_EMPTY);
 	int dirty = 1, held = IN_NONE;
 	long long next_repeat = 0, cover_due = now_ms() + COVER_DELAY_MS, warn_since = 0;
@@ -248,7 +330,11 @@ int main(int argc, char **argv)
 			if (--st.retry_secs <= 0) {
 				st.retry_secs = MOUNT_RETRY_S;
 				if (is_mountpoint(cfg.roms_dir)) {
+					prefs_load();
 					rom_scan(&roms, cfg.roms_dir, cfg.saves_dir);
+					apply_favs(&roms);
+					view_build(&view, &roms, filter);
+					view_to_state(&st, &view, filter);
 					scr = roms.count ? SCR_LIST : SCR_EMPTY;
 				}
 			}
@@ -311,16 +397,47 @@ int main(int argc, char **argv)
 			continue;
 
 		if (scr == SCR_LIST) {
-			int n = (int)roms.count, sel = st.sel;
+			int n = view.n, sel = st.sel;
+			if (btn == IN_SELECT) {	/* troca o filtro, mantendo o jogo se ele estiver no novo */
+				char keep[256] = "";
+				if (n)
+					snprintf(keep, sizeof(keep), "%s", roms.items[view.idx[sel]].stem);
+				filter = (filter_t)((filter + 1) % FILTER_COUNT);
+				view_build(&view, &roms, filter);
+				st.sel = keep[0] ? view_find(&view, &roms, keep) : 0;
+				view_to_state(&st, &view, filter);
+				cover_due = now_ms() + COVER_DELAY_MS;
+				held = IN_NONE;
+				dirty = 1;
+				continue;
+			}
+			if (n == 0)
+				continue;
+			if (btn == IN_X) {	/* favoritar / desfavoritar */
+				rom_t *r = &roms.items[view.idx[sel]];
+				r->fav = prefs_toggle_fav(r->stem);
+				if (filter == FILTER_FAV) {
+					view_build(&view, &roms, filter);
+					view_to_state(&st, &view, filter);
+				}
+				dirty = 1;
+				continue;
+			}
 			switch (btn) {
 			case IN_UP: sel = sel > 0 ? sel - 1 : n - 1; break;
 			case IN_DOWN: sel = sel < n - 1 ? sel + 1 : 0; break;
 			case IN_LEFT: sel = sel - UI_VISIBLE_ROWS < 0 ? 0 : sel - UI_VISIBLE_ROWS; break;
 			case IN_RIGHT: sel = sel + UI_VISIBLE_ROWS >= n ? n - 1 : sel + UI_VISIBLE_ROWS; break;
-			case IN_L: sel = jump_letter(&roms, sel, -1); break;
-			case IN_R: sel = jump_letter(&roms, sel, +1); break;
+			case IN_L:
+				if (filter == FILTER_ALL)
+					sel = jump_letter(&view, &roms, sel, -1);
+				break;
+			case IN_R:
+				if (filter == FILTER_ALL)
+					sel = jump_letter(&view, &roms, sel, +1);
+				break;
 			case IN_A:
-				if (!chip_supported(roms.items[sel].chip)) {
+				if (!chip_supported(roms.items[view.idx[sel]].chip)) {
 					scr = SCR_WARN;
 					warn_since = now_ms();
 					held = IN_NONE;
@@ -346,14 +463,16 @@ int main(int argc, char **argv)
 		}
 
 		if (scr == SCR_LAUNCH) {
+			rom_t *game = &roms.items[view.idx[st.sel]];
 			char stem[256];
-			snprintf(stem, sizeof(stem), "%s", roms.items[st.sel].stem);
+			snprintf(stem, sizeof(stem), "%s", game->stem);
+			prefs_add_recent(stem);	/* antes de abrir: conta mesmo se o jogo travar */
 			ui_draw(screen, SCR_LAUNCH, &st);
 			video_present();
 
 			input_close();
 			video_suspend();
-			int rc = run_game(&cfg, &roms.items[st.sel]);
+			int rc = run_game(&cfg, game);
 			sync();	/* saves no FAT */
 			video_resume();
 			input_open();
@@ -370,7 +489,10 @@ int main(int argc, char **argv)
 			/* saves novos e eventuais mudanças em /roms */
 			if (!cfg.require_mount || is_mountpoint(cfg.roms_dir)) {
 				rom_scan(&roms, cfg.roms_dir, cfg.saves_dir);
-				st.sel = roms.count ? find_stem(&roms, stem) : 0;
+				apply_favs(&roms);
+				view_build(&view, &roms, filter);
+				st.sel = view_find(&view, &roms, stem);
+				view_to_state(&st, &view, filter);
 				scr = roms.count ? SCR_LIST : SCR_EMPTY;
 			} else {
 				scr = SCR_NOMOUNT;
@@ -383,6 +505,7 @@ int main(int argc, char **argv)
 
 	input_close();
 	video_close();
+	free(view.idx);
 	rom_list_free(&roms);
 	cover_shutdown();
 	ui_shutdown();

@@ -14,15 +14,21 @@ Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e
 
 ## Controles
 
-| Botão | Lista | Aviso de chip |
-|---|---|---|
-| Cima/baixo | Jogo anterior/seguinte (segurar repete) | |
-| Esquerda/direita | Página anterior/seguinte | |
-| L / R | Letra anterior/seguinte | |
-| A | Jogar | Tentar mesmo assim (após 0,5 s) |
-| B | | Voltar à lista |
+| Botão | Teclado | Lista | Aviso de chip |
+|---|---|---|---|
+| Cima/baixo | Setas | Jogo anterior/seguinte (segurar repete) | |
+| Esquerda/direita | Setas | Página anterior/seguinte | |
+| L / R | `a` / `f` ou PageUp/PageDown | Letra anterior/seguinte (só em Todos) | |
+| A | Enter ou `d` | Jogar | Tentar mesmo assim (após 0,5 s) |
+| B | Esc ou `c` | | Voltar à lista |
+| X | `s` | Favoritar / desfavoritar | |
+| Select | Tab | Filtro: Todos → Favoritos → Recentes | |
 
-No jogo, Select + Start volta ao menu (fixo no PiSNES).
+No jogo, Select + Start no controle volta ao menu (fixo no PiSNES); no teclado, Esc.
+
+## Favoritos e recentes
+
+Guardados em `/roms/.snespi/favoritos.txt` e `recentes.txt` (um nome de ROM por linha), porque a raiz é somente leitura. Recentes são os 5 últimos jogos **abertos**, em ordem de uso: sem relógio no Pi, não há data. Cada gravação vai para um arquivo temporário com `fsync` e depois `rename`, para um desligamento na tomada não deixar o arquivo pela metade. Jogos apagados de `/roms` somem das listas sozinhos.
 
 ## Desenvolvimento fora do Pi
 
