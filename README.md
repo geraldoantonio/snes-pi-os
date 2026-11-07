@@ -11,14 +11,15 @@ Não é uma distro genérica: o objetivo é ligar o aparelho, cair direto num me
 | Camada | Escolha |
 |---|---|
 | Hardware alvo | Raspberry Pi 1 B+ (ARMv6, hard-float) |
-| Sistema base | Linux montado com [Buildroot](https://buildroot.org/) (BusyBox init, sem systemd) |
+| Sistema base | Linux montado com [Buildroot](https://buildroot.org/) 2025.02.19 LTS (BusyBox init, sem systemd) |
 | Emulador | [PiSNES](https://github.com/RetroPie/pisnes) (baseado no SNES9X 1.39) |
 | Frontend | Launcher mínimo próprio (lista ROMs, executa o emulador, volta ao menu) |
 | Vídeo | GLES2/dispmanx (via `rpi-userland`), escalonamento pela GPU |
 | Áudio | ALSA (HDMI ou jack 3,5 mm) |
 | Controles | Gamepad USB (evdev/SDL 1.2); GPIO opcional via `mk_arcade_joystick_rpi` |
-| ROMs e saves | Segunda partição FAT32 do cartão SD, montada em `/roms` |
+| ROMs e saves | Terceira partição FAT32 do cartão SD, montada em `/roms` |
 | Raiz do sistema | Somente leitura (seguro contra desligar na tomada) |
+| Build | GitHub Actions (repositório público), em contêiner Debian 12 |
 
 ## Documentação
 

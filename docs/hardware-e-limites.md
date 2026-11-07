@@ -22,7 +22,7 @@ O PiSNES roda a maioria dos jogos em velocidade total no Pi 1, e o readme do pro
 - O efeito "phosphor" (pós-processamento) não roda a velocidade cheia no Pi 1. Manter desligado.
 - A opção `InterpolatedSound=1` deixa o Pi 1 lento demais. Manter desligada.
 
-O overclock (`arm_freq` no `config.txt`) ainda precisa ser testado nesta placa: estabilidade, temperatura e fonte de alimentação variam.
+O readme do PiSNES usa `arm_freq=900` e `sdram_freq=500`, e a promessa de "maioria em velocidade total" depende disso. Ele também avisa para conferir se o governor da CPU não está em `powersave`. Em 700 MHz, sem overclock, o desempenho pode não bastar. O overclock ainda precisa ser testado nesta placa: estabilidade, temperatura e fonte de alimentação variam.
 
 ## Compatibilidade de jogos
 
@@ -32,7 +32,21 @@ O PiSNES é baseado no SNES9X 1.39, uma versão antiga. A página do projeto cit
 - Street Fighter Alpha 2
 - Star Fox
 
-Jogos com chips especiais (Super FX, SA-1 etc.) devem ser tratados como suspeitos até teste. Precisão de vídeo e áudio também é menor que a de emuladores recentes.
+### Chips especiais
+
+O Makefile do PiSNES **não compila** os emuladores de chip `sa1`, `c4`, `fxemu` (Super FX), `sdd1`, `spc7110` e `srtc`, e as chamadas a eles parecem estar sob `#ifndef _ZAURUS` (o Makefile define `_ZAURUS`). Isso bate com a lista acima: Yoshi's Island e Star Fox são Super FX; Street Fighter Alpha 2 é SDD-1. O DSP-1 é compilado.
+
+Por inferência, também **não devem funcionar** **(verificar)**:
+
+| Chip | Exemplos |
+|---|---|
+| Super FX | Star Fox, Yoshi's Island, Stunt Race FX, Doom |
+| SA-1 | Super Mario RPG, Kirby Super Star, Kirby's Dream Land 3 |
+| C4 | Mega Man X2, Mega Man X3 |
+| SDD-1 | Star Ocean, Street Fighter Alpha 2 |
+| SPC7110 / S-RTC | Far East of Eden Zero, Daikaijuu Monogatari II |
+
+Precisão de vídeo e áudio também é menor que a de emuladores recentes. Se esses jogos importarem, isso pesa a favor do plano B.
 
 Se a compatibilidade for um problema, o plano B é um frontend libretro próprio com os cores `snes9x2002` ou `snes9x2005`. Ver [pendencias.md](pendencias.md).
 

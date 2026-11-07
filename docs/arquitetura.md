@@ -23,15 +23,28 @@ PiSNES é um **programa**, não um sistema operacional. Ele precisa de um Linux 
 
 Alternativas consideradas e descartadas para este alvo: RetroArch completo (pesado), snes9x/bsnes atuais (lentos demais em 700 MHz), cores libretro snes9x2002/2005 com frontend próprio (opção viável, deixada como plano B).
 
-## Dependências de runtime do PiSNES
+## Dependências do PiSNES
 
-Inferidas da página do projeto e da receita Yocto (a confirmar com o Makefile real):
+Confirmadas no Makefile e no código do fork `RetroPie/pisnes` (commit `a5b427f`, 2017):
 
-- `rpi-userland` (EGL, GLES2, dispmanx, bcm_host)
-- `sdl` (1.2)
-- `alsa-lib`
-- `zlib`
-- possivelmente `glib` (listado na receita Yocto)
+| Biblioteca | Pacote Buildroot | Uso |
+|---|---|---|
+| `bcm_host`, `brcmEGL`, `brcmGLESv2` | `rpi-userland` | vídeo (dispmanx + GLES2) |
+| `SDL` 1.2 | `sdl` (com driver fbcon) | só entrada; chama `SDL_SetVideoMode` |
+| `asound` | `alsa-lib` | áudio, dispositivo ALSA `default` |
+| `glib-2.0` | `libglib2` | leitura do `snes9x.cfg` (`g_key_file`) |
+| `z` | `zlib` | ROMs compactadas |
+| `jpeg` | `jpeg` | só o GUI (box art), mas linkado nos dois binários |
+| `rt`, `m`, `pthread`, `stdc++` | toolchain | |
+
+O `rpi-userland` foi **removido do Buildroot em 2026.02** (não compila com CMake ≥ 4, e o projeto upstream foi arquivado como obsoleto). Por isso a base é a **2025.02.19**, a última LTS que ainda o contém. Ver [buildroot.md](buildroot.md).
+
+## Comportamento do `snes9x` que afeta o sistema
+
+- Faz `realpath(argv[0])` e `chdir` para a pasta do binário. O launcher deve executá-lo por **caminho absoluto**, nunca pelo `PATH`.
+- Lê `snes9x.cfg` da pasta do binário. Sem o arquivo, usa os padrões (mapeamento de controle de Xbox 360).
+- ROMs passadas por caminho absoluto são carregadas diretamente.
+- Sai com **Select+Start** no controle 1 (fixo no código) ou Esc no teclado, gravando a SRAM antes de sair. Também grava a SRAM automaticamente (`AutoSaveDelay=30`).
 
 ## Armazenamento
 
@@ -45,7 +58,11 @@ A partição de ROMs em FAT32 permite trocar jogos pelo PC sem recompilar nada.
 
 ## Saves
 
-O PiSNES guarda SRAM e snapshots em `$HOME/.snes96_snapshots/`. Como a raiz é somente leitura, o `HOME` do processo deve apontar para a partição `/roms` (por exemplo `HOME=/roms`). Isso é definido no `S99game`.
+O PiSNES guarda SRAM (`.srm`) e snapshots em `$SNES9X_SNAPSHOT_DIR` ou, se não definido, em `$HOME/.snes96_snapshots/` (que ele cria). Como a raiz é somente leitura, o `S99game` define `HOME=/roms`.
+
+`HOME` é **obrigatório**: sem ele e sem `SNES9X_SNAPSHOT_DIR`, o código faz `strcpy` de um ponteiro nulo e o emulador cai.
+
+O `snes9x.cfg` fica na raiz (somente leitura) ao lado do binário. Para poder editá-lo pelo PC, ele pode virar um link simbólico para `/roms/snes9x.cfg` **(verificar)**.
 
 ## Desligamento
 
