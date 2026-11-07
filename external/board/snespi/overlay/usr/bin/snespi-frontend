@@ -1,10 +1,20 @@
 #!/bin/sh
 # Frontend do snes-pi-os, iniciado pelo init no tty1 (respawn).
-# Por enquanto é o GUI nativo do PiSNES; depois será o launcher próprio.
+#
+# Usa o launcher próprio (snespi-launcher). Para depurar com o GUI nativo
+# do PiSNES, crie um arquivo vazio "usar-gui-nativo" na partição ROMS.
 
 # O PiSNES grava SRAM e snapshots em $HOME/.snes96_snapshots, e cai se
 # HOME não estiver definido. A raiz é somente leitura: HOME vai para /roms.
 export HOME=/roms
+
+if [ -x /usr/bin/snespi-launcher ] && [ ! -e /roms/usar-gui-nativo ]; then
+	# O launcher trata sozinho a partição ausente (tela de erro e nova tentativa)
+	/usr/bin/snespi-launcher
+	sync
+	sleep 1
+	exit 0
+fi
 
 if ! mountpoint -q /roms; then
 	echo "snes-pi-os: a partição de ROMs (/roms) não está montada."

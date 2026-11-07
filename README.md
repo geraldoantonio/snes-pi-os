@@ -41,10 +41,10 @@ snes-pi-os/
 ├── scripts/                   # build.sh e ci-container.sh (Debian 12)
 ├── external/                  # árvore BR2_EXTERNAL do Buildroot
 │   ├── package/pisnes/
-│   ├── package/snes-launcher/ # (a criar)
+│   ├── package/snes-launcher/
 │   ├── configs/snespi_defconfig
 │   └── board/snespi/overlay/  # S99game, config.txt, cmdline.txt, fstab (a criar)
-└── launcher/                  # código C do launcher (a criar)
+└── launcher/                  # código C do launcher (snespi-launcher)
 ```
 
 ## Jogos e ROMs

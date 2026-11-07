@@ -29,6 +29,18 @@ Leitura direta de `/dev/input/event*` (evdev). O mapeamento do gamepad é fixo n
 - Como o launcher e o PiSNES dividem a tela (modo texto vs. dispmanx) sem piscar entre eles.
 - Se vale mais a pena manter o GUI nativo do PiSNES (`snes9x.gui`) na primeira versão e só trocar depois. O GUI executa `./snes9x "roms/<rom>"` a partir da própria pasta, então precisa de `roms/` (link para `/roms`) e `skins/` ao lado dele.
 
+## Implementação (primeira versão)
+
+Código em [`launcher/`](../launcher/README.md), pacote `snes-launcher` no Buildroot. O `snespi-frontend` usa o launcher; um arquivo vazio `usar-gui-nativo` na partição ROMS volta para o GUI do PiSNES (depuração).
+
+Feito: lista com capa e detalhes, aviso de chip, tela de iniciando, telas sem jogos e sem partição, execução do emulador e volta ao menu. Testado só fora do Pi: leitura de cabeçalhos com ROMs de teste e capturas de tela geradas no macOS. **Não testado no hardware** (framebuffer, controles, volta do emulador).
+
+Diferenças em relação ao canvas:
+
+- Títulos e textos em IBM Plex Mono; a Pixelify Sans ficou só no logo, porque no desenho dela "C" parece "O", e "B", "Z" e alguns números parecem "8".
+- Sem o campo "Último jogo": o Pi não tem relógio, então a data dos saves não é confiável.
+- Modo rede e a dica "Start · Receber pela rede" ainda não implementados.
+
 ## Design
 
 As telas estão no canvas "Launcher snes-pi-os" (1280×720, HDMI): lista de jogos com painel de detalhes e capa, aviso de chip não suportado, tela de carregamento e telas sem jogos ou sem partição.
