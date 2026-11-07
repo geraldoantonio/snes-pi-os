@@ -48,4 +48,6 @@ Este projeto **não inclui nem distribui ROMs**. Use apenas jogos que você tem 
 
 ## Licenças
 
-O PiSNES é GPLv2 (derivado do SNES9X, que tem licença própria não comercial). A licença do código original deste repositório ainda precisa ser escolhida; veja [docs/pendencias.md](docs/pendencias.md).
+O código original deste repositório (launcher, pacotes e configurações do Buildroot, scripts) é distribuído sob a licença [MIT](LICENSE).
+
+O PiSNES não faz parte deste repositório: ele é baixado durante o build e tem licença própria (derivado do SNES9X, cuja licença é não comercial). Os patches aplicados a ele em `external/package/pisnes/` seguem a licença do PiSNES. O launcher é um programa separado e não é linkado ao emulador.

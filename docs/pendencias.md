@@ -3,7 +3,7 @@
 ## Decisões
 
 - [ ] **Controle:** USB (assumido) ou GPIO (`mk_arcade_joystick_rpi`)?
-- [ ] **Licença do código original** deste repositório. Atenção: o PiSNES é GPLv2 e deriva do SNES9X, cuja licença é não comercial. Misturar código no mesmo binário exige cuidado; manter o launcher como programa separado simplifica.
+- [x] **Licença do código original:** MIT (arquivo `LICENSE`). O PiSNES deriva do SNES9X, cuja licença é não comercial; os patches nele seguem a licença do PiSNES, e o launcher continua um programa separado, sem linkar com o emulador.
 - [ ] **Saída de vídeo principal:** HDMI ou composto?
 - [ ] **Launcher:** começar com o GUI nativo do PiSNES e trocar depois, ou já escrever o launcher próprio?
 
