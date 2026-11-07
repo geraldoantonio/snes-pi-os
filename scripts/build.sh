@@ -19,7 +19,9 @@ if [ ! -d "$BR_DIR" ]; then
 fi
 
 make -C "$BR_DIR" BR2_EXTERNAL="$SRC/external" O="$OUT" snespi_defconfig
-make -C "$BR_DIR" O="$OUT"
+# BR2_JLEVEL (opcional): tarefas em paralelo. Útil no Docker Desktop com
+# pouca RAM (ex.: 4 GB), onde o padrão (núcleos + 1) pode estourar a memória.
+make -C "$BR_DIR" O="$OUT" ${BR2_JLEVEL:+BR2_JLEVEL=$BR2_JLEVEL}
 
 xz -T0 -f -k "$OUT/images/sdcard.img"
 ls -lh "$OUT/images/sdcard.img" "$OUT/images/sdcard.img.xz"

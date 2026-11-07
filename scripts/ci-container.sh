@@ -25,4 +25,4 @@ fi
 mkdir -p /work
 chown builder: /work
 
-exec runuser -u builder -- env WORK=/work sh /src/scripts/build.sh
+exec runuser -u builder -- env WORK=/work BR2_JLEVEL="${BR2_JLEVEL:-}" sh /src/scripts/build.sh
