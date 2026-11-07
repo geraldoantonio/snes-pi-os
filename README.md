@@ -7,6 +7,10 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 - **Para quem vai usar:** instruções, controles e perguntas frequentes em **https://snespi.geraldojunior.dev**
 - **Download:** [Releases](https://github.com/geraldoantonio/snes-pi-os/releases) (imagem `.img.xz` para gravar no cartão SD)
 
+![Menu do snes-pi-os: lista de jogos à esquerda e, à direita, capa, região, save e compatibilidade do jogo selecionado](site/public/img/lista.png)
+
+<sub>Tela real do launcher, gerada com ROMs de teste (`make shots` em `launcher/`).</sub>
+
 ## Status
 
 > **Em desenvolvimento. Ainda não testado em um Raspberry Pi de verdade.**
@@ -29,6 +33,10 @@ Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 - Controle USB (Xbox 360 é o mais garantido) ou teclado; dois jogadores com dois controles
 - Raiz somente leitura; só a partição de jogos e saves é gravada
 - Dois jogos de teste gratuitos na imagem, para validar logo após gravar o cartão
+
+| Favoritos e recentes | Aviso de chip não suportado | Iniciando o jogo |
+|---|---|---|
+| ![Aba Favoritos com três jogos marcados com estrela](site/public/img/favoritos.png) | ![Aviso de que o jogo usa o chip SA-1, com as opções Voltar e Tentar mesmo assim](site/public/img/aviso.png) | ![Tela de carregamento com a capa e o nome do jogo](site/public/img/iniciando.png) |
 
 ## Visão geral técnica
 
