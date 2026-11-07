@@ -40,6 +40,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
     timeout-minutes: 360
+    permissions:
+      contents: write   # criar a Release nas tags v*
     steps:
       - uses: actions/checkout@v7
 
@@ -87,6 +89,23 @@ jobs:
           path: ${{ runner.temp }}/work/output/images/sdcard.img.xz
           retention-days: 14
           compression-level: 0
+
+      # Em tags v*: Release pública (pré-lançamento) com a imagem e o hash.
+      # Fica antes do teste no QEMU para não depender dele.
+      - name: Criar release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd "$RUNNER_TEMP/work/output/images"
+          img="snes-pi-os-$GITHUB_REF_NAME.img.xz"
+          cp sdcard.img.xz "$img"
+          sha256sum "$img" > "$img.sha256"
+          gh release create "$GITHUB_REF_NAME" "$img" "$img.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "snes-pi-os $GITHUB_REF_NAME" \
+            --notes-file "$GITHUB_WORKSPACE/.github/release-notes.md" \
+            --prerelease
 
       # Boota a imagem no QEMU (raspi1ap, mesmo SoC do Pi 1). Não testa a GPU
       # (PiSNES) nem áudio, mas pega erros de kernel, init, montagens e se o
