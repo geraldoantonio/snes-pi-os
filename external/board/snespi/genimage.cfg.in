@@ -1,5 +1,5 @@
 # Layout do cartão SD do snes-pi-os.
-# #BOOT_FILES# é preenchido pelo post-image.sh.
+# A lista de arquivos da partição de boot é preenchida pelo post-image.sh.
 
 image boot.vfat {
 	vfat {
