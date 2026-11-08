@@ -70,13 +70,18 @@ lsmod >> "$OUT" 2>&1
 section "memória"
 head -5 /proc/meminfo >> "$OUT" 2>&1
 
+section "CPU (frequência)"
+for f in scaling_governor scaling_cur_freq scaling_min_freq scaling_max_freq; do
+	log "$f: $(cat /sys/devices/system/cpu/cpu0/cpufreq/$f 2>&1)"
+done
+
 section "kernel (últimas 150 linhas do dmesg)"
 dmesg 2>&1 | tail -150 >> "$OUT"
 
 # Daqui para baixo, comandos que falam com a GPU pela VCHIQ e podem travar
 section "firmware e GPU (vcgencmd)"
 if command -v vcgencmd >/dev/null 2>&1; then
-	for args in "version" "get_mem arm" "get_mem gpu" "get_config int" "hdmi_timings" "dispmanx_list"; do
+	for args in "version" "get_mem arm" "get_mem gpu" "get_config int" "measure_clock arm" "measure_temp" "get_throttled" "hdmi_timings" "dispmanx_list"; do
 		log "--- vcgencmd $args"
 		# shellcheck disable=SC2086
 		run_for 3 vcgencmd $args

@@ -46,7 +46,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 ## A testar no hardware
 
 - [ ] **Primeiro de tudo:** `hello_triangle` (pilha GLES legada com kernel 6.6 no Pi 1).
-- [ ] Estabilidade e temperatura com overclock (`arm_freq=900`, `sdram_freq=500`, sugeridos pelo readme do PiSNES).
+- [ ] Estabilidade e temperatura com overclock (`arm_freq=900`, `sdram_freq=500`, sugeridos pelo readme do PiSNES). **Ativado por padrão** depois de Mortal Kombat II ficar lento a 700 MHz, com o governor `performance` no `S99game`. O `diagnostico.txt` mostra a frequência, a temperatura e o `get_throttled`.
 - [ ] Menor `gpu_mem` que ainda funciona com dispmanx/GLES2.
 - [ ] Se `dtparam=audio=on` é necessário para o áudio.
 - [ ] Tempo de boot até o menu.

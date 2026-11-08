@@ -10,6 +10,12 @@ start)
 	modprobe -q snd_bcm2835 || echo "S99game: snd_bcm2835 não carregou"
 	modprobe -q joydev || echo "S99game: joydev não carregou"
 
+	# CPU na frequência máxima: o padrão do kernel (powersave) deixa no
+	# mínimo, e o overclock do config.txt não teria efeito.
+	for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
+		[ -w "$g" ] && echo performance > "$g"
+	done
+
 	# Avança a barra da tela de abertura (ver S00splash)
 	[ -x /usr/bin/snespi-launcher ] &&
 		/usr/bin/snespi-launcher --splash 45 --splash-msg "Preparando som e controles" \

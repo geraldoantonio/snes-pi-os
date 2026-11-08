@@ -22,7 +22,10 @@ dtparam=audio=on
 # NÃO ativar dtoverlay=vc4-kms-v3d: desliga a pilha GLES legada que o
 # PiSNES usa.
 
-# Overclock sugerido pelo readme do PiSNES (testar estabilidade,
-# temperatura e fonte antes de ativar):
-#arm_freq=900
-#sdram_freq=500
+# Overclock sugerido pelo readme do PiSNES: sem ele, jogos pesados
+# (ex.: Mortal Kombat II) ficam lentos no Pi 1. Sem over_voltage (não
+# mexe na garantia). Se o aparelho travar ou reiniciar sozinho, comente
+# as duas linhas. O S99game põe a CPU em "performance" para o kernel
+# usar essa frequência (o padrão do kernel, "powersave", fica no mínimo).
+arm_freq=900
+sdram_freq=500
