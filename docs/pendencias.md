@@ -41,6 +41,7 @@ Segundo teste (imagem `90b3749`, com o patch `0005`):
 Terceiro teste (imagem local `d385f29`, 2026-11-07):
 
 - [x] **Os jogos abrem e rodam no PiSNES** pelo launcher. A correção do terminal resolveu a tela preta.
+- [ ] **Lentidão crescente até travar, com o som parando** (Mortal Kombat II e Aladdin, já a 900 MHz, 37 °C, sem throttling no boot). O log vai até `entering main loop`, sem erro. O Aladdin é leve, o que aponta para o sistema, não para a ROM. Para o próximo teste, o launcher grava no log, a cada 5 s, a CPU e o estado de cada thread do emulador e as mensagens do kernel.
 - [ ] Ainda a confirmar: som no jogo, controles dos jogadores 1 e 2, Select + Start / Esc voltando ao menu, saves, tela de abertura no boot.
 
 ## A testar no hardware

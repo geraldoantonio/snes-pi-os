@@ -14,7 +14,7 @@ LDLIBS += -lm
 PREFIX ?= /usr
 PYTHON ?= python3
 
-COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/music.c src/ui.c src/shot.c src/main.c
+COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/music.c src/ui.c src/shot.c src/main.c src/monitor.c
 HEADERS = $(wildcard src/*.h)
 
 all: snespi-launcher

@@ -13,6 +13,7 @@
  * deixando a imagem na tela; os scripts do boot chamam a cada etapa.
  */
 #include "cover.h"
+#include "monitor.h"
 #include "music.h"
 #include "prefs.h"
 #include "platform.h"
@@ -187,15 +188,18 @@ static int run_game(const config_t *c, const rom_t *r)
 		dprintf(STDERR_FILENO, "execl: %s\n", strerror(errno));
 		_exit(127);
 	}
-	if (logfd >= 0)
+	if (logfd >= 0) {
 		fsync(logfd);
+		monitor_start(pid, logfd);
+	}
 	/*
-	 * Espera o emulador gravando o log no cartão a cada segundo: se ele
-	 * travar e o aparelho for desligado na tomada, o log mostra até onde
-	 * chegou (sem fsync, o FAT perde tudo que ainda estava na memória).
+	 * Espera o emulador. O monitor grava uma amostra (CPU por thread,
+	 * carga, kernel) e faz fsync do log aos 2 s e depois a cada 5 s: se o
+	 * jogo travar e o aparelho for desligado na tomada, o log mostra o
+	 * que estava acontecendo (sem fsync, o FAT perde o que estava na memória).
 	 */
 	int st = 0, rc;
-	long long next_sync = now_ms() + 1000;
+	long long next_tick = now_ms() + 2000;
 	for (;;) {
 		pid_t w = waitpid(pid, &st, WNOHANG);
 		if (w == pid)
@@ -205,11 +209,13 @@ static int run_game(const config_t *c, const rom_t *r)
 			break;
 		}
 		usleep(200 * 1000);
-		if (logfd >= 0 && now_ms() >= next_sync) {
-			fsync(logfd);
-			next_sync = now_ms() + 1000;
+		if (logfd >= 0 && now_ms() >= next_tick) {
+			monitor_tick();
+			next_tick = now_ms() + 5000;
 		}
 	}
+	if (logfd >= 0)
+		monitor_stop();
 	if (st == -1)
 		rc = -1;
 	else if (WIFEXITED(st))
