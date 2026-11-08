@@ -161,6 +161,7 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
 - **`README.md`** às vezes fica com permissão 444 no disco local; o git não guarda isso. Se precisar editar, `chmod u+w` e restaure depois.
 
 - **FORTIFY:** o Buildroot compila com `_FORTIFY_SOURCE`; código antigo (PiSNES) aborta com `buffer overflow detected` em padrões que nunca foram testados assim. Para o PiSNES ele fica desligado no `pisnes.mk`.
+- **Build local incremental:** mudanças em `config.txt`/`cmdline.txt` só entram com `make rpi-firmware-rebuild all`, e no launcher com `make snes-launcher-rebuild all` (site `local`). O overlay e o `post-image.sh` rodam de novo em todo `make all`.
 - **Overclock e governor:** o kernel vem com o governor `powersave` (CPU no mínimo); sem trocar para `performance` (feito no `S99game`), o `arm_freq=900` do `config.txt` não tem efeito.
 - **Terminal antes do emulador:** o launcher tem de deixar o `tty1` em `KD_TEXT` antes do `fork` (`video_suspend`). O SDL 1.2 (fbcon) do PiSNES troca de terminal com `VT_ACTIVATE` + `VT_WAITACTIVE`, e o kernel ignora trocas a partir de um terminal em `KD_GRAPHICS`: o emulador trava sem imagem, sem som e sem teclado.
 - **Depurar no hardware sem cabo serial:** a partição ROMS recebe `/.snespi/diagnostico.txt` (a cada boot, via `snespi-diagnostico`) e `/.snespi/emulador.log` (a cada jogo aberto, pelo launcher). Peça esses arquivos ao dono antes de supor a causa.
