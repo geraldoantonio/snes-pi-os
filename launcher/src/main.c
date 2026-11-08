@@ -154,17 +154,39 @@ static int run_game(const config_t *c, const rom_t *r)
 			dup2(logfd, STDOUT_FILENO);
 			dup2(logfd, STDERR_FILENO);
 		}
+		/*
+		 * O PiSNES usa o SDL 1.2 (fbcon) só para teclado e controles. Sem
+		 * mouse, o fbcon desiste do vídeo e o teclado para de responder.
+		 */
+		setenv("SDL_NOMOUSE", "1", 1);
 		/* caminho absoluto: o snes9x acha snes9x.cfg pela pasta de argv[0] */
 		execl(c->emu, c->emu, r->path, (char *)NULL);
 		dprintf(STDERR_FILENO, "execl: %s\n", strerror(errno));
 		_exit(127);
 	}
-	int st, rc;
-	while (waitpid(pid, &st, 0) < 0)
-		if (errno != EINTR) {
+	if (logfd >= 0)
+		fsync(logfd);
+	/*
+	 * Espera o emulador gravando o log no cartão a cada segundo: se ele
+	 * travar e o aparelho for desligado na tomada, o log mostra até onde
+	 * chegou (sem fsync, o FAT perde tudo que ainda estava na memória).
+	 */
+	int st = 0, rc;
+	long long next_sync = now_ms() + 1000;
+	for (;;) {
+		pid_t w = waitpid(pid, &st, WNOHANG);
+		if (w == pid)
+			break;
+		if (w < 0 && errno != EINTR) {
 			st = -1;
 			break;
 		}
+		usleep(200 * 1000);
+		if (logfd >= 0 && now_ms() >= next_sync) {
+			fsync(logfd);
+			next_sync = now_ms() + 1000;
+		}
+	}
 	if (st == -1)
 		rc = -1;
 	else if (WIFEXITED(st))

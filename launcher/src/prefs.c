@@ -62,7 +62,14 @@ static void write_lines(const char *name, char (*lines)[NAME_LEN], int n)
 	fflush(fp);
 	fsync(fileno(fp));
 	fclose(fp);
-	rename(tmp, path);
+	if (rename(tmp, path) != 0)
+		return;
+	/* grava também a entrada da pasta (o rename), não só os dados */
+	int dfd = open(dir, O_RDONLY | O_DIRECTORY);
+	if (dfd >= 0) {
+		fsync(dfd);
+		close(dfd);
+	}
 }
 
 void prefs_load(void)
