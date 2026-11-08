@@ -1,0 +1,89 @@
+From f15f50b1cfde2af70a21eef5a588dcacae710554 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?= <junior.bimbo+github@gmail.com>
+Date: Sat, 7 Nov 2026 21:22:54 -0300
+Subject: [PATCH] unix: log startup stages to stderr
+
+Running headless (no serial console), the only clue after a hang is
+the log file. Print each startup stage to stderr (unbuffered) and make
+stdout line-buffered so the last stage reached is on disk.
+---
+ unix/graphics.cpp |  7 ++++++-
+ unix/unix.cpp     | 12 +++++++++++-
+ 2 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/unix/graphics.cpp b/unix/graphics.cpp
+index cdb31a5..213620e 100644
+--- a/unix/graphics.cpp
++++ b/unix/graphics.cpp
+@@ -132,7 +132,11 @@ void S9xInitDisplay (int height)
+ 	}
+ 	atexit(SDL_Quit);
+ 	keyssnes = SDL_GetKeyState(NULL);
+-	SDL_SetVideoMode(0, 0, 16, SDL_SWSURFACE);
++	fprintf(stderr, "snes9x: SDL_SetVideoMode (keyboard input)\n");
++	if (!SDL_SetVideoMode(0, 0, 16, SDL_SWSURFACE))
++		fprintf(stderr, "snes9x: SDL_SetVideoMode failed: %s\n", SDL_GetError());
++	else
++		fprintf(stderr, "snes9x: SDL video driver ok\n");
+ 
+     SDL_EventState(SDL_ACTIVEEVENT,SDL_IGNORE);
+     SDL_EventState(SDL_SYSWMEVENT,SDL_IGNORE);
+@@ -143,6 +147,7 @@ void S9xInitDisplay (int height)
+ 	screen = (unsigned short *) calloc(1, 256*240*2);
+ 
+ 	bcm_host_init();
++	fprintf(stderr, "snes9x: bcm_host ready, %d joystick(s)\n", SDL_NumJoysticks());
+ 
+     // We only handle up to two joysticks
+     int numJoySticks = SDL_NumJoysticks();
+diff --git a/unix/unix.cpp b/unix/unix.cpp
+index e884ca3..f3b5bd7 100644
+--- a/unix/unix.cpp
++++ b/unix/unix.cpp
+@@ -263,6 +263,10 @@ int main (int argc, char **argv)
+ 	if (argc < 2)
+ 		S9xUsage ();
+ 
++	/* stdout may be a log file: flush each line so it survives a hang */
++	setvbuf(stdout, NULL, _IOLBF, 0);
++	fprintf(stderr, "snes9x: starting\n");
++
+ 	char abspath[PATH_MAX];
+ 
+ 	//Set the directory to where the binary is
+@@ -344,6 +348,7 @@ int main (int argc, char **argv)
+ 
+ 	if (!S9xGraphicsInit ())
+ 	OutOfMemory ();
++	fprintf(stderr, "snes9x: loading ROM %s\n", rom_filename ? rom_filename : "(none)");
+ 	if (rom_filename)
+ 	{
+ 	if (!Memory.LoadROM (rom_filename))
+@@ -390,7 +395,9 @@ int main (int argc, char **argv)
+ 	    exit (1);
+ 	CPU.Flags |= Flags;
+ 	}
++	fprintf(stderr, "snes9x: ROM loaded, initialising display\n");
+ 	S9xInitDisplay ( Settings.PAL ? 239:224);
++	fprintf(stderr, "snes9x: display ready\n");
+ 
+  	if (nso) {
+ 		Settings.SoundBufferSize = 8192;
+@@ -402,10 +409,13 @@ int main (int argc, char **argv)
+ 	} else {
+ 	    if (!Settings.APUEnabled)
+ 			S9xSetSoundMute (FALSE);
+-		else
++		else {
++			fprintf(stderr, "snes9x: starting sound timer\n");
+ 	    	InitTimer ();
++		}
+ 	}
+ 
++	fprintf(stderr, "snes9x: entering main loop\n");
+ 	while (1)
+ 	{
+ 	    S9xMainLoop ();
+-- 
+2.54.0 (Apple Git-157)
+
