@@ -150,9 +150,19 @@ static int run_game(const config_t *c, const rom_t *r)
 	snprintf(logdir, sizeof(logdir), "%s/.snespi", c->roms_dir);
 	snprintf(logpath, sizeof(logpath), "%s/emulador.log", logdir);
 	mkdir(logdir, 0755);
-	int logfd = open(logpath, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+	/*
+	 * Acumula os jogos (o que travou pode não ser o último aberto). Passando
+	 * de 64 KB, o log atual vira emulador.log.1 e começa outro.
+	 */
+	struct stat lst;
+	if (stat(logpath, &lst) == 0 && lst.st_size > 64 * 1024) {
+		char old[740];
+		snprintf(old, sizeof(old), "%s.1", logpath);
+		rename(logpath, old);
+	}
+	int logfd = open(logpath, O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC, 0644);
 	if (logfd >= 0)
-		dprintf(logfd, "snespi-launcher: %s \"%s\"\n\n", c->emu, r->path);
+		dprintf(logfd, "\n==========\nsnespi-launcher: %s \"%s\"\n\n", c->emu, r->path);
 
 	pid_t pid = fork();
 	if (pid < 0) {
