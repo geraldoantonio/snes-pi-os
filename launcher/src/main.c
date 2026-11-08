@@ -42,7 +42,7 @@ int shot_write_png(const surface_t *s, const char *path);
 #define SPLASH_SCAN_FROM 60
 #define SPLASH_REDRAW_MS 120
 /* tela "iniciando": tempo mínimo, para não piscar, com a música sumindo */
-#define LAUNCH_HOLD_MS 1000
+#define LAUNCH_HOLD_MS 3000
 
 static volatile sig_atomic_t quit_flag;
 
