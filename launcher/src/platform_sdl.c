@@ -59,6 +59,11 @@ void video_close(void)
 	SDL_Quit();
 }
 
+void video_detach(void)
+{
+	video_close();
+}
+
 static void open_pads(void)
 {
 	for (int i = 0; i < SDL_NumJoysticks() && i < 4; i++)

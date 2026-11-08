@@ -36,6 +36,12 @@ int ui_init(const char *fonts_dir);
 void ui_shutdown(void);
 void ui_draw(surface_t *s, screen_t scr, const ui_state_t *st);
 
+/*
+ * Tela de abertura: logo e barra de carregamento (percent 0..100) com uma
+ * mensagem da etapa. Usada no boot (--splash) e enquanto a lista é lida.
+ */
+void ui_draw_splash(surface_t *s, int percent, const char *msg, int scanlines);
+
 /* Primeira linha visível da lista para a seleção atual */
 int ui_list_top(int sel, int count);
 

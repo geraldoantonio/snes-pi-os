@@ -56,6 +56,8 @@ shots: snespi-launcher-preview
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/teclado.png --screen list --select 1 --pads 0
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/empty.png --screen empty
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/nomount.png --screen nomount
+	./snespi-launcher-preview --fonts fonts --shot build/shots/abertura.png --screen splash --splash 15 --splash-msg "Iniciando o sistema"
+	./snespi-launcher-preview --fonts fonts --shot build/shots/abertura-jogos.png --screen splash --splash 80 --splash-msg "Lendo os jogos · 205 de 410"
 
 test: snespi-launcher-preview
 	rm -rf build/test-roms

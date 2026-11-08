@@ -704,6 +704,41 @@ static void draw_empty(surface_t *s, const ui_state_t *st, int nomount)
 	scan_overlay(s, st);
 }
 
+/* ---- tela de abertura ---- */
+
+void ui_draw_splash(surface_t *s, int percent, const char *msg, int scanlines)
+{
+	if (percent < 0)
+		percent = 0;
+	if (percent > 100)
+		percent = 100;
+	gfx_clear(s, C_BG);
+
+	/* cartucho grande + nome, centrados como um bloco */
+	const char *name = "snes-pi-os";
+	const int scale = 7, icon = 16 * scale, gap = 18, cy = 290;	/* o ícone já tem margem */
+	int total = icon + gap + tw(PX_BOLD, 80, name, 2);
+	int x = (UI_W - total) / 2;
+	gfx_pixmap(s, &ICON_CART, x, cy - icon / 2, scale, C_ACCENT, C_BG);
+	txt_mid(s, PX_BOLD, 80, x + icon + gap, cy, C_TEXT, name, 2);
+
+	const char *sub = "Super Nintendo no Raspberry Pi";
+	txt_mid(s, MONO_REG, 20, (UI_W - tw(MONO_REG, 20, sub, 1)) / 2, cy + 104, C_MUTED, sub, 1);
+
+	/* barra em blocos, no estilo da tela "iniciando" */
+	const int n = 24, bw = 22, bg = 8, bh = 16, by = 500;
+	int bx = (UI_W - (n * bw + (n - 1) * bg)) / 2;
+	int lit = (percent * n + 50) / 100;
+	for (int i = 0; i < n; i++)
+		gfx_fill(s, bx + i * (bw + bg), by, bw, bh, i < lit ? C_ACCENT : C_LINE);
+	if (msg && *msg) {
+		int mw = tw(MONO_REG, 17, msg, 0);
+		txt_mid(s, MONO_REG, 17, (UI_W - mw) / 2, by + bh + 34, C_TEXT2, msg, 0);
+	}
+	if (scanlines)
+		gfx_scanlines(s, 46);
+}
+
 void ui_draw(surface_t *s, screen_t scr, const ui_state_t *st)
 {
 	switch (scr) {

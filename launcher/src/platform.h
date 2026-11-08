@@ -13,6 +13,12 @@ void video_present(void);
 void video_suspend(void);
 int video_resume(void);
 void video_close(void);
+/*
+ * Sai deixando a imagem na tela (tela de abertura do boot): não apaga o
+ * framebuffer e mantém o terminal em modo gráfico, para o texto do console
+ * não aparecer por cima até o launcher abrir.
+ */
+void video_detach(void);
 
 /* ---- entrada ---- */
 

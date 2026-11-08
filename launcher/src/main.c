@@ -7,6 +7,10 @@
  *   snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR]
  *                   [--no-scanlines] [--list]
  *                   [--shot ARQ.png --screen NOME --select N]
+ *   snespi-launcher --splash PCT [--splash-msg TEXTO]
+ *
+ * --splash desenha a tela de abertura (logo + carregamento em PCT %) e sai
+ * deixando a imagem na tela; os scripts do boot chamam a cada etapa.
  */
 #include "cover.h"
 #include "music.h"
@@ -34,6 +38,9 @@ int shot_write_png(const surface_t *s, const char *path);
 #define WARN_GUARD_MS 500
 #define STATUS_MS 6000
 #define MOUNT_RETRY_S 10
+/* a barra do boot chega até aqui pelos scripts; o launcher completa lendo as ROMs */
+#define SPLASH_SCAN_FROM 60
+#define SPLASH_REDRAW_MS 120
 
 static volatile sig_atomic_t quit_flag;
 
@@ -63,7 +70,8 @@ static int is_mountpoint(const char *path)
 
 typedef struct {
 	const char *roms_dir, *emu, *fonts_dir, *music, *shot, *shot_screen, *shot_filter;
-	int shot_select, shot_pads, scanlines, require_mount, list;
+	const char *splash_msg;
+	int shot_select, shot_pads, scanlines, require_mount, list, splash;
 	char saves_dir[600], covers_dir[600];
 } config_t;
 
@@ -72,8 +80,9 @@ static void usage(void)
 	fprintf(stderr,
 		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--music ARQ | --no-music]\n"
 		"                     [--no-scanlines] [--list]\n"
-		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount --select N\n"
-		"                      --filter todos|favoritos|recentes]\n");
+		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|splash --select N\n"
+		"                      --filter todos|favoritos|recentes]\n"
+		"       snespi-launcher --splash PCT [--splash-msg TEXTO]\n");
 }
 
 static int parse_args(config_t *c, int argc, char **argv)
@@ -86,6 +95,8 @@ static int parse_args(config_t *c, int argc, char **argv)
 	c->shot_screen = "list";
 	c->shot_filter = "todos";
 	c->shot_pads = 1;
+	c->splash = -1;
+	c->splash_msg = "";
 	for (int i = 1; i < argc; i++) {
 		const char *a = argv[i];
 		const char *v = i + 1 < argc ? argv[i + 1] : NULL;
@@ -101,6 +112,8 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--pads") && v) { c->shot_pads = atoi(v); i++; }
 		else if (!strcmp(a, "--no-scanlines")) c->scanlines = 0;
 		else if (!strcmp(a, "--list")) c->list = 1;
+		else if (!strcmp(a, "--splash") && v) { c->splash = atoi(v); i++; }
+		else if (!strcmp(a, "--splash-msg") && v) { c->splash_msg = v; i++; }
 		else { usage(); return -1; }
 	}
 	c->require_mount = strcmp(c->roms_dir, "/roms") == 0;
@@ -255,8 +268,53 @@ static void view_to_state(ui_state_t *st, const view_t *v, filter_t f)
 		st->sel = v->n ? v->n - 1 : 0;
 }
 
+/* ---- tela de abertura ---- */
+
+typedef struct {
+	surface_t *screen;
+	int scanlines;
+	long long next;
+} splash_ctx_t;
+
+/* Barra de SPLASH_SCAN_FROM a 100 % enquanto as ROMs são lidas */
+static void scan_progress(int done, int total, void *ud)
+{
+	splash_ctx_t *c = ud;
+	long long t = now_ms();
+	if (done > 0 && done < total && t < c->next)
+		return;	/* redesenhar a tela inteira custa caro no Pi 1 */
+	c->next = t + SPLASH_REDRAW_MS;
+	char msg[80];
+	if (total > 0)
+		snprintf(msg, sizeof(msg), "Lendo os jogos \xC2\xB7 %d de %d", done, total);
+	else
+		snprintf(msg, sizeof(msg), "Lendo os jogos");
+	int pct = total > 0 ? SPLASH_SCAN_FROM + (100 - SPLASH_SCAN_FROM) * done / total : 100;
+	ui_draw_splash(c->screen, pct, msg, c->scanlines);
+	video_present();
+}
+
+/* --splash: desenha uma vez e sai deixando a imagem na tela */
+static int splash_mode(const config_t *c)
+{
+	surface_t *s = video_open(UI_W, UI_H);
+	if (!s)
+		return 1;
+	ui_draw_splash(s, c->splash, c->splash_msg, c->scanlines);
+	video_present();
+	video_detach();
+	return 0;
+}
+
 static int shot_mode(config_t *c, rom_list_t *roms)
 {
+	if (!strcmp(c->shot_screen, "splash")) {
+		surface_t *s = gfx_surface_new(UI_W, UI_H);
+		ui_draw_splash(s, c->splash < 0 ? 75 : c->splash, c->splash_msg, c->scanlines);
+		int rc = shot_write_png(s, c->shot) == 0 ? 0 : 1;
+		gfx_surface_free(s);
+		return rc;
+	}
 	static const struct { const char *name; screen_t scr; } map[] = {
 		{ "list", SCR_LIST }, { "warn", SCR_WARN }, { "launch", SCR_LAUNCH },
 		{ "empty", SCR_EMPTY }, { "nomount", SCR_NOMOUNT },
@@ -312,14 +370,37 @@ int main(int argc, char **argv)
 		return 2;
 	if (ui_init(cfg.fonts_dir) != 0)
 		return 1;
+	if (cfg.splash >= 0 && !cfg.shot) {
+		int rc = splash_mode(&cfg);
+		ui_shutdown();
+		return rc;
+	}
 	cover_init(cfg.covers_dir);
 	prefs_init(cfg.roms_dir);
+
+	/* modo normal: abre a tela antes de ler as ROMs, para mostrar o progresso */
+	surface_t *screen = NULL;
+	if (!cfg.list && !cfg.shot) {
+		signal(SIGTERM, on_signal);
+		signal(SIGINT, on_signal);
+		signal(SIGPIPE, SIG_IGN);
+		screen = video_open(UI_W, UI_H);
+		if (!screen) {
+			cover_shutdown();
+			ui_shutdown();
+			return 1;
+		}
+		ui_draw_splash(screen, SPLASH_SCAN_FROM, "Lendo os jogos", cfg.scanlines);
+		video_present();
+	}
 
 	rom_list_t roms = { 0 };
 	int mounted = !cfg.require_mount || is_mountpoint(cfg.roms_dir);
 	if (mounted) {
 		prefs_load();
-		rom_scan(&roms, cfg.roms_dir, cfg.saves_dir);
+		splash_ctx_t sc = { screen, cfg.scanlines, 0 };
+		rom_scan_progress(&roms, cfg.roms_dir, cfg.saves_dir,
+				  screen ? scan_progress : NULL, &sc);
 		apply_favs(&roms);
 	}
 
@@ -345,15 +426,6 @@ int main(int argc, char **argv)
 		return rc;
 	}
 
-	signal(SIGTERM, on_signal);
-	signal(SIGINT, on_signal);
-	signal(SIGPIPE, SIG_IGN);
-
-	surface_t *screen = video_open(UI_W, UI_H);
-	if (!screen) {
-		ui_shutdown();
-		return 1;
-	}
 	input_open();
 	music_init(cfg.roms_dir, cfg.music);
 	if (mounted)

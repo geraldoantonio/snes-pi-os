@@ -44,6 +44,11 @@ typedef struct {
  * Devolve 0 em sucesso, -1 se a pasta não abriu.
  */
 int rom_scan(rom_list_t *list, const char *roms_dir, const char *saves_dir);
+
+/* Como rom_scan, chamando cb(lidas, total, ud) a cada ROM (tela de carregamento) */
+typedef void (*rom_progress_fn)(int done, int total, void *ud);
+int rom_scan_progress(rom_list_t *list, const char *roms_dir, const char *saves_dir,
+		      rom_progress_fn cb, void *ud);
 void rom_list_free(rom_list_t *list);
 
 /* Preenche os campos do cabeçalho a partir do arquivo; 0 em sucesso */

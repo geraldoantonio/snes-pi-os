@@ -45,15 +45,25 @@ static void tty_graphics(int on)
 	tcflush(tty_fd, TCIFLUSH);
 }
 
-static int fb_setup(void)
+/*
+ * Configura o modo e mapeia a memória. Só apaga a tela se o modo mudou ou
+ * se force_clear: assim a tela de abertura do boot (mesmo modo) continua
+ * visível até o primeiro quadro do menu, sem piscar preto.
+ */
+static int fb_setup(int force_clear)
 {
+	int changed = 1;
 	if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &var) == 0) {
+		struct fb_var_screeninfo before = var;
 		struct fb_var_screeninfo v = var;
 		v.xres = v.xres_virtual = (unsigned)want_w;
 		v.yres = v.yres_virtual = (unsigned)want_h;
 		v.xoffset = v.yoffset = 0;
 		v.bits_per_pixel = 16;
 		ioctl(fb_fd, FBIOPUT_VSCREENINFO, &v);	/* pode falhar: usamos o que vier */
+		if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &var) == 0)
+			changed = var.xres != before.xres || var.yres != before.yres ||
+				  var.bits_per_pixel != before.bits_per_pixel;
 	}
 	if (ioctl(fb_fd, FBIOGET_VSCREENINFO, &var) != 0 ||
 	    ioctl(fb_fd, FBIOGET_FSCREENINFO, &fix) != 0) {
@@ -73,7 +83,8 @@ static int fb_setup(void)
 		perror("snespi-launcher: mmap");
 		return -1;
 	}
-	memset(fb_mem, 0, fb_len);
+	if (force_clear || changed)
+		memset(fb_mem, 0, fb_len);
 	return 0;
 }
 
@@ -93,7 +104,7 @@ surface_t *video_open(int w, int h)
 		perror("snespi-launcher: /dev/fb0");
 		return NULL;
 	}
-	if (fb_setup() != 0)
+	if (fb_setup(0) != 0)
 		return NULL;
 	back = gfx_surface_new(w, h);
 	if (!back)
@@ -144,7 +155,7 @@ void video_suspend(void)
 int video_resume(void)
 {
 	/* o SDL pode ter mudado o modo do framebuffer */
-	if (fb_setup() != 0)
+	if (fb_setup(1) != 0)
 		return -1;
 	tty_graphics(1);
 	return 0;
@@ -158,6 +169,24 @@ void video_close(void)
 		fb_mem = NULL;
 	}
 	tty_graphics(0);
+	if (fb_fd >= 0)
+		close(fb_fd);
+	if (tty_fd >= 0)
+		close(tty_fd);
+	fb_fd = tty_fd = -1;
+	gfx_surface_free(back);
+	back = NULL;
+}
+
+void video_detach(void)
+{
+	if (fb_mem) {
+		munmap(fb_mem, fb_len);
+		fb_mem = NULL;
+	}
+	/* o terminal fica em KD_GRAPHICS: o console não desenha por cima */
+	if (tty_fd >= 0 && tio_ok)
+		tcsetattr(tty_fd, TCSANOW, &tio_saved);
 	if (fb_fd >= 0)
 		close(fb_fd);
 	if (tty_fd >= 0)

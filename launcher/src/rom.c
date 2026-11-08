@@ -217,11 +217,25 @@ static int rom_push(rom_list_t *l, const rom_t *r)
 
 int rom_scan(rom_list_t *list, const char *roms_dir, const char *saves_dir)
 {
+	return rom_scan_progress(list, roms_dir, saves_dir, NULL, NULL);
+}
+
+int rom_scan_progress(rom_list_t *list, const char *roms_dir, const char *saves_dir,
+		      rom_progress_fn cb, void *ud)
+{
 	list->count = 0;
 	DIR *d = opendir(roms_dir);
 	if (!d)
 		return -1;
 	struct dirent *e;
+	int total = 0, done = 0;
+	if (cb) {	/* primeira passada só conta (barato: não abre os arquivos) */
+		while ((e = readdir(d)) != NULL)
+			if (e->d_name[0] != '.' && has_rom_ext(e->d_name))
+				total++;
+		rewinddir(d);
+		cb(0, total, ud);
+	}
 	while ((e = readdir(d)) != NULL) {
 		if (e->d_name[0] == '.' || !has_rom_ext(e->d_name))
 			continue;
@@ -245,8 +259,12 @@ int rom_scan(rom_list_t *list, const char *roms_dir, const char *saves_dir)
 		}
 		if (rom_push(list, &r) != 0)
 			break;
+		if (cb && done < total)
+			cb(++done, total, ud);
 	}
 	closedir(d);
+	if (cb && done < total)	/* algum arquivo sumiu ou não era regular */
+		cb(total, total, ud);
 	qsort(list->items, list->count, sizeof(rom_t), cmp_rom);
 	return 0;
 }

@@ -25,6 +25,8 @@ void video_close(void)
 	back = NULL;
 }
 
+void video_detach(void) { video_close(); }
+
 int input_open(void) { return 0; }
 void input_close(void) {}
 int input_pad_count(void) { return 1; }
