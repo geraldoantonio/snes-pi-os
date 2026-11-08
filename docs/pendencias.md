@@ -39,6 +39,7 @@
 - [ ] Menor `gpu_mem` que ainda funciona com dispmanx/GLES2.
 - [ ] Se `dtparam=audio=on` é necessário para o áudio.
 - [ ] Tempo de boot até o menu.
+- [ ] Tela de abertura (`S00splash` → `S99game` → launcher): se aparece logo no começo do boot, se a barra avança sem texto do console por cima e quanto tempo cada `--splash` acrescenta ao boot.
 - [ ] Jogos com chips especiais: pelo Makefile, Super FX, SA-1, C4, SDD-1, SPC7110 e S-RTC não são compilados. Ver [hardware-e-limites.md](hardware-e-limites.md).
 - [ ] Efeito de raiz somente leitura + `HOME=/roms` nos saves.
 - [ ] Se um link simbólico `snes9x.cfg` → `/roms/snes9x.cfg` funciona.

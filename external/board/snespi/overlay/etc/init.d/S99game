@@ -10,6 +10,11 @@ start)
 	modprobe -q snd_bcm2835 || echo "S99game: snd_bcm2835 não carregou"
 	modprobe -q joydev || echo "S99game: joydev não carregou"
 
+	# Avança a barra da tela de abertura (ver S00splash)
+	[ -x /usr/bin/snespi-launcher ] &&
+		/usr/bin/snespi-launcher --splash 45 --splash-msg "Preparando som e controles" \
+			</dev/null >/dev/null 2>&1
+
 	if ! mountpoint -q /roms; then
 		echo "S99game: AVISO: /roms não está montado (3ª partição)"
 	fi

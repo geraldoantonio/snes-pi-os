@@ -1,0 +1,15 @@
+#!/bin/sh
+# Tela de abertura: o launcher desenha o logo e a barra de carregamento no
+# framebuffer e sai, deixando a imagem na tela (e o tty1 em modo gráfico,
+# para o texto do boot não aparecer por cima). O S99game avança a barra e
+# o próprio launcher a completa enquanto lê a lista de jogos.
+
+case "$1" in
+start)
+	[ -x /usr/bin/snespi-launcher ] &&
+		/usr/bin/snespi-launcher --splash 15 --splash-msg "Iniciando o sistema" \
+			</dev/null >/dev/null 2>&1
+	;;
+esac
+
+exit 0
