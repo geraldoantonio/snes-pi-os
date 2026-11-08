@@ -18,7 +18,7 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 | Parte | Situação |
 |---|---|
 | Imagem do cartão (Buildroot) | Compila no CI e gera a `sdcard.img` com 3 partições |
-| PiSNES (emulador) | Compila e linka; vídeo GLES2/dispmanx **a verificar no hardware** |
+| PiSNES (emulador) | **Roda no hardware** (Pi 1 Model B, 900 MHz): Mortal Kombat II, Aladdin, Donkey Kong Country |
 | Launcher (`launcher/`) | Primeira versão completa; testado no Mac (janela SDL2, capturas e teste de cabeçalhos) |
 | Teste de boot no QEMU | No CI, a cada build: kernel, init, montagens e launcher no framebuffer |
 | Modo rede (enviar jogos pela página web) | Especificado e desenhado; não implementado |
