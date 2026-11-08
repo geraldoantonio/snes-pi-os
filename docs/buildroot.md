@@ -81,7 +81,7 @@ O Makefile original precisa de **patch** para cross-compilar:
 |---|---|
 | `config.txt` | `gpu_mem=64`, `disable_splash=1`, `boot_delay=0`, `disable_overscan=1`, `dtparam=audio=on` **(verificar se é necessário)**, overclock comentado. **Não** ativar `dtoverlay=vc4-kms-v3d`: ele desliga a pilha legada. |
 | `cmdline.txt` | Raiz `/dev/mmcblk0p2` `ro`, consoles `ttyAMA0` e `tty1`, `consoleblank=0`, `vt.global_cursor_default=0`, `loglevel=3`. |
-| `genimage.cfg.in` | 3 partições: boot (FAT, 32M), rootfs (ext4, 120M), roms (FAT32, 512M, rótulo `ROMS`). |
+| `genimage.cfg.in` | 3 partições: boot (FAT, 32M, rótulo `SNES-PI-OS`), rootfs (ext4, 120M), roms (FAT32, 512M, rótulo `ROMS`). |
 | `dir.txt` | Instruções que vão na partição de ROMs. O GUI do PiSNES ignora esse nome. |
 | `post-build.sh` | Cria `/roms` e põe o frontend no `inittab`. **Não** chama o `post-build.sh` do raspberrypi, que coloca login no `tty1`. |
 | `post-image.sh` | Gera o `genimage.cfg` e a `sdcard.img` (baseado no do raspberrypi). |

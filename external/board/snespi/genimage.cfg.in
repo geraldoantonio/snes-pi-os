@@ -3,6 +3,8 @@
 
 image boot.vfat {
 	vfat {
+		# Rótulo que aparece no computador (sem ele, "NO NAME")
+		extraargs = "-n SNES-PI-OS"
 		files = {
 #BOOT_FILES#
 		}
