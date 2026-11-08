@@ -5,7 +5,7 @@
  * (snes9x) para o jogo escolhido, voltando ao menu quando ele termina.
  *
  *   snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR]
- *                   [--no-scanlines] [--list]
+ *                   [--scanlines | --no-scanlines] [--list]
  *                   [--shot ARQ.png --screen NOME --select N]
  *   snespi-launcher --splash PCT [--splash-msg TEXTO]
  *
@@ -79,7 +79,7 @@ static void usage(void)
 {
 	fprintf(stderr,
 		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--music ARQ | --no-music]\n"
-		"                     [--no-scanlines] [--list]\n"
+		"                     [--scanlines | --no-scanlines] [--list]\n"
 		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|splash --select N\n"
 		"                      --filter todos|favoritos|recentes]\n"
 		"       snespi-launcher --splash PCT [--splash-msg TEXTO]\n");
@@ -91,7 +91,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 	c->emu = "/usr/share/pisnes/snes9x";
 	c->fonts_dir = "/usr/share/snespi/fonts";
 	c->music = "/usr/share/snespi/musica/menu.wav";
-	c->scanlines = 1;
+	c->scanlines = -1;	/* -1: decide pelo arquivo .snespi/scanlines */
 	c->shot_screen = "list";
 	c->shot_filter = "todos";
 	c->shot_pads = 1;
@@ -110,6 +110,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--select") && v) { c->shot_select = atoi(v); i++; }
 		else if (!strcmp(a, "--filter") && v) { c->shot_filter = v; i++; }
 		else if (!strcmp(a, "--pads") && v) { c->shot_pads = atoi(v); i++; }
+		else if (!strcmp(a, "--scanlines")) c->scanlines = 1;
 		else if (!strcmp(a, "--no-scanlines")) c->scanlines = 0;
 		else if (!strcmp(a, "--list")) c->list = 1;
 		else if (!strcmp(a, "--splash") && v) { c->splash = atoi(v); i++; }
@@ -117,6 +118,16 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else { usage(); return -1; }
 	}
 	c->require_mount = strcmp(c->roms_dir, "/roms") == 0;
+	/*
+	 * Efeito de scanline (1 linha escura a cada 3): desligado por padrão.
+	 * Na TV, a imagem de 720p é ampliada 1,5x para 1080p e as linhas ficam
+	 * irregulares. Liga com o arquivo vazio /roms/.snespi/scanlines.
+	 */
+	if (c->scanlines < 0) {
+		char flag[700];
+		snprintf(flag, sizeof(flag), "%s/.snespi/scanlines", c->roms_dir);
+		c->scanlines = access(flag, F_OK) == 0;
+	}
 	/* o PiSNES grava em $HOME/.snes96_snapshots; o frontend usa HOME=/roms */
 	const char *home = getenv("HOME");
 	snprintf(c->saves_dir, sizeof(c->saves_dir), "%s/.snes96_snapshots",
