@@ -1,11 +1,19 @@
 From f15f50b1cfde2af70a21eef5a588dcacae710554 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Geraldo=20J=C3=BAnior?= <junior.bimbo+github@gmail.com>
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
 Date: Sat, 7 Nov 2026 21:22:54 -0300
 Subject: [PATCH] unix: log startup stages to stderr
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Running headless (no serial console), the only clue after a hang is
 the log file. Print each startup stage to stderr (unbuffered) and make
 stdout line-buffered so the last stage reached is on disk.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
 ---
  unix/graphics.cpp |  7 ++++++-
  unix/unix.cpp     | 12 +++++++++++-
