@@ -72,3 +72,4 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 9. [x] Launcher em C e pacote `snes-launcher` (primeira versão; testado só com capturas fora do Pi).
 10. [ ] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
 11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher.
+12. [ ] (Ideia, adiada) Buscar capas pela internet no launcher, junto com o modo rede: índice do `libretro-thumbnails` gerado no build, rede e hora (`udhcpc`, `ntpd -q`) sob demanda, HTTPS com libcurl e certificados, gravação em `/roms/capas`. Um script para PC também ficou para depois.
