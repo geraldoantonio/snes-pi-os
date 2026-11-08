@@ -12,6 +12,8 @@ void music_init(const char *roms_dir, const char *default_path);
 /* Começa do início, se houver música e não estiver tocando */
 void music_play(void);
 void music_stop(void);
+/* Abaixa o volume até o silêncio em ms (transição para o jogo) */
+void music_fade_out(int ms);
 void music_shutdown(void);
 
 /* ---- decodificador (OGG/WAV, sempre em loop), usado pelas saídas ---- */

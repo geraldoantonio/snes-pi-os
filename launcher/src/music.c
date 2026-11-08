@@ -15,6 +15,7 @@
 
 static char roms[600], fallback[600];
 static int playing;
+static volatile int fade_out_ms;	/* pedido de fade-out, lido pelo decodificador */
 
 static int exists(const char *p)
 {
@@ -32,6 +33,7 @@ void music_play(void)
 {
 	if (playing)
 		return;
+	fade_out_ms = 0;
 	char p[700];
 	snprintf(p, sizeof(p), "%s/.snespi/sem-musica", roms);
 	if (exists(p))
@@ -56,6 +58,11 @@ void music_stop(void)
 	playing = 0;
 }
 
+void music_fade_out(int ms)
+{
+	fade_out_ms = ms > 0 ? ms : 1;
+}
+
 void music_shutdown(void)
 {
 	music_stop();
@@ -73,6 +80,7 @@ struct mdec {
 	FILE *wav;
 	long data_start, data_len, data_pos;
 	long fade_total, fade_done;	/* em quadros */
+	long out_total, out_done;	/* fade-out, em quadros (0: sem) */
 };
 
 static unsigned rd16(const unsigned char *p) { return p[0] | (p[1] << 8); }
@@ -184,11 +192,17 @@ static int raw_read(mdec_t *d, short *out, int frames)
 int mdec_read(mdec_t *d, short *out, int frames)
 {
 	int n = raw_read(d, out, frames);
+	if (fade_out_ms && !d->out_total)
+		d->out_total = (long)fade_out_ms * d->rate / 1000 + 1;
 	for (int i = 0; i < n; i++) {
 		float g = GAIN;
 		if (d->fade_done < d->fade_total) {
 			g *= (float)d->fade_done / (float)d->fade_total;
 			d->fade_done++;
+		}
+		if (d->out_total) {
+			g *= d->out_done < d->out_total ? 1.0f - (float)d->out_done / (float)d->out_total : 0.0f;
+			d->out_done++;
 		}
 		for (int c = 0; c < d->channels; c++) {
 			int v = (int)(out[i * d->channels + c] * g);

@@ -618,8 +618,9 @@ static void draw_launch(surface_t *s, const ui_state_t *st)
 
 	/* blocos */
 	int bx = (UI_W - (12 * 24 + 11 * 8)) / 2;
+	int lit = st->launch_blocks > 0 ? st->launch_blocks : 4;
 	for (int i = 0; i < 12; i++)
-		gfx_fill(s, bx + i * 32, y, 24, 16, i < 4 ? C_ACCENT : C_LINE);
+		gfx_fill(s, bx + i * 32, y, 24, 16, i < lit ? C_ACCENT : C_LINE);
 	y += 16 + 14;
 	const char *ini = "INICIANDO";
 	txt_mid(s, MONO_SEMI, 18, (UI_W - tw(MONO_SEMI, 18, ini, 4)) / 2, y + 13, C_TEXT, ini, 4);

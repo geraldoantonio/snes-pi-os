@@ -41,6 +41,8 @@ int shot_write_png(const surface_t *s, const char *path);
 /* a barra do boot chega até aqui pelos scripts; o launcher completa lendo as ROMs */
 #define SPLASH_SCAN_FROM 60
 #define SPLASH_REDRAW_MS 120
+/* tela "iniciando": tempo mínimo, para não piscar, com a música sumindo */
+#define LAUNCH_HOLD_MS 1000
 
 static volatile sig_atomic_t quit_flag;
 
@@ -622,8 +624,21 @@ int main(int argc, char **argv)
 			char stem[256];
 			snprintf(stem, sizeof(stem), "%s", game->stem);
 			prefs_add_recent(stem);	/* antes de abrir: conta mesmo se o jogo travar */
-			ui_draw(screen, SCR_LAUNCH, &st);
-			video_present();
+			/*
+			 * Mostra "iniciando" por LAUNCH_HOLD_MS, enchendo a barra, enquanto
+			 * a música some. Sem isso, a tela só piscava antes do jogo.
+			 */
+			music_fade_out(LAUNCH_HOLD_MS - 200);
+			long long t0 = now_ms();
+			for (int lit = 1; lit <= 12; lit++) {
+				st.launch_blocks = lit;
+				ui_draw(screen, SCR_LAUNCH, &st);
+				video_present();
+				long long due = t0 + (long long)LAUNCH_HOLD_MS * lit / 12, left = due - now_ms();
+				if (left > 0)
+					usleep((useconds_t)left * 1000);
+			}
+			st.launch_blocks = 0;
 
 			music_stop();	/* o emulador precisa do dispositivo de áudio */
 			input_close();

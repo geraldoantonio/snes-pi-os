@@ -30,6 +30,7 @@ typedef struct {
 	int scanlines;
 	const char *status;	/* mensagem temporária no rodapé, ou NULL */
 	int retry_secs;		/* contagem na tela SCR_NOMOUNT */
+	int launch_blocks;	/* blocos acesos na barra de SCR_LAUNCH (0: padrão, 4) */
 } ui_state_t;
 
 int ui_init(const char *fonts_dir);
