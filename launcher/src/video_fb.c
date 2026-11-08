@@ -147,9 +147,20 @@ void video_suspend(void)
 {
 	if (fb_mem)
 		memset(fb_mem, 0, fb_len);
-	/* o emulador (SDL/fbcon) configura o terminal do jeito dele */
-	if (tty_fd >= 0 && tio_ok)
-		tcsetattr(tty_fd, TCSANOW, &tio_saved);
+	/*
+	 * Volta o terminal ao modo texto. O SDL 1.2 (fbcon) do PiSNES troca
+	 * para um terminal livre (VT_ACTIVATE + VT_WAITACTIVE), e o kernel
+	 * ignora trocas a partir de um terminal em KD_GRAPHICS: o emulador
+	 * ficava esperando para sempre (tela preta, sem som, Esc sem efeito).
+	 * Antes, apaga o texto guardado no tty1, para ele não reaparecer.
+	 */
+	if (tty_fd >= 0) {
+		static const char cls[] = "\033[2J\033[H";
+		if (write(tty_fd, cls, sizeof(cls) - 1) < 0) {
+			/* sem efeito no resultado: só estética */
+		}
+		tty_graphics(0);
+	}
 }
 
 int video_resume(void)

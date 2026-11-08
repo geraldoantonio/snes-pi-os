@@ -36,6 +36,7 @@ Segundo teste (imagem `90b3749`, com o patch `0005`):
 
 - [x] **Música do menu toca** (ALSA funciona no Pi).
 - [ ] Ao abrir "Teste - Controles": **tela preta**, LED parado; foi desligado na tomada. O `emulador.log` ficou **vazio** e o `recentes.txt` com zeros: o FAT perdeu o que ainda não tinha ido para o cartão. Não se sabe se travou ou se rodava sem imagem (verificar se Esc volta ao menu e se há som do jogo). Preparado para o próximo teste: patch `0006` (cada etapa da partida do PiSNES no stderr), launcher grava o log no cartão a cada segundo enquanto o emulador roda, `fsync` da pasta depois do `rename` das preferências e `SDL_NOMOUSE=1` para o SDL fbcon não desistir do vídeo (e do teclado) sem mouse.
+- [x] Depois: Esc sem efeito e sem som, ou seja, travou antes do loop do jogo. **Causa provável:** o SDL 1.2 (fbcon) do PiSNES troca para um terminal livre (`VT_ACTIVATE` + `VT_WAITACTIVE`), e o kernel ignora trocas a partir de um terminal em `KD_GRAPHICS`, modo em que o launcher deixava o `tty1`. Corrigido: o launcher volta o `tty1` a `KD_TEXT` antes de abrir o emulador **(verificar no Pi)**.
 
 ## A testar no hardware
 
