@@ -4,7 +4,7 @@ Orientações para agentes de IA (e pessoas) que trabalham neste repositório. L
 
 ## O projeto em uma frase
 
-Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga direto num launcher próprio em C e roda jogos de SNES no **PiSNES** (SNES9X 1.39, vídeo GLES2/dispmanx). Nada foi testado em hardware ainda.
+Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga direto num launcher próprio em C e roda jogos de SNES no **PiSNES** (SNES9X 1.39, vídeo GLES2/dispmanx). Boot, launcher e jogos já rodam no hardware (2026-11-07); o resto está em `docs/pendencias.md`.
 
 ## Retomando o trabalho numa nova sessão
 
@@ -27,6 +27,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Pronto (testado só fora do Pi):** imagem compila no CI; PiSNES compila e linka; launcher com lista, capas, favoritos/recentes, aviso de chip e telas de erro; jogos de teste na partição ROMS; teste de boot no QEMU no CI; página pública no ar.
 - **QEMU:** o teste de boot passa (~10 s até o login; o launcher aparece no framebuffer com os 2 jogos de teste e a partição ROMS montada). A captura do QEMU revelou um bug de layout com nomes longos no painel de detalhes, corrigido depois da `v0.1.0`: entra na próxima versão.
 - **Causa do 134 encontrada** (pelo `emulador.log`): `*** buffer overflow detected ***` da glibc, antes do EGL. O `main()` do PiSNES passava um buffer de 1000 bytes ao `realpath()`; com `_FORTIFY_SOURCE` (padrão do Buildroot) a glibc aborta. Corrigido com o patch `0005` (`PATH_MAX`) e FORTIFY desligado só no PiSNES. **Segundo teste (`90b3749`):** a música do menu toca; "Teste - Controles" deu tela preta e o log ficou vazio (desligado na tomada antes de o FAT gravar). A próxima imagem grava o log a cada segundo e o patch `0006` mostra cada etapa da partida. O `diagnostico.txt` confirmou: **GPU funciona** (`hello_triangle` e `hello_triangle2` desenham), firmware de 17/04/2024, HDMI 1920×1080, **2 placas de som** (HDMI e fone).
+- **Terceiro teste (imagem local `d385f29`): os jogos rodam no Pi.** A tela preta era o SDL do PiSNES esperando uma troca de terminal que o kernel ignorava (`tty1` em `KD_GRAPHICS`). Falta confirmar som no jogo, controles, volta ao menu, saves e a tela de abertura.
 - **Maior risco em aberto (antes):** a pilha gráfica legada (GLES2/dispmanx via `rpi-userland`) com o kernel 6.6 no Pi 1. Se o jogo não abrir ou a tela ficar preta, é o primeiro suspeito.
 
 ## Próximos passos (em ordem)
