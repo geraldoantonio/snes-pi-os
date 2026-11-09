@@ -6,6 +6,7 @@
 - [x] **Licença do código original:** MIT (arquivo `LICENSE`). O PiSNES deriva do SNES9X, cuja licença é não comercial; os patches nele seguem a licença do PiSNES, e o launcher continua um programa separado, sem linkar com o emulador.
 - [x] **Saída de vídeo principal:** HDMI. O design do launcher é 1280×720 (720p); composto fica sem layout próprio por enquanto.
 - [x] **Placa:** Raspberry Pi 1 Model B rev 2 (2 USB, Ethernet), não B+.
+- [x] **Desligar com segurança:** menu do sistema no launcher (Start) e, opcionalmente, botão no GPIO3 (pinos 5 e 6) e LED de status no GPIO17 (pinos 11 e 9). Reset fica de fora (furos P6, solda). Ver [hardware-e-limites.md](hardware-e-limites.md).
 - [x] **Envio de ROMs:** cartão SD sempre funciona; além disso, um **modo rede** opcional no launcher, com página web de upload pela Ethernet. Desligado por padrão: a rede só sobe enquanto esse modo está aberto. Ver [launcher.md](launcher.md).
 - [ ] **Launcher:** começar com o GUI nativo do PiSNES e trocar depois, ou já escrever o launcher próprio?
 - [x] **Versão do Buildroot:** 2025.02.19 LTS, a última com `rpi-userland` (removido na 2026.02). Ver [buildroot.md](buildroot.md).
@@ -62,6 +63,9 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] Remover depois: login na serial `ttyAMA0` e `hello_pi`.
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
 - [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
+- [ ] **Menu do sistema e botão de desligar** (GPIO3, pinos 5 e 6): Start › Desligar e Reiniciar; o botão desliga do menu e do meio do jogo, com o save gravado (patch `0007`, ver no `emulador.log` a linha "quit signal, saving SRAM"); se a tela "Desligando" fica até o fim; se o botão religa o Pi parado; se o `gpio_keys` carrega sozinho.
+- [ ] **LED de status** (GPIO17, pinos 11 e 9): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
+- [ ] Se depois de desligar pelo menu o `recentes.txt` e a partição ROMS ficam íntegros (o desligamento desmonta `/roms`).
 
 ## Plano B
 
@@ -79,5 +83,5 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 8. [ ] Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
 9. [x] Launcher em C e pacote `snes-launcher` (primeira versão; testado só com capturas fora do Pi).
 10. [ ] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
-11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher.
+11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher (como item do menu do sistema, aberto pelo Start).
 12. [ ] (Ideia, adiada) Buscar capas pela internet no launcher, junto com o modo rede: índice do `libretro-thumbnails` gerado no build, rede e hora (`udhcpc`, `ntpd -q`) sob demanda, HTTPS com libcurl e certificados, gravação em `/roms/capas`. Um script para PC também ficou para depois.

@@ -25,8 +25,12 @@ Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e
 | B | Esc ou `c` | | Voltar à lista |
 | X | `s` | Favoritar / desfavoritar | |
 | Select | Tab | Filtro: Todos → Favoritos → Recentes | |
+| Start | Espaço | Menu do sistema: Desligar, Reiniciar, Voltar | |
+| Botão de desligar (GPIO3) | F12 no `make run` | Desliga na hora (também no meio do jogo) | |
 
 No jogo, Select + Start no controle volta ao menu (fixo no PiSNES); no teclado, Esc.
+
+No menu do sistema: cima/baixo escolhem, A confirma, B ou Start fecham. Desligar mostra a tela "Desligando", pisca o LED `snespi-status` (se houver) e chama o `poweroff` do BusyBox. Fora do Pi, só fecha o launcher.
 
 ## Favoritos e recentes
 

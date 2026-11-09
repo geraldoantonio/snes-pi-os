@@ -25,6 +25,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Versão publicada:** `v0.1.1` (pré-lançamento, criada pela tag). Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
+- **Novo, sem teste no hardware:** menu do sistema (Start › Desligar/Reiniciar), botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; controles USB, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` (com monitor a cada 5 s) na partição ROMS.
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
@@ -99,7 +100,7 @@ gh release delete v0.2.0 --cleanup-tag
 | Caminho | O que é |
 |---|---|
 | `external/` | Árvore BR2_EXTERNAL (`SNESPI`): `configs/snespi_defconfig`, `package/*`, `board/snespi/` |
-| `external/package/pisnes/` | PiSNES do fork `RetroPie/pisnes` (`a5b427f`) + patches `0001` a `0006` (cross-compile, correções, logs de diagnóstico) |
+| `external/package/pisnes/` | PiSNES do fork `RetroPie/pisnes` (`a5b427f`) + patches `0001` a `0007` (cross-compile, correções, logs de diagnóstico, save no `SIGTERM`) |
 | `external/package/snes-launcher/` | Compila `launcher/` (site method `local`, sempre com `make -B`) |
 | `external/package/snespi-homebrew/` | Baixa exemplos do OpenSNES (MIT) para a partição ROMS |
 | `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S99game`, `snespi-frontend`) |
@@ -163,6 +164,8 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
 - **Overclock e governor:** o kernel vem com o governor `powersave` (CPU no mínimo); sem trocar para `performance` (feito no `S99game`), o `arm_freq=900` do `config.txt` não tem efeito.
 - **Terminal antes do emulador:** o launcher tem de deixar o `tty1` em `KD_TEXT` antes do `fork` (`video_suspend`). O SDL 1.2 (fbcon) do PiSNES troca de terminal com `VT_ACTIVATE` + `VT_WAITACTIVE`, e o kernel ignora trocas a partir de um terminal em `KD_GRAPHICS`: o emulador trava sem imagem, sem som e sem teclado.
 - **Depurar no hardware sem cabo serial:** a partição ROMS recebe `/.snespi/diagnostico.txt` (a cada boot, via `snespi-diagnostico`) e `/.snespi/emulador.log` (acumula os jogos abertos, pelo launcher; passando de 64 KB vira `emulador.log.1`). Durante o jogo, o monitor do launcher (`launcher/src/monitor.c`) anota a cada 5 s a CPU e o `wchan` de cada thread do emulador, carga, temperatura, frequência, memória e mensagens novas do kernel. Peça esses arquivos ao dono antes de supor a causa.
+- **Overlays do `config.txt`** (`gpio-shutdown`, `gpio-led`) só funcionam porque a defconfig instala a pasta `overlays/` (`BR2_PACKAGE_RPI_FIRMWARE_INSTALL_DTB_OVERLAYS=y`). Num build local já existente, mudar isso exige `make linux-rebuild rpi-firmware-rebuild all`.
+- **Desligar:** quem trata o botão (`KEY_POWER`) é o launcher, não um daemon. Ele precisa do `SIGTERM` com tratamento no PiSNES (patch `0007`) para não perder o save, e sai deixando a tela "Desligando" (`video_detach`) com `SIGTERM` no padrão, para o init matá-lo sem apagar a imagem.
 - **Código de saída do emulador no rodapé:** 134 = SIGABRT (assert, geralmente EGL), 139 = SIGSEGV, 127 = não executou (binário ou biblioteca faltando).
 
 ## Antes de dar algo por pronto

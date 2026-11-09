@@ -21,6 +21,23 @@ O firmware escolhe o device tree pela revisão da placa (`bcm2708-rpi-b.dtb` no 
 
 Por ser ARMv6, o Buildroot deve ser configurado para `arm1176jzf-s` com hard-float (o `raspberrypi_defconfig` já faz isso).
 
+## Botão de desligar e LED de status (GPIO, opcional)
+
+Esquema: [`site/public/img/ligacao-gpio.svg`](../site/public/img/ligacao-gpio.svg) (também no README e no site).
+
+| Peça | Pinos (conector P1, 26 pinos) | Configuração |
+|---|---|---|
+| Botão normalmente aberto | 5 (GPIO3) e 6 (GND) | `dtoverlay=gpio-shutdown,gpio_pin=3` (pull-up, ativo em nível baixo, tecla `KEY_POWER`) |
+| LED + resistor de 330 Ω | 11 (GPIO17) → resistor → perna longa; perna curta → 9 (GND) | `dtoverlay=gpio-led,gpio=17,label=snespi-status,trigger=heartbeat` |
+
+- **Botão:** o kernel (módulo `gpio_keys`, carregado pelo `S99game`) gera a tecla `KEY_POWER`, e o **launcher** desliga: no menu, na hora; no meio do jogo, manda `SIGTERM` ao PiSNES, que grava o save (patch `0007`) e sai, e então desliga. O desligamento é o `poweroff` do BusyBox, que roda os scripts de parada e desmonta `/roms`. Se o launcher não estiver rodando (ex.: GUI nativo), o botão não faz nada.
+- **Ligar de novo:** com o Pi parado, encostar o GPIO3 no GND faz o firmware religar **(verificar no Pi 1)**. O botão não corta a energia; para isso, seria preciso um circuito externo (MOSFET ou módulo com trava) acionado pelo overlay `gpio-poweroff`.
+- **LED:** pisca em batimento no boot (`heartbeat`), fica aceso no menu (o launcher troca para `default-on`), pisca rápido ao desligar (`timer`) e o driver `leds-gpio` o apaga no fim do desligamento: apagado, pode tirar da tomada **(verificar)**.
+- O GPIO3 é também o SCL do I²C e tem pull-up de 1,8 kΩ na placa; nada usa I²C nesta imagem. No **Model B rev 1** o pino 5 é o GPIO1: troque para `gpio_pin=1`.
+- Não use o GPIO14/15 (pinos 8 e 10): é a serial de depuração (`ttyAMA0`).
+- **Reset sem GPIO:** a placa rev 2 tem os furos **P6** perto do HDMI; um botão soldado ali reinicia na hora (equivale a tirar da tomada: pode perder save). Não faz parte da imagem.
+- Os overlays vão para a partição de boot com `BR2_PACKAGE_RPI_FIRMWARE_INSTALL_DTB_OVERLAYS=y` (pasta `overlays/`, ~1,8 MB).
+
 ## Desempenho esperado
 
 O PiSNES roda a maioria dos jogos em velocidade total no Pi 1, e o readme do projeto recomenda overclock para isso. Pontos do próprio readme:

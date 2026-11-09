@@ -69,7 +69,9 @@ O `snes9x.cfg` fica na raiz (somente leitura) ao lado do binário. Para poder ed
 
 ## Desligamento
 
-O aparelho será desligado na tomada. Raiz somente leitura e escrita só em `/roms` (FAT32, com `sync` após salvar) reduzem o risco de corrupção.
+O aparelho pode ser desligado na tomada. Raiz somente leitura e escrita só em `/roms` (FAT32, com `sync` após salvar) reduzem o risco de corrupção.
+
+O jeito seguro é pelo launcher: **Start › Desligar**, ou o botão de desligar no GPIO3 (opcional, ver [hardware-e-limites.md](hardware-e-limites.md)). O launcher fecha o emulador com `SIGTERM` (o PiSNES grava a SRAM, patch `0007`) e chama o `poweroff` do BusyBox: o init roda o `rcK` (`S99game stop` faz `sync`), desmonta tudo (`umount -a -r`) e só depois mata os processos. O LED de status (GPIO17) apaga no fim.
 
 ## Boot rápido (ideias, a medir)
 

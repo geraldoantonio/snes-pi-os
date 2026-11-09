@@ -45,11 +45,14 @@ Depois da primeira versão:
 - **Efeito de scanline desligado por padrão** (resultado do teste no Pi): na TV, a imagem de 720p é ampliada 1,5× para 1080p e as linhas escuras (1 a cada 3) ficam irregulares. Para ligar, crie o arquivo vazio `/roms/.snespi/scanlines` (ou use `--scanlines`).
 - **Tela de abertura com carregamento:** logo (cartucho + "snes-pi-os") e uma barra em blocos, do boot até o menu. O launcher desenha e sai com `--splash PCT --splash-msg TEXTO`, deixando a imagem na tela e o `tty1` em modo gráfico, para o texto do console não aparecer por cima. Etapas: `S00splash` mostra 15 % ("Iniciando o sistema"), o `S99game` mostra 45 % ("Preparando som e controles") e o launcher vai de 60 % a 100 % enquanto lê as ROMs ("Lendo os jogos · N de M"). O framebuffer só é apagado quando o modo muda, por isso a abertura passa para o menu sem piscar preto. O `cmdline.txt` ganhou `logo.nologo`, que tira as framboesas do kernel. Capturas: `abertura*.png` em `make shots`. **(verificar no hardware:** quanto tempo cada chamada leva no Pi 1, já que carrega as fontes; se nenhum texto do boot aparece por cima)**.
 
+- **Menu do sistema e desligamento:** Start (Espaço no teclado) abre o "Menu do sistema" sobre a lista, a tela sem jogos ou a de erro na partição: **Desligar**, **Reiniciar**, **Voltar**. O botão de desligar no GPIO (tecla `KEY_POWER`) desliga de qualquer tela, sem perguntar; no meio do jogo, o launcher manda `SIGTERM` ao PiSNES (que grava o save, patch `0007`), espera até 8 s (depois `SIGKILL`) e desliga. A tela "Desligando" fica até o fim (o launcher sai deixando a imagem, como na abertura) e o `poweroff`/`reboot` do BusyBox faz o resto. O LED `snespi-status` fica aceso no menu e pisca ao desligar. Fora do Pi, "desligar" só fecha o launcher (F12 simula o botão no `make run`). Capturas: `menu*.png`, `desligando.png`, `reiniciando.png`. **(verificar no hardware)**. O modo rede deve virar um item deste menu.
+
 Diferenças em relação ao canvas:
 
 - Títulos e textos em IBM Plex Mono; a Pixelify Sans ficou só no logo, porque no desenho dela "C" parece "O", e "B", "Z" e alguns números parecem "8".
 - Sem o campo "Último jogo": o Pi não tem relógio, então a data dos saves não é confiável.
-- Modo rede e a dica "Start · Receber pela rede" ainda não implementados.
+- Modo rede ainda não implementado. O Start abre o menu do sistema; o modo rede deve entrar como um item dele, em vez da dica "Start · Receber pela rede" do canvas.
+- Menu do sistema e tela "Desligando" não estão no canvas.
 
 ## Design
 
