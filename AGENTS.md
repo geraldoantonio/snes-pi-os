@@ -20,9 +20,9 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 ## Estado atual
 
-> Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-07**.
+> Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-09**.
 
-- **Versão publicada:** `v0.1.1` (pré-lançamento, criada pela tag). Download também pelo site.
+- **Versão publicada:** `v0.2.0` (pré-lançamento, 2026-11-09): ROMS ampliada no primeiro boot, menu do sistema (desligar, reiniciar, depuração), botão de desligar e LED no GPIO, teclado do jogo remapeado, save gravado no `SIGTERM`. Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
