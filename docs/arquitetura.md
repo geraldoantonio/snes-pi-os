@@ -5,13 +5,13 @@
 Um Linux mínimo que sobe direto no emulador. Nada de login, shell interativo, gerenciador de janelas ou serviços de rede.
 
 ```
-Boot ROM do Pi → bootloader (start.elf) → kernel → BusyBox init → rcS (S00splash … S99game) 
+Boot ROM do Pi → bootloader (start.elf) → kernel → BusyBox init → rcS (S00splash, S01roms … S99game) 
                                                                 → inittab tty1::respawn → frontend → snes9x (PiSNES)
                                                                                               ↑__________________|
                                                                               (ao sair do jogo, volta ao menu)
 ```
 
-O `S00splash` desenha a tela de abertura (logo e carregamento) pelo próprio launcher (`--splash`). O `S99game` só prepara o hardware (módulos de áudio e joystick) e avança a barra. O frontend é iniciado pelo init com `respawn` no `tty1`: ganha o terminal da tela e volta sozinho se cair. Na primeira versão o frontend é o GUI nativo do PiSNES (`snespi-frontend` → `snes9x.gui`); depois, o launcher próprio.
+O `S00splash` desenha a tela de abertura (logo e carregamento) pelo próprio launcher (`--splash`). O `S01roms` amplia a partição ROMS até o fim do cartão no primeiro boot (ver [buildroot.md](buildroot.md)). O `S99game` só prepara o hardware (módulos de áudio e joystick) e avança a barra. O frontend é iniciado pelo init com `respawn` no `tty1`: ganha o terminal da tela e volta sozinho se cair. Na primeira versão o frontend é o GUI nativo do PiSNES (`snespi-frontend` → `snes9x.gui`); depois, o launcher próprio.
 
 ## Por que Buildroot
 

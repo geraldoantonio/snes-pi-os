@@ -25,7 +25,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Versão publicada:** `v0.1.1` (pré-lançamento, criada pela tag). Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
-- **Novo, sem teste no hardware:** menu do sistema (Start › Desligar/Reiniciar), botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **Novo, sem teste no hardware:** ROMS ampliada até o fim do cartão no primeiro boot (`S01roms`, testado no QEMU); menu do sistema (Start › Desligar/Reiniciar), botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; controles USB, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` (com monitor a cada 5 s) na partição ROMS.
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
@@ -103,7 +103,7 @@ gh release delete v0.2.0 --cleanup-tag
 | `external/package/pisnes/` | PiSNES do fork `RetroPie/pisnes` (`a5b427f`) + patches `0001` a `0007` (cross-compile, correções, logs de diagnóstico, save no `SIGTERM`) |
 | `external/package/snes-launcher/` | Compila `launcher/` (site method `local`, sempre com `make -B`) |
 | `external/package/snespi-homebrew/` | Baixa exemplos do OpenSNES (MIT) para a partição ROMS |
-| `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S99game`, `snespi-frontend`, `snes9x.cfg` com o teclado do jogo) |
+| `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S01roms`, `S99game`, `snespi-frontend`, `snes9x.cfg` com o teclado do jogo) |
 | `launcher/` | Launcher em C: `src/` (gfx, font, rom, cover, prefs, ui, main, plataformas), `fonts/`, `third_party/stb_*`, `tests/` |
 | `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py` |
 | `site/` | Página pública estática (`public/`) e `wrangler.jsonc` (Cloudflare Workers, domínio `snespi.geraldojunior.dev`) |

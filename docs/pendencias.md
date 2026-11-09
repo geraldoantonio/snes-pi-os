@@ -66,6 +66,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] **Menu do sistema e botão de desligar** (GPIO3, pinos 5 e 6): Start › Desligar e Reiniciar; o botão desliga do menu e do meio do jogo, com o save gravado (patch `0007`, ver no `emulador.log` a linha "quit signal, saving SRAM"); se a tela "Desligando" fica até o fim; se o botão religa o Pi parado; se o `gpio_keys` carrega sozinho.
 - [ ] **Teclado no jogo remapeado** (`snes9x.cfg` do overlay): A = C, B = X, X = D, Y = S, L = A, R = Z, Start = Enter, Select = Espaço; Esc ainda sai.
 - [ ] **LED de status** (GPIO17, pinos 11 e 9): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
+- [ ] **Ampliação da ROMS no primeiro boot** (`S01roms`): testada no QEMU; no Pi, conferir o tempo, o `expansao.txt` e o tamanho no `diagnostico.txt` (cartão de 32 GB: o `mkfs.fat` de ~31 GB no Pi 1).
 - [ ] Se depois de desligar pelo menu o `recentes.txt` e a partição ROMS ficam íntegros (o desligamento desmonta `/roms`).
 
 ## Plano B

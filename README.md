@@ -60,7 +60,7 @@ A imagem já vem configurada (overlays `gpio-shutdown` e `gpio-led` no `config.t
 | Frontend | `snespi-launcher` (C, framebuffer RGB565 1280×720, evdev, `stb_truetype`/`stb_image`) |
 | Vídeo | GLES2/dispmanx do firmware legado (`rpi-userland`); saída principal HDMI |
 | Áudio | ALSA (`snd_bcm2835`) |
-| ROMs e saves | 3ª partição FAT32 (`ROMS`, 512 MB) montada em `/roms`; `HOME=/roms` |
+| ROMs e saves | 3ª partição FAT32 (`ROMS`) montada em `/roms`, gravada com 512 MB e ampliada até o fim do cartão no primeiro boot (`S01roms`); `HOME=/roms` |
 | Build | GitHub Actions em contêiner Debian 12, com cache; Releases nas tags `v*` |
 | Página | `site/`, Cloudflare Workers (só arquivos estáticos), em `snespi.geraldojunior.dev` |
 

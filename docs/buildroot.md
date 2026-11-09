@@ -81,7 +81,7 @@ O Makefile original precisa de **patch** para cross-compilar:
 |---|---|
 | `config.txt` | `gpu_mem=64`, `disable_splash=1`, `boot_delay=0`, `disable_overscan=1`, `dtparam=audio=on` **(verificar se é necessário)**, overclock comentado. **Não** ativar `dtoverlay=vc4-kms-v3d`: ele desliga a pilha legada. |
 | `cmdline.txt` | Raiz `/dev/mmcblk0p2` `ro`, consoles `ttyAMA0` e `tty1`, `consoleblank=0`, `vt.global_cursor_default=0`, `loglevel=3`. |
-| `genimage.cfg.in` | 3 partições: boot (FAT, 32M, rótulo `SNES-PI-OS`), rootfs (ext4, 120M), roms (FAT32, 512M, rótulo `ROMS`). |
+| `genimage.cfg.in` | 3 partições: boot (FAT, 32M, rótulo `SNES-PI-OS`), rootfs (ext4, 120M), roms (FAT32, 512M, rótulo `ROMS`, ampliada no primeiro boot). |
 | `dir.txt` | Instruções que vão na partição de ROMs. O GUI do PiSNES ignora esse nome. |
 | `post-build.sh` | Cria `/roms` e põe o frontend no `inittab`. **Não** chama o `post-build.sh` do raspberrypi, que coloca login no `tty1`. |
 | `post-image.sh` | Gera o `genimage.cfg` e a `sdcard.img` (baseado no do raspberrypi). |
@@ -109,7 +109,16 @@ Pontos a verificar no hardware: se `dtparam=audio=on` é necessário; se o FAT m
 
 ## 7. Gravação no cartão SD
 
-O Buildroot gera `sdcard.img` (via `genimage`) já com a 3ª partição (FAT32, 512M, rótulo `ROMS`). Para mais espaço, aumentar a partição num PC depois de gravar (ex.: GParted), ou mudar o `size` em `genimage.cfg.in`.
+O Buildroot gera `sdcard.img` (via `genimage`) já com a 3ª partição (FAT32, 512M, rótulo `ROMS`). No primeiro boot, o `S01roms` amplia essa partição até o fim do cartão:
+
+1. Só age se a partição 3 for a última e houver mais de 64 MB livres depois dela, ou se o sistema de arquivos for menor que a partição (boot anterior interrompido). Nos outros boots sai na hora.
+2. Copia o conteúdo da ROMS para a RAM, **só se tiver até 64 MB** (com mais, não mexe e registra no log).
+3. `sfdisk --no-reread -N 3` estende a partição (mesmo início) e `partx -u` avisa o kernel, sem reiniciar (a raiz, na p2, continua montada).
+4. `mkfs.fat -F 32 -n ROMS`, monta e devolve os arquivos. O log vai para `/roms/.snespi/expansao.txt` (e para o `diagnostico.txt`).
+
+Pacotes: `util-linux` (binários e partx) e `dosfstools` (mkfs.fat). Testado no QEMU (cartão de 1 GB: 512 → 872 MB, e o segundo boot não faz nada); no Pi **(verificar)**. Se faltar energia entre a formatação e a devolução dos arquivos, o que estava na ROMS se perde (no primeiro boot, só os jogos de teste).
+
+Com jogos já copiados (mais de 64 MB) antes do primeiro boot, amplie num PC: no Linux, GParted; no macOS, o `diskutil` não redimensiona FAT, então é preciso estender a partição 3 com `fdisk -e` (mesmo início) e reformatar a ROMS, salvando os arquivos antes.
 
 ## 8. Primeiro boot
 
