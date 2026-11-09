@@ -472,7 +472,7 @@ static void footer_list(surface_t *s, const ui_state_t *st)
 	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Navegar", 0) + 32;
 	if (st->filter == FILTER_ALL) {
 		x += keycap(s, x, cy, kb ? "A" : "L") + 10;
-		x += keycap(s, x, cy, kb ? "F" : "R") + 10;
+		x += keycap(s, x, cy, kb ? "Z" : "R") + 10;
 		x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Letra", 0) + 32;
 	}
 	if (kb) {

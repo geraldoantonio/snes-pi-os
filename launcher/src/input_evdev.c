@@ -68,7 +68,7 @@ static int map_key(int code)
 	case KEY_S: return IN_X;
 	case KEY_X: return IN_Y;
 	case KEY_PAGEUP: case KEY_A: return IN_L;
-	case KEY_PAGEDOWN: case KEY_F: return IN_R;
+	case KEY_PAGEDOWN: case KEY_Z: return IN_R;
 	case KEY_SPACE: return IN_START;
 	case KEY_TAB: return IN_SELECT;
 	/* controles pela convenção do kernel */

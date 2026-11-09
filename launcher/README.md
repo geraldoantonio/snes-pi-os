@@ -5,7 +5,7 @@ Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e
 ## Como funciona
 
 - **Vídeo:** desenha em memória (RGB565, 1280×720) e copia para `/dev/fb0`. O framebuffer é pedido em 1280×720 a 16 bpp; com a pilha gráfica legada do Pi, a GPU escala para a TV. Se o driver recusar, a imagem fica centralizada.
-- **Entrada:** evdev (`/dev/input/event*`), com controles conectados depois detectados a cada 2 s. Controles Xbox, PlayStation e similares: A do Xbox (botão de baixo) confirma, B volta, X favorita. Controles genéricos estilo SNES: botão da direita (A) confirma, o de baixo (B) volta. O PiSNES, no jogo, tem mapeamento próprio (padrão de Xbox 360, por posição: B do Xbox = A do SNES). Teclado: setas, Enter/`d` = A, Esc/`c` = B, PageUp/`a` = L, PageDown/`f` = R.
+- **Entrada:** evdev (`/dev/input/event*`), com controles conectados depois detectados a cada 2 s. Controles Xbox, PlayStation e similares: A do Xbox (botão de baixo) confirma, B volta, X favorita. Controles genéricos estilo SNES: botão da direita (A) confirma, o de baixo (B) volta. O PiSNES, no jogo, tem mapeamento próprio (padrão de Xbox 360, por posição: B do Xbox = A do SNES). Teclado: setas, Enter/`d` = A, Esc/`c` = B, PageUp/`a` = L, PageDown/`z` = R (as mesmas teclas de L/R no jogo).
 - **ROMs:** `.sfc`, `.smc`, `.fig`, `.swc` na raiz de `/roms`, em ordem alfabética sem diferenciar acentos. Do cabeçalho do cartucho saem região, LoROM/HiROM e chip (mesma pontuação do SNES9X 1.39). Jogos com Super FX, SA-1, SDD-1, S-RTC, C4, SPC7110 ou outro chip especial mostram aviso antes de abrir.
 - **Saves:** existe save se houver `$HOME/.snes96_snapshots/<nome>.srm` (o frontend usa `HOME=/roms`).
 - **Capas:** `/roms/capas/<nome-da-rom>.jpg` ou `.png`. Só a do jogo selecionado é decodificada, 150 ms depois que a navegação para; as 6 últimas ficam em cache.
@@ -20,7 +20,7 @@ Frontend do snes-pi-os em C: lista as ROMs de `/roms`, mostra detalhes e capa, e
 |---|---|---|---|
 | Cima/baixo | Setas | Jogo anterior/seguinte (segurar repete) | |
 | Esquerda/direita | Setas | Página anterior/seguinte | |
-| L / R | `a` / `f` ou PageUp/PageDown | Letra anterior/seguinte (só em Todos) | |
+| L / R | `a` / `z` ou PageUp/PageDown | Letra anterior/seguinte (só em Todos) | |
 | A | Enter ou `d` | Jogar | Tentar mesmo assim (após 0,5 s) |
 | B | Esc ou `c` | | Voltar à lista |
 | X | `s` | Favoritar / desfavoritar | |

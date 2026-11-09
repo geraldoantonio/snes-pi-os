@@ -38,7 +38,7 @@ Feito: lista com capa e detalhes, aviso de chip, tela de iniciando, telas sem jo
 Depois da primeira versão:
 
 - **Favoritos e recentes:** filtros Todos · Favoritos · Recentes (Select), X favorita. Gravados em `/roms/.snespi/`. Recentes = 5 últimos abertos, por ordem (sem relógio).
-- **Teclado USB:** funciona no launcher (setas, Enter = A, Esc = B, `a`/`f` = L/R, `s` = X, Tab = Select) e no PiSNES (remapeado no `snes9x.cfg` do overlay: A = `c`, B = `x`, X = `d`, Y = `s`, L = `a`, R = `z`, Start = Enter, Select = Espaço, Esc sai), só para o jogador 1. No PiSNES, a entrada do teclado vem pelo SDL no `tty1` **(verificar no hardware)**.
+- **Teclado USB:** funciona no launcher (setas, Enter = A, Esc = B, `a`/`z` = L/R, `s` = X, Tab = Select) e no PiSNES (remapeado no `snes9x.cfg` do overlay: A = `c`, B = `x`, X = `d`, Y = `s`, L = `a`, R = `z`, Start = Enter, Select = Espaço, Esc sai), só para o jogador 1. No PiSNES, a entrada do teclado vem pelo SDL no `tty1` **(verificar no hardware)**.
 - **Modo janela (SDL2)** para testar no computador: `make run` em `launcher/`.
 - **Música de fundo no menu:** loop com volume baixo. Padrão: faixa CC0 do OpenGameArt ("rpgchip01_title_screen", Aureolus_Omicron), em WAV mono 22 kHz. O usuário troca com `/roms/musica.ogg` ou `.wav` e desliga com `/roms/.snespi/sem-musica`. Para antes do jogo e volta ao menu. Som no Pi ainda não validado **(verificar)**.
 - **Transição para o jogo:** a tela "Iniciando" fica 3 s com a barra enchendo, enquanto a música do menu some (fade-out). Antes ela só piscava (resultado do teste no Pi). **(verificar no Pi** se a música some sem estalo**)**

@@ -119,7 +119,7 @@ static int map_key(SDL_Keycode k)
 	case SDLK_s: return IN_X;
 	case SDLK_x: return IN_Y;
 	case SDLK_PAGEUP: case SDLK_a: return IN_L;
-	case SDLK_PAGEDOWN: case SDLK_f: return IN_R;
+	case SDLK_PAGEDOWN: case SDLK_z: return IN_R;
 	case SDLK_SPACE: return IN_START;
 	case SDLK_TAB: return IN_SELECT;
 	case SDLK_POWER: case SDLK_F12: return IN_POWER;	/* F12 simula o botão de desligar */
