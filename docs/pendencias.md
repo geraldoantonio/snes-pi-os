@@ -43,8 +43,8 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 
 - [x] **Os jogos abrem e rodam no PiSNES** pelo launcher. A correção do terminal resolveu a tela preta.
 - [x] **Mortal Kombat II roda bem** com a imagem `8f2b625` (900 MHz + governor `performance`). Antes travava; a CPU era o gargalo, não a ROM (que tem a soma de verificação diferente da original).
-- [ ] **Aladdin:** roda, música e inimigos seguem, mas às vezes o Aladdin demora a responder ao teclado. Suspeita (verificar): leitura do teclado pelo terminal no SDL 1.2 (fbcon) com várias teclas juntas. Testar com controle USB e ler o monitor no `emulador.log`. Na segunda vez, rodou normal: intermitente.
-- [ ] **Lentidão crescente até travar, com o som parando** (Mortal Kombat II e Aladdin, já a 900 MHz, 37 °C, sem throttling no boot). O log vai até `entering main loop`, sem erro. O Aladdin é leve, o que aponta para o sistema, não para a ROM. Para o próximo teste, o launcher grava no log, a cada 5 s, a CPU e o estado de cada thread do emulador e as mensagens do kernel.
+- [ ] **Aladdin:** roda, música e inimigos seguem, mas às vezes o Aladdin demora a responder ao teclado. Suspeita (verificar): leitura do teclado pelo terminal no SDL 1.2 (fbcon) com várias teclas juntas. Testar com controle USB e, com a depuração ligada (Start › Depuração), ler o monitor no `emulador.log`. Na segunda vez, rodou normal: intermitente.
+- [ ] **Lentidão crescente até travar, com o som parando** (Mortal Kombat II e Aladdin, já a 900 MHz, 37 °C, sem throttling no boot). O log vai até `entering main loop`, sem erro. O Aladdin é leve, o que aponta para o sistema, não para a ROM. Com a depuração ligada (Start › Depuração), o launcher grava no log, a cada 5 s, a CPU e o estado de cada thread do emulador e as mensagens do kernel.
 - [ ] Ainda a confirmar: som no jogo, controles dos jogadores 1 e 2, Select + Start / Esc voltando ao menu, saves, tela de abertura no boot.
 
 ## A testar no hardware
