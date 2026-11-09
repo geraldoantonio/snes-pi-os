@@ -9,6 +9,8 @@ start)
 	# carrega a maioria pelo modalias; aqui é só garantia.
 	modprobe -q snd_bcm2835 || echo "S99game: snd_bcm2835 não carregou"
 	modprobe -q joydev || echo "S99game: joydev não carregou"
+	# Botão de desligar (overlay gpio-shutdown no config.txt)
+	modprobe -q gpio_keys || echo "S99game: gpio_keys não carregou"
 
 	# CPU na frequência máxima: o padrão do kernel (powersave) deixa no
 	# mínimo, e o overclock do config.txt não teria efeito.

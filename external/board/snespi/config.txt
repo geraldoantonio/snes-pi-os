@@ -29,3 +29,14 @@ dtparam=audio=on
 # usar essa frequência (o padrão do kernel, "powersave", fica no mínimo).
 arm_freq=900
 sdram_freq=500
+
+# Botão de desligar: GPIO3 (pino 5) ao GND (pino 6). Gera a tecla Power,
+# que o launcher trata (fecha o jogo gravando o save e desliga). Com o
+# aparelho desligado, o mesmo botão liga de novo (verificar no Pi 1).
+# Atenção: no Model B rev 1 o pino 5 é o GPIO1 (usar gpio_pin=1).
+dtoverlay=gpio-shutdown,gpio_pin=3
+
+# LED de status: GPIO17 (pino 11) -> resistor de 330 ohms -> LED -> GND
+# (pino 9). Pisca no boot, fica aceso no menu, pisca rápido ao desligar e
+# apaga quando já pode tirar da tomada.
+dtoverlay=gpio-led,gpio=17,label=snespi-status,trigger=heartbeat
