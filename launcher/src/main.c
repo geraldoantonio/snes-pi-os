@@ -44,8 +44,12 @@ int shot_write_png(const surface_t *s, const char *path);
 #define SPLASH_REDRAW_MS 120
 /* tela "iniciando": tempo mínimo, para não piscar, com a música sumindo */
 #define LAUNCH_HOLD_MS 3000
+/* botão de desligar no jogo: tempo para o emulador gravar o save e sair */
+#define EMU_QUIT_MS 8000
 
 static volatile sig_atomic_t quit_flag;
+/* botão de desligar apertado durante o jogo: desliga ao voltar ao menu */
+static int power_after_game;
 
 static void on_signal(int sig)
 {
@@ -83,8 +87,8 @@ static void usage(void)
 	fprintf(stderr,
 		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--music ARQ | --no-music]\n"
 		"                     [--scanlines | --no-scanlines] [--list]\n"
-		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|splash --select N\n"
-		"                      --filter todos|favoritos|recentes]\n"
+		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|menu|power|reboot|splash\n"
+		"                      --select N --filter todos|favoritos|recentes]\n"
 		"       snespi-launcher --splash PCT [--splash-msg TEXTO]\n");
 }
 
@@ -198,8 +202,14 @@ static int run_game(const config_t *c, const rom_t *r)
 	 * jogo travar e o aparelho for desligado na tomada, o log mostra o
 	 * que estava acontecendo (sem fsync, o FAT perde o que estava na memória).
 	 */
+	/*
+	 * Botão de desligar no meio do jogo: SIGTERM, que o PiSNES (patch 0007)
+	 * trata como Select + Start, gravando o save. Se ele não sair em
+	 * EMU_QUIT_MS (travado), SIGKILL.
+	 */
 	int st = 0, rc;
-	long long next_tick = now_ms() + 2000;
+	long long next_tick = now_ms() + 2000, term_at = 0;
+	power_watch_open();
 	for (;;) {
 		pid_t w = waitpid(pid, &st, WNOHANG);
 		if (w == pid)
@@ -209,11 +219,22 @@ static int run_game(const config_t *c, const rom_t *r)
 			break;
 		}
 		usleep(200 * 1000);
+		if (!term_at && power_watch_pressed()) {
+			term_at = now_ms();
+			power_after_game = 1;
+			kill(pid, SIGTERM);
+			if (logfd >= 0)
+				dprintf(logfd, "\nsnespi-launcher: bot\xC3\xA3o de desligar, fechando o emulador\n");
+		} else if (term_at && now_ms() - term_at > EMU_QUIT_MS) {
+			kill(pid, SIGKILL);
+			term_at = now_ms();	/* não repete a cada volta */
+		}
 		if (logfd >= 0 && now_ms() >= next_tick) {
 			monitor_tick();
 			next_tick = now_ms() + 5000;
 		}
 	}
+	power_watch_close();
 	if (logfd >= 0)
 		monitor_stop();
 	if (st == -1)
@@ -357,6 +378,41 @@ static int splash_mode(const config_t *c)
 	return 0;
 }
 
+/*
+ * Desliga ou reinicia: tela "desligando", LED piscando, música e entrada
+ * fechadas, e o init cuida do resto (scripts de parada, desmontar /roms).
+ * A imagem fica na tela até o fim. Só volta se não deu para desligar.
+ */
+static int power_off(surface_t *screen, ui_state_t *st, int reboot)
+{
+	st->power_reboot = reboot;
+	ui_draw(screen, SCR_POWER, st);
+	video_present();
+	system_led(LED_BLINK);
+	music_stop();
+	input_close();
+	sync();
+	/* o init manda SIGTERM no fim: morrer sem apagar a tela */
+	signal(SIGTERM, SIG_DFL);
+	int rc = system_power(reboot);
+	if (rc == 0) {
+		video_detach();
+		for (;;)
+			pause();
+	}
+	signal(SIGTERM, on_signal);
+	if (rc > 0) {	/* computador de desenvolvimento: mostra a tela e fecha */
+		usleep(1500 * 1000);
+		quit_flag = 1;
+		return rc;
+	}
+	/* falhou: volta ao menu (o chamador mostra o aviso) */
+	system_led(LED_ON);
+	input_open();
+	music_play();
+	return rc;
+}
+
 static int shot_mode(config_t *c, rom_list_t *roms)
 {
 	if (!strcmp(c->shot_screen, "splash")) {
@@ -368,7 +424,8 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 	}
 	static const struct { const char *name; screen_t scr; } map[] = {
 		{ "list", SCR_LIST }, { "warn", SCR_WARN }, { "launch", SCR_LAUNCH },
-		{ "empty", SCR_EMPTY }, { "nomount", SCR_NOMOUNT },
+		{ "empty", SCR_EMPTY }, { "nomount", SCR_NOMOUNT }, { "menu", SCR_MENU },
+		{ "power", SCR_POWER }, { "reboot", SCR_POWER },
 	};
 	screen_t scr = SCR_LIST;
 	int found = 0;
@@ -381,7 +438,8 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 		usage();
 		return 2;
 	}
-	if ((scr == SCR_LIST || scr == SCR_WARN || scr == SCR_LAUNCH) && roms->count == 0) {
+	if ((scr == SCR_LIST || scr == SCR_WARN || scr == SCR_LAUNCH || scr == SCR_MENU) &&
+	    roms->count == 0) {
 		fprintf(stderr, "snespi-launcher: nenhuma ROM em %s\n", c->roms_dir);
 		return 1;
 	}
@@ -396,9 +454,12 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 	surface_t *s = gfx_surface_new(UI_W, UI_H);
 	ui_state_t st = {
 		.roms = roms, .pads = c->shot_pads, .load_cover = 1, .scanlines = c->scanlines,
-		.retry_secs = MOUNT_RETRY_S,
+		.retry_secs = MOUNT_RETRY_S, .menu_under = SCR_LIST,
+		.power_reboot = !strcmp(c->shot_screen, "reboot"),
 	};
 	st.sel = c->shot_select < 0 ? 0 : c->shot_select;
+	if (scr == SCR_MENU)	/* --select escolhe a linha da lista; o menu fica no 1º item */
+		st.menu_sel = MENU_OFF;
 	view_to_state(&st, &v, f);
 	if ((scr == SCR_WARN || scr == SCR_LAUNCH) && v.n == 0) {
 		fprintf(stderr, "snespi-launcher: filtro vazio\n");
@@ -478,6 +539,7 @@ int main(int argc, char **argv)
 	}
 
 	input_open();
+	system_led(LED_ON);	/* no boot pisca (heartbeat); aceso = menu pronto */
 	music_init(cfg.roms_dir, cfg.music);
 	if (mounted)
 		music_play();
@@ -492,6 +554,17 @@ int main(int argc, char **argv)
 	long long next_repeat = 0, cover_due = now_ms() + COVER_DELAY_MS, warn_since = 0;
 	long long status_until = 0, next_retry = now_ms() + 1000;
 	char status[160] = "";
+
+	/* desliga/reinicia; se falhar, volta com aviso no rodapé */
+#define DO_POWER(rb) do { \
+		if (power_off(screen, &st, (rb)) < 0) { \
+			snprintf(status, sizeof(status), "N\xC3\xA3o foi poss\xC3\xADvel desligar"); \
+			st.status = status; \
+			status_until = now_ms() + STATUS_MS; \
+		} \
+		held = IN_NONE; \
+		dirty = 1; \
+	} while (0)
 
 	while (!quit_flag) {
 		long long t = now_ms();
@@ -568,6 +641,39 @@ int main(int argc, char **argv)
 		}
 		if (btn == IN_NONE)
 			continue;
+
+		/* botão físico de desligar: em qualquer tela, sem perguntar */
+		if (btn == IN_POWER) {
+			if (scr == SCR_MENU)
+				scr = st.menu_under;
+			DO_POWER(0);
+			continue;
+		}
+		/* Start abre o menu do sistema (desligar, reiniciar) */
+		if (btn == IN_START && (scr == SCR_LIST || scr == SCR_EMPTY || scr == SCR_NOMOUNT)) {
+			st.menu_under = scr;
+			st.menu_sel = MENU_OFF;
+			scr = SCR_MENU;
+			held = IN_NONE;
+			dirty = 1;
+			continue;
+		}
+		if (scr == SCR_MENU) {
+			if (btn == IN_UP || btn == IN_DOWN) {
+				st.menu_sel = (st.menu_sel + (btn == IN_UP ? MENU_COUNT - 1 : 1)) % MENU_COUNT;
+				dirty = 1;
+			} else if (btn == IN_B || btn == IN_START ||
+				   (btn == IN_A && st.menu_sel == MENU_BACK)) {
+				scr = st.menu_under;
+				held = IN_NONE;
+				dirty = 1;
+			} else if (btn == IN_A) {
+				int rb = st.menu_sel == MENU_REBOOT;
+				scr = st.menu_under;
+				DO_POWER(rb);
+			}
+			continue;
+		}
 
 		if (scr == SCR_LIST) {
 			int n = view.n, sel = st.sel;
@@ -688,8 +794,14 @@ int main(int argc, char **argv)
 			held = IN_NONE;
 			cover_due = now_ms() + COVER_DELAY_MS;
 			dirty = 1;
+			/* o botão de desligar foi apertado no jogo: o save já foi gravado */
+			if (power_after_game) {
+				power_after_game = 0;
+				DO_POWER(0);
+			}
 		}
 	}
+#undef DO_POWER
 
 	music_shutdown();
 	input_close();

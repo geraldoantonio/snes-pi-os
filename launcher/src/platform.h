@@ -27,6 +27,7 @@ enum {
 	IN_UP, IN_DOWN, IN_LEFT, IN_RIGHT,
 	IN_A, IN_B, IN_X, IN_Y, IN_L, IN_R,
 	IN_START, IN_SELECT,
+	IN_POWER,	/* botão de desligar (GPIO) ou tecla Power */
 	IN_COUNT
 };
 
@@ -41,5 +42,27 @@ void input_close(void);
 int input_poll(in_event_t *ev, int timeout_ms);
 /* Número de controles (não teclados) conectados */
 int input_pad_count(void);
+
+/*
+ * Botão de desligar enquanto o emulador roda (a entrada normal fica
+ * fechada nessa hora): power_watch_pressed devolve 1 se foi apertado
+ * desde a última chamada. Não bloqueia.
+ */
+void power_watch_open(void);
+int power_watch_pressed(void);
+void power_watch_close(void);
+
+/* ---- sistema ---- */
+
+/*
+ * Desliga (reboot = 0) ou reinicia o aparelho pelo init, que fecha os
+ * programas e desmonta /roms. Devolve 0 se o desligamento começou, 1 se a
+ * plataforma não desliga (desenvolvimento: o launcher só fecha) e -1 se falhou.
+ */
+int system_power(int reboot);
+
+/* LED de status (/sys/class/leds/snespi-status); sem o LED, não faz nada */
+enum { LED_ON, LED_BLINK, LED_OFF };
+void system_led(int mode);
 
 #endif

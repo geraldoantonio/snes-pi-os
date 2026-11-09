@@ -31,6 +31,14 @@ int input_open(void) { return 0; }
 void input_close(void) {}
 int input_pad_count(void) { return 1; }
 
+void power_watch_open(void) {}
+int power_watch_pressed(void) { return 0; }
+void power_watch_close(void) {}
+
+/* fora do Pi não desliga nada: o launcher só fecha */
+int system_power(int reboot) { (void)reboot; return 1; }
+void system_led(int mode) { (void)mode; }
+
 int input_poll(in_event_t *ev, int timeout_ms)
 {
 	(void)ev;

@@ -72,5 +72,6 @@ extern const pixmap_t ICON_PAD;		/* controle 13x9 */
 extern const pixmap_t ICON_STAR;	/* estrela (favorito) 9x9 */
 extern const pixmap_t ICON_SDCARD;	/* cartão SD 14x16 */
 extern const pixmap_t ICON_SDCARD_X;	/* cartão SD com X 14x16 */
+extern const pixmap_t ICON_POWER;	/* liga/desliga 13x13 */
 
 #endif

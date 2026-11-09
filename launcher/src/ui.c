@@ -161,8 +161,15 @@ static void header(surface_t *s, const ui_state_t *st, int right)
 {
 	logo(s, 40, 36);
 	gfx_fill(s, 0, 70, UI_W, 2, C_LINE);
-	if (!right)
+	if (!right) {	/* telas sem rodapé: só a dica do menu (desligar) */
+		const char *m = "Menu";
+		const char *k = st->pads > 0 ? "START" : "ESPA\xC3\x87O";
+		int x = 1240 - tw(MONO_REG, 16, m, 0);
+		txt_mid(s, MONO_REG, 16, x, 36, C_MUTED, m, 0);
+		x -= 10 + tw(MONO_SEMI, 13, k, 0) + 16;
+		keycap(s, x, 36, k);
 		return;
+	}
 
 	/* direita para a esquerda: controle, depois contagem */
 	int x = 1240;
@@ -484,7 +491,9 @@ static void footer_list(surface_t *s, const ui_state_t *st)
 	const rom_t *r = cur_rom(st);
 	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, r && r->fav ? "Desfavoritar" : "Favoritar", 0) + 32;
 	x += keycap(s, x, cy, kb ? "TAB" : "SELECT") + 10;
-	txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Filtro", 0);
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Filtro", 0) + 32;
+	x += keycap(s, x, cy, kb ? "ESPA\xC3\x87O" : "START") + 10;
+	txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, "Menu", 0);
 
 	if (st->status) {
 		int w = tw(MONO_SEMI, 16, st->status, 0);
@@ -705,6 +714,99 @@ static void draw_empty(surface_t *s, const ui_state_t *st, int nomount)
 	scan_overlay(s, st);
 }
 
+/* ---- tela: menu do sistema ---- */
+
+/* Dica do rodapé: ícone/tecla + texto; devolve a largura */
+static int hint(surface_t *s, int x, int cy, int kb, const char *key, const char *pad_btn,
+		const char *label)
+{
+	int x0 = x;
+	if (kb) {
+		x += keycap(s, x, cy, key) + 10;
+	} else if (pad_btn) {
+		round_btn(s, x + 15, cy, pad_btn, 0, C_TEXT);
+		x += 30 + 10;
+	} else {
+		gfx_pixmap(s, &ICON_DPAD, x, cy - 13, 2, C_TEXT, 0);
+		x += 26 + 10;
+	}
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, label, 0);
+	return x - x0;
+}
+
+static void draw_menu(surface_t *s, const ui_state_t *st)
+{
+	static const char *const title[MENU_COUNT] = { "Desligar", "Reiniciar", "Voltar" };
+	static const char *const desc[MENU_COUNT] = {
+		"Grava tudo e desliga. Tire da tomada com o LED apagado.",
+		"Desliga e liga de novo, sem tirar da tomada.",
+		"Fecha este menu.",
+	};
+	ui_state_t under = *st;
+	under.status = NULL;
+	under.scanlines = 0;	/* o menu aplica uma vez só, por cima de tudo */
+	if (st->menu_under != SCR_MENU && st->menu_under != SCR_POWER)
+		ui_draw(s, st->menu_under, &under);
+	else
+		gfx_clear(s, C_BG);
+	gfx_blend_fill(s, 0, 0, UI_W, UI_H, C_SHADE, 204);
+
+	const int w = 640, pad = 40, row = 80, iw = w - 2 * pad;
+	const int h = pad + 26 + 28 + MENU_COUNT * row + 28 + 2 + 26 + 30 + pad;
+	const int x = (UI_W - w) / 2, y0 = (UI_H - h) / 2;
+	gfx_fill(s, x, y0, w, h, C_PANEL);
+	gfx_frame(s, x, y0, w, h, 4, C_LINE2);
+
+	int ix = x + pad, y = y0 + pad;
+	gfx_pixmap(s, &ICON_POWER, ix, y, 2, C_ACCENT, 0);
+	txt_mid(s, MONO_SEMI, 18, ix + 26 + 14, y + 13, C_ACCENT, "MENU DO SISTEMA", 3);
+	y += 26 + 28;
+
+	for (int i = 0; i < MENU_COUNT; i++, y += row) {
+		int on = i == st->menu_sel;
+		if (on)
+			gfx_fill(s, ix - 16, y, iw + 32, row - 8, C_ACCENT);
+		else if (i < MENU_COUNT - 1)
+			gfx_fill(s, ix, y + row - 5, iw, 1, C_ROWLN);
+		int tx = ix + 30;
+		if (on)
+			gfx_pixmap(s, &ICON_ARROW, ix, y + 18, 2, C_INK, 0);
+		txt_mid(s, MONO_SEMI, 22, tx, y + 22, on ? C_INK : C_TEXT, title[i], 0);
+		txt_fit(s, MONO_REG, 15, tx, y + 50, iw - 30, on ? C_INK : C_MUTED, desc[i]);
+	}
+	y += 28 - 8;
+	gfx_fill(s, ix, y, iw, 2, C_LINE);
+	y += 2 + 26 + 13;
+
+	const int kb = st->pads == 0;
+	int hx = ix;
+	hx += hint(s, hx, y, kb, "SETAS", NULL, "Escolher") + 28;
+	hx += hint(s, hx, y, kb, "ENTER", "A", "Confirmar") + 28;
+	hint(s, hx, y, kb, "ESC", "B", "Voltar");
+}
+
+/* ---- tela: desligando / reiniciando ---- */
+
+static void draw_power(surface_t *s, const ui_state_t *st)
+{
+	gfx_clear(s, C_BG);
+	const int scale = 9, icon = 13 * scale, cy = 250;
+	gfx_pixmap(s, &ICON_POWER, (UI_W - icon) / 2, cy - icon / 2, scale, C_ACCENT, 0);
+
+	const char *t = st->power_reboot ? "Reiniciando" : "Desligando";
+	const char *m1 = st->power_reboot ? "O menu volta em instantes."
+					  : "Quando o LED apagar, pode tirar o aparelho da tomada.";
+	const char *m2 = st->power_reboot ? "N\xC3\xA3o tire o aparelho da tomada agora."
+					  : "Sem LED externo, espere uns 10 segundos.";
+	int y = cy + icon / 2 + 56;
+	txt_mid(s, MONO_SEMI, 48, (UI_W - tw(MONO_SEMI, 48, t, 0)) / 2, y, C_TEXT, t, 0);
+	y += 64;
+	txt_mid(s, MONO_REG, 20, (UI_W - tw(MONO_REG, 20, m1, 0)) / 2, y, C_TEXT2, m1, 0);
+	y += 36;
+	txt_mid(s, MONO_REG, 16, (UI_W - tw(MONO_REG, 16, m2, 0)) / 2, y, C_MUTED, m2, 0);
+	scan_overlay(s, st);
+}
+
 /* ---- tela de abertura ---- */
 
 void ui_draw_splash(surface_t *s, int percent, const char *msg, int scanlines)
@@ -759,6 +861,13 @@ void ui_draw(surface_t *s, screen_t scr, const ui_state_t *st)
 		break;
 	case SCR_NOMOUNT:
 		draw_empty(s, st, 1);
+		break;
+	case SCR_MENU:
+		draw_menu(s, st);
+		scan_overlay(s, st);
+		break;
+	case SCR_POWER:
+		draw_power(s, st);
 		break;
 	}
 }

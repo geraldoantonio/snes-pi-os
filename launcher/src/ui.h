@@ -15,9 +15,14 @@ typedef enum {
 	SCR_LAUNCH,	/* iniciando o jogo */
 	SCR_EMPTY,	/* partição sem ROMs */
 	SCR_NOMOUNT,	/* partição de ROMs não montou */
+	SCR_MENU,	/* menu do sistema (Start), sobre a tela de baixo */
+	SCR_POWER,	/* desligando / reiniciando */
 } screen_t;
 
 typedef enum { FILTER_ALL, FILTER_FAV, FILTER_RECENT, FILTER_COUNT } filter_t;
+
+/* itens do menu do sistema, na ordem da tela */
+enum { MENU_OFF, MENU_REBOOT, MENU_BACK, MENU_COUNT };
 
 typedef struct {
 	const rom_list_t *roms;
@@ -31,6 +36,9 @@ typedef struct {
 	const char *status;	/* mensagem temporária no rodapé, ou NULL */
 	int retry_secs;		/* contagem na tela SCR_NOMOUNT */
 	int launch_blocks;	/* blocos acesos na barra de SCR_LAUNCH (0: padrão, 4) */
+	screen_t menu_under;	/* tela desenhada atrás do SCR_MENU */
+	int menu_sel;		/* item escolhido em SCR_MENU (MENU_*) */
+	int power_reboot;	/* SCR_POWER: 1 reiniciando, 0 desligando */
 } ui_state_t;
 
 int ui_init(const char *fonts_dir);

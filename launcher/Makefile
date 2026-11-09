@@ -19,8 +19,8 @@ HEADERS = $(wildcard src/*.h)
 
 all: snespi-launcher
 
-snespi-launcher: $(COMMON) src/video_fb.c src/input_evdev.c src/music_alsa.c $(HEADERS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/video_fb.c src/input_evdev.c src/music_alsa.c \
+snespi-launcher: $(COMMON) src/video_fb.c src/input_evdev.c src/system_linux.c src/music_alsa.c $(HEADERS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/video_fb.c src/input_evdev.c src/system_linux.c src/music_alsa.c \
 		-lasound -lpthread $(LDLIBS)
 
 preview: snespi-launcher-preview
@@ -56,6 +56,10 @@ shots: snespi-launcher-preview
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/teclado.png --screen list --select 1 --pads 0
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/empty.png --screen empty
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/nomount.png --screen nomount
+	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/menu.png --screen menu --select 1
+	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/menu-teclado.png --screen menu --select 1 --pads 0
+	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/desligando.png --screen power
+	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/reiniciando.png --screen reboot
 	./snespi-launcher-preview --fonts fonts --shot build/shots/abertura.png --screen splash --splash 15 --splash-msg "Iniciando o sistema"
 	./snespi-launcher-preview --fonts fonts --shot build/shots/abertura-jogos.png --screen splash --splash 80 --splash-msg "Lendo os jogos · 205 de 410"
 

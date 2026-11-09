@@ -93,6 +93,8 @@ static int map_key(int code)
 	case BTN_PINKIE: return IN_R;
 	case BTN_BASE3: return IN_SELECT;
 	case BTN_BASE4: return IN_START;
+	/* botão de desligar no GPIO3 (overlay gpio-shutdown) e teclas Power */
+	case KEY_POWER: return IN_POWER;
 	default: return IN_NONE;
 	}
 }
@@ -134,7 +136,8 @@ static void scan(void)
 		int is_pad = TEST(BTN_GAMEPAD, keybits) || TEST(BTN_JOYSTICK, keybits) ||
 			     TEST(BTN_THUMB, keybits) || TEST(BTN_SOUTH, keybits);
 		int is_kbd = TEST(KEY_ENTER, keybits) && TEST(KEY_UP, keybits);
-		if (!TEST(EV_KEY, evbits) || (!is_pad && !is_kbd)) {
+		int is_power = TEST(KEY_POWER, keybits);	/* gpio-keys só tem esta tecla */
+		if (!TEST(EV_KEY, evbits) || (!is_pad && !is_kbd && !is_power)) {
 			close(fd);
 			continue;
 		}
@@ -219,6 +222,55 @@ static void drain(int i)
 				axis(&devs[i], ev[k].code, ev[k].value);
 		}
 	}
+}
+
+/* ---- botão de desligar durante o jogo ---- */
+
+static int pw_fd[MAX_DEV], npw;
+
+void power_watch_open(void)
+{
+	power_watch_close();
+	DIR *d = opendir("/dev/input");
+	if (!d)
+		return;
+	struct dirent *e;
+	while ((e = readdir(d)) != NULL && npw < MAX_DEV) {
+		if (strncmp(e->d_name, "event", 5) != 0)
+			continue;
+		char path[32];
+		snprintf(path, sizeof(path), "/dev/input/%.16s", e->d_name);
+		int fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+		if (fd < 0)
+			continue;
+		unsigned long keybits[BITS(KEY_MAX + 1)] = { 0 };
+		ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits);
+		if (TEST(KEY_POWER, keybits))
+			pw_fd[npw++] = fd;
+		else
+			close(fd);
+	}
+	closedir(d);
+}
+
+int power_watch_pressed(void)
+{
+	int hit = 0;
+	for (int i = 0; i < npw; i++) {
+		struct input_event ev[16];
+		ssize_t n;
+		while ((n = read(pw_fd[i], ev, sizeof(ev))) > 0)
+			for (size_t k = 0; k < (size_t)n / sizeof(ev[0]); k++)
+				if (ev[k].type == EV_KEY && ev[k].code == KEY_POWER && ev[k].value == 1)
+					hit = 1;
+	}
+	return hit;
+}
+
+void power_watch_close(void)
+{
+	while (npw > 0)
+		close(pw_fd[--npw]);
 }
 
 int input_poll(in_event_t *out, int timeout_ms)

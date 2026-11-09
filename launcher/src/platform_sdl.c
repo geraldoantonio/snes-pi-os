@@ -86,6 +86,19 @@ void input_close(void)
 		}
 }
 
+void power_watch_open(void) {}
+int power_watch_pressed(void) { return 0; }
+void power_watch_close(void) {}
+
+/* no computador não desliga nada: o launcher só fecha */
+int system_power(int reboot)
+{
+	SDL_Log("snespi-launcher: %s (simulado)", reboot ? "reiniciar" : "desligar");
+	return 1;
+}
+
+void system_led(int mode) { (void)mode; }
+
 int input_pad_count(void)
 {
 	int n = 0;
@@ -109,6 +122,7 @@ static int map_key(SDL_Keycode k)
 	case SDLK_PAGEDOWN: case SDLK_f: return IN_R;
 	case SDLK_SPACE: return IN_START;
 	case SDLK_TAB: return IN_SELECT;
+	case SDLK_POWER: case SDLK_F12: return IN_POWER;	/* F12 simula o botão de desligar */
 	default: return IN_NONE;
 	}
 }
