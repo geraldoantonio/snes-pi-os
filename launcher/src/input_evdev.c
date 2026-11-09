@@ -58,7 +58,7 @@ static void push(int button, int pressed)
 static int map_key(int code)
 {
 	switch (code) {
-	/* teclado (inclui as teclas padrão do PiSNES: d c s x a f) */
+	/* teclado (d c s x: as teclas antigas do PiSNES; no jogo, ver snes9x.cfg) */
 	case KEY_UP: return IN_UP;
 	case KEY_DOWN: return IN_DOWN;
 	case KEY_LEFT: return IN_LEFT;

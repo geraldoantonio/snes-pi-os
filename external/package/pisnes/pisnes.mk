@@ -39,6 +39,7 @@ endef
 # snes9x reads snes9x.cfg from its own directory, and the GUI looks for
 # roms/, skins/ and preview/ there too. Keep everything together in
 # /usr/share/pisnes, with roms/ pointing to the /roms partition.
+# The board overlay replaces snes9x.cfg (keyboard remapped).
 define PISNES_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/snes9x $(TARGET_DIR)/usr/share/pisnes/snes9x
 	$(INSTALL) -D -m 0755 $(@D)/snes9x.gui $(TARGET_DIR)/usr/share/pisnes/snes9x.gui

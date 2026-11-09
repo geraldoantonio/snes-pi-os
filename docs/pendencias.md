@@ -64,6 +64,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
 - [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
 - [ ] **Menu do sistema e botão de desligar** (GPIO3, pinos 5 e 6): Start › Desligar e Reiniciar; o botão desliga do menu e do meio do jogo, com o save gravado (patch `0007`, ver no `emulador.log` a linha "quit signal, saving SRAM"); se a tela "Desligando" fica até o fim; se o botão religa o Pi parado; se o `gpio_keys` carrega sozinho.
+- [ ] **Teclado no jogo remapeado** (`snes9x.cfg` do overlay): A = C, B = X, X = D, Y = S, L = A, R = Z, Start = Enter, Select = Espaço; Esc ainda sai.
 - [ ] **LED de status** (GPIO17, pinos 11 e 9): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
 - [ ] Se depois de desligar pelo menu o `recentes.txt` e a partição ROMS ficam íntegros (o desligamento desmonta `/roms`).
 
