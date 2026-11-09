@@ -25,7 +25,8 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Versão publicada:** `v0.1.1` (pré-lançamento, criada pela tag). Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
-- **Novo, sem teste no hardware:** ROMS ampliada até o fim do cartão no primeiro boot (`S01roms`, testado no QEMU); menu do sistema (Start › Desligar/Reiniciar), botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
+- **Novo, sem teste no hardware:** menu do sistema (Start › Desligar/Reiniciar), botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; controles USB, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` (com monitor a cada 5 s) na partição ROMS.
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 

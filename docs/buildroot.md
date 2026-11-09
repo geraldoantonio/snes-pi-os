@@ -116,7 +116,7 @@ O Buildroot gera `sdcard.img` (via `genimage`) já com a 3ª partição (FAT32, 
 3. `sfdisk --no-reread -N 3` estende a partição (mesmo início) e `partx -u` avisa o kernel, sem reiniciar (a raiz, na p2, continua montada).
 4. `mkfs.fat -F 32 -n ROMS`, monta e devolve os arquivos. O log vai para `/roms/.snespi/expansao.txt` (e para o `diagnostico.txt`).
 
-Pacotes: `util-linux` (binários e partx) e `dosfstools` (mkfs.fat). Testado no QEMU (cartão de 1 GB: 512 → 872 MB, e o segundo boot não faz nada); no Pi **(verificar)**. Se faltar energia entre a formatação e a devolução dos arquivos, o que estava na ROMS se perde (no primeiro boot, só os jogos de teste).
+Pacotes: `util-linux` (binários e partx) e `dosfstools` (mkfs.fat). Testado no QEMU (cartão de 1 GB: 512 → 872 MB, e o segundo boot não faz nada) e no Pi (cartão de 32 GB: 512 → 30.284 MB, boot com poucos segundos a mais). Se faltar energia entre a formatação e a devolução dos arquivos, o que estava na ROMS se perde (no primeiro boot, só os jogos de teste).
 
 Com jogos já copiados (mais de 64 MB) antes do primeiro boot, amplie num PC: no Linux, GParted; no macOS, o `diskutil` não redimensiona FAT, então é preciso estender a partição 3 com `fdisk -e` (mesmo início) e reformatar a ROMS, salvando os arquivos antes.
 
