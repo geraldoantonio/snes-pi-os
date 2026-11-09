@@ -1,0 +1,128 @@
+#!/bin/sh
+# Amplia a partição ROMS (3ª, FAT32) até o fim do cartão, no primeiro boot.
+#
+# A imagem grava a ROMS com 512 MB. Se depois dela houver espaço livre no
+# cartão (ou se o sistema de arquivos for menor que a partição, caso um
+# boot anterior tenha sido interrompido), este script:
+#   1. copia o conteúdo da ROMS para a RAM (só se tiver até 64 MB);
+#   2. aumenta a partição 3 até o fim do disco, mantendo o início (sfdisk)
+#      e avisa o kernel sem reiniciar (partx);
+#   3. formata em FAT32 com o rótulo ROMS e devolve os arquivos.
+# Nos boots seguintes não há o que fazer e ele sai na hora.
+#
+# Com mais de 64 MB na ROMS (jogos copiados antes do primeiro boot), não
+# mexe em nada: dá para ampliar no computador (ver docs/buildroot.md).
+
+DISK=/dev/mmcblk0
+PART=${DISK}p3
+SYS=/sys/block/mmcblk0
+MNT=/roms
+BACKUP=/tmp/roms-backup
+MIN_GAIN=131072		# 64 MB em setores de 512 bytes
+MAX_COPY_KB=65536	# 64 MB
+
+TMPLOG=/tmp/expansao.txt
+
+log() {
+	echo "S01roms: $*"
+	echo "$*" >>"$TMPLOG"
+}
+
+# grava o log em /roms/.snespi/expansao.txt (se a ROMS estiver montada) e sai
+finish() {
+	if mountpoint -q "$MNT"; then
+		mkdir -p "$MNT/.snespi"
+		cat "$TMPLOG" >>"$MNT/.snespi/expansao.txt" 2>/dev/null
+		sync
+	fi
+	rm -f "$TMPLOG"
+	exit 0
+}
+
+splash() {
+	[ -x /usr/bin/snespi-launcher ] &&
+		/usr/bin/snespi-launcher --splash "$1" --splash-msg "$2" </dev/null >/dev/null 2>&1
+}
+
+start() {
+	[ -b "$PART" ] && [ -r "$SYS/mmcblk0p3/start" ] || exit 0
+	[ -e "${DISK}p4" ] && exit 0	# a ROMS não é a última partição
+
+	disk=$(cat "$SYS/size")
+	pstart=$(cat "$SYS/mmcblk0p3/start")
+	psize=$(cat "$SYS/mmcblk0p3/size")
+	free=$((disk - pstart - psize))
+	# total de setores do FAT32: campo de 32 bits no byte 32 do setor de boot
+	fssize=$(hexdump -s 32 -n 4 -e '1/4 "%u"' "$PART" 2>/dev/null)
+	[ -n "$fssize" ] || fssize=$psize
+
+	grow_part=0
+	[ "$free" -gt "$MIN_GAIN" ] && grow_part=1
+	[ $grow_part = 0 ] && [ $((psize - fssize)) -le "$MIN_GAIN" ] && exit 0
+
+	mountpoint -q "$MNT" || mount "$MNT" 2>/dev/null
+	log "partição ROMS: $((psize / 2048)) MB, sistema de arquivos: $((fssize / 2048)) MB, livre depois dela: $((free / 2048)) MB"
+
+	used=$(du -sk "$MNT" 2>/dev/null | cut -f1)
+	if ! mountpoint -q "$MNT" || [ -z "$used" ] || [ "$used" -gt "$MAX_COPY_KB" ]; then
+		log "não ampliada: a ROMS tem ${used:-?} KB (limite ${MAX_COPY_KB} KB) ou não montou; amplie no computador"
+		finish
+	fi
+
+	splash 25 "Ampliando a parti\303\247\303\243o de jogos (s\303\263 no primeiro boot)"
+	log "copiando $used KB para a RAM"
+	rm -rf "$BACKUP"
+	mkdir -p "$BACKUP"
+	if ! cp -a "$MNT/." "$BACKUP/"; then
+		log "não ampliada: a cópia para a RAM falhou"
+		rm -rf "$BACKUP"
+		finish
+	fi
+	sync
+	if ! umount "$MNT"; then
+		log "não ampliada: $MNT não desmontou"
+		rm -rf "$BACKUP"
+		finish
+	fi
+
+	if [ $grow_part = 1 ]; then
+		# mesmo início, tamanho até o fim; --no-reread porque a raiz (p2) está em uso
+		echo ", +" | sfdisk --no-reread -q -N 3 "$DISK" >/dev/null 2>&1
+		partx -u --nr 3 "$DISK" 2>/dev/null
+	fi
+	psize=$(cat "$SYS/mmcblk0p3/size")
+	formatted=0
+	if [ $((psize - fssize)) -le "$MIN_GAIN" ]; then
+		log "ERRO: a partição não cresceu (sfdisk/partx); nada foi formatado"
+	else
+		log "partição com $((psize / 2048)) MB, formatando"
+		mkfs.fat -F 32 -n ROMS "$PART" >/dev/null 2>&1 && formatted=1
+	fi
+	if ! mount "$MNT"; then
+		log "ERRO: $MNT não montou depois de formatar (arquivos perdidos: $BACKUP, só na RAM)"
+		finish
+	fi
+	cp -a "$BACKUP/." "$MNT/"
+	sync
+	rm -rf "$BACKUP"
+	if [ $formatted = 1 ]; then
+		log "ROMS ampliada para $((psize / 2048)) MB"
+	else
+		log "ROMS não ampliada; arquivos devolvidos à partição"
+	fi
+	finish
+}
+
+case "$1" in
+start)
+	start
+	;;
+stop)
+	;;
+*)
+	echo "Uso: $0 {start|stop}"
+	exit 1
+	;;
+esac
+
+exit 0

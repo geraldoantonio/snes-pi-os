@@ -13,8 +13,8 @@ image boot.vfat {
 	size = 32M
 }
 
-# Partição de ROMs e saves (montada em /roms). Pode ser aumentada
-# depois de gravar o cartão, num PC.
+# Partição de ROMs e saves (montada em /roms). O S01roms a amplia até o
+# fim do cartão no primeiro boot.
 image roms.vfat {
 	vfat {
 		extraargs = "-F 32 -n ROMS"

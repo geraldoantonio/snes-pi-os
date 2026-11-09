@@ -56,6 +56,11 @@ uname -a >> "$OUT" 2>&1
 uptime >> "$OUT" 2>&1
 cat /proc/cmdline >> "$OUT" 2>&1
 
+section "partições"
+cat /proc/partitions >> "$OUT" 2>&1
+df -h / /roms >> "$OUT" 2>&1
+[ -f /roms/.snespi/expansao.txt ] && cat /roms/.snespi/expansao.txt >> "$OUT"
+
 section "dispositivos"
 ls -l /dev/vchiq /dev/vcsm /dev/vcsm-cma /dev/fb0 /dev/dri >> "$OUT" 2>&1
 ls -l /dev/input >> "$OUT" 2>&1
