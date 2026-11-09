@@ -1,0 +1,68 @@
+From 52ea4eeaf73cd6b935af4c393c1741ce77e395c5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Geraldo=20J=C3=BAnior?=
+ <19914760+geraldoantonio@users.noreply.github.com>
+Date: Mon, 9 Nov 2026 09:21:26 -0300
+Subject: [PATCH] unix: save SRAM and exit cleanly on SIGTERM
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The emulator had no signal handlers, so stopping it with SIGTERM (for
+example when the system shuts down) lost the SRAM changes not yet
+auto-saved. Set a flag in the handler and call S9xExit() from the
+joypad read, which saves SRAM like the normal quit keys.
+
+Upstream: not sent, the project is unmaintained.
+
+Signed-off-by: Geraldo Júnior <19914760+geraldoantonio@users.noreply.github.com>
+---
+ unix/unix.cpp | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/unix/unix.cpp b/unix/unix.cpp
+index f3b5bd7..4795a1f 100644
+--- a/unix/unix.cpp
++++ b/unix/unix.cpp
+@@ -255,6 +255,18 @@ static int get_integer_conf (char *section, char *option, int defval)
+ }
+ 
+ 
++/*
++ * SIGTERM/SIGINT/SIGHUP: leave through S9xExit() on the next joypad read,
++ * so SRAM is saved (e.g. when the system is shutting down).
++ */
++static volatile sig_atomic_t quit_signal = 0;
++
++static void S9xQuitSignal (int sig)
++{
++	(void)sig;
++	quit_signal = 1;
++}
++
+ /*#include "cheats.h"*/
+ extern "C"
+ int main (int argc, char **argv)
+@@ -267,6 +279,11 @@ int main (int argc, char **argv)
+ 	setvbuf(stdout, NULL, _IOLBF, 0);
+ 	fprintf(stderr, "snes9x: starting\n");
+ 
++	/* installed before SDL_Init, so SDL keeps these handlers */
++	signal(SIGTERM, S9xQuitSignal);
++	signal(SIGINT, S9xQuitSignal);
++	signal(SIGHUP, S9xQuitSignal);
++
+ 	char abspath[PATH_MAX];
+ 
+ 	//Set the directory to where the binary is
+@@ -1212,6 +1229,11 @@ uint32 S9xReadJoypad (int which1)
+ 		if (joy_buttons[which1][sfc_joy[DOWN_2]])	val |= SNES_DOWN_MASK;
+ 	}
+ 
++	if (quit_signal) {
++		fprintf(stderr, "snes9x: quit signal, saving SRAM\n");
++		S9xExit();
++	}
++
+ 	if (keyssnes[sfc_key[QUIT]] == SDL_PRESSED || joy_buttons[0][sfc_joy[QUIT]]) S9xExit();
+ 
+ 	if (which1==0 && (val & SNES_SELECT_MASK) && (val & SNES_START_MASK)) S9xExit();
