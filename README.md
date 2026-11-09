@@ -32,11 +32,23 @@ Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 - Aviso antes de abrir jogos com chips que o emulador não suporta (Super FX, SA-1, SDD-1, C4, SPC7110, S-RTC)
 - Controle USB (Xbox 360 é o mais garantido) ou teclado; dois jogadores com dois controles
 - Raiz somente leitura; só a partição de jogos e saves é gravada
+- Menu do sistema (Start) para desligar ou reiniciar com segurança; botão de desligar e LED de status opcionais no GPIO
 - Dois jogos de teste gratuitos na imagem, para validar logo após gravar o cartão
 
 | Favoritos e recentes | Aviso de chip não suportado | Iniciando o jogo |
 |---|---|---|
 | ![Aba Favoritos com três jogos marcados com estrela](site/public/img/favoritos.png) | ![Aviso de que o jogo usa o chip SA-1, com as opções Voltar e Tentar mesmo assim](site/public/img/aviso.png) | ![Tela de carregamento com a capa e o nome do jogo](site/public/img/iniciando.png) |
+
+## Botão de desligar e LED de status (opcional)
+
+![Esquema de ligação: botão entre o pino 5 (GPIO3) e o pino 6 (GND); LED com resistor de 330 Ω entre o pino 11 (GPIO17) e o pino 9 (GND)](site/public/img/ligacao-gpio.svg)
+
+| Peça | Pinos | O que faz |
+|---|---|---|
+| Botão (normalmente aberto) | 5 (GPIO3) e 6 (GND) | Fecha o jogo gravando o save e desliga; com o aparelho desligado, liga de novo (verificar) |
+| LED + resistor de 330 Ω | 11 (GPIO17) e 9 (GND) | Pisca no boot, aceso no menu, pisca rápido ao desligar; **apagado = pode tirar da tomada** |
+
+A imagem já vem configurada (overlays `gpio-shutdown` e `gpio-led` no `config.txt`). Sem botão, o mesmo desligamento fica no menu do sistema: **Start** (ou Espaço) › **Desligar**. Ainda sem teste no hardware (verificar). Detalhes em [docs/hardware-e-limites.md](docs/hardware-e-limites.md).
 
 ## Visão geral técnica
 

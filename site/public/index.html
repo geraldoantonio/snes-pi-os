@@ -25,6 +25,7 @@
 			<a href="#precisa">O que precisa</a>
 			<a href="#instalar">Instalar</a>
 			<a href="#controles">Controles</a>
+			<a href="#botao">Botão e LED</a>
 			<a href="#compatibilidade">Compatibilidade</a>
 			<a href="#duvidas">Dúvidas</a>
 		</nav>
@@ -191,6 +192,7 @@
 					<tr><td>Favoritar / desfavoritar</td><td><span class="k">X</span></td><td><span class="k">S</span></td></tr>
 					<tr><td>Todos / Favoritos / Recentes</td><td><span class="k">Back</span></td><td><span class="k">Tab</span></td></tr>
 					<tr><td>Letra anterior / seguinte</td><td><span class="k">LB</span> <span class="k">RB</span></td><td><span class="k">A</span> <span class="k">F</span></td></tr>
+					<tr><td>Menu do sistema (desligar, reiniciar)</td><td><span class="k">Start</span></td><td><span class="k">Espaço</span></td></tr>
 				</tbody>
 			</table>
 		</div>
@@ -243,6 +245,40 @@
 	</div>
 </section>
 
+<section class="block" id="botao">
+	<div class="wrap">
+		<p class="eyebrow">OPCIONAL</p>
+		<h2>Botão de desligar e LED de status</h2>
+		<p class="intro">Sem botão, desligue pelo menu: aperte <b>Start</b> (ou <b>Espaço</b> no teclado) e escolha <b>Desligar</b>. Se quiser um botão de verdade, como num console, ligue um botão e um LED nos pinos do Pi. Não precisa configurar nada: a imagem já vem pronta para eles.</p>
+		<figure class="screen wiring">
+			<img src="img/ligacao-gpio.svg" width="960" height="540" loading="lazy" alt="Esquema de ligação no conector de 26 pinos do Pi 1 Model B rev 2: botão entre o pino 5 (GPIO3) e o pino 6 (GND); LED com resistor de 330 ohms entre o pino 11 (GPIO17) e o pino 9 (GND), com a perna longa do LED do lado do resistor.">
+		</figure>
+		<div class="grid c2 wiring-info">
+			<div class="card">
+				<h3>Peças</h3>
+				<ul>
+					<li>Um botão de pressão comum (normalmente aberto)</li>
+					<li>Um LED de 3 ou 5 mm, de qualquer cor</li>
+					<li>Um resistor de 330 Ω</li>
+					<li>Fios com conector fêmea (jumpers) para os pinos</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>Como funciona</h3>
+				<ul>
+					<li><b>Botão:</b> fecha o jogo gravando o save e desliga. Com o aparelho desligado, o mesmo botão liga de novo.</li>
+					<li><b>LED:</b> pisca enquanto liga, fica aceso no menu e pisca rápido ao desligar. <b>Apagou, pode tirar da tomada.</b></li>
+				</ul>
+			</div>
+		</div>
+		<div style="height: 20px"></div>
+		<div class="note">
+			<svg viewBox="0 0 16 16" fill="#F2A93B" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v8H7zm0 10h2v2H7z"/></svg>
+			<span>Os pinos do Pi trabalham com 3,3 V: nunca ligue 5 V neles. Faça as ligações com o aparelho fora da tomada. Recurso novo, ainda em teste no hardware.</span>
+		</div>
+	</div>
+</section>
+
 <section class="block" id="duvidas">
 	<div class="wrap">
 		<p class="eyebrow">DÚVIDAS E PROBLEMAS</p>
@@ -271,7 +307,7 @@
 		</details>
 		<details>
 			<summary>Posso desligar direto na tomada?</summary>
-			<div class="ans"><p>Pode, desde que esteja no menu e não no meio de um jogo salvando. O sistema fica protegido contra escrita; só a unidade ROMS (jogos, capas e saves) é gravada.</p></div>
+			<div class="ans"><p>O jeito mais seguro é pelo menu: aperte <b>Start</b> e escolha <b>Desligar</b> (ou use o <a href="#botao">botão de desligar</a>). Tirar direto da tomada funciona se estiver no menu e não no meio de um jogo salvando: o sistema fica protegido contra escrita e só a unidade ROMS (jogos, capas e saves) é gravada.</p></div>
 		</details>
 		<details>
 			<summary>Funciona com Wi-Fi ou Bluetooth?</summary>
