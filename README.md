@@ -1,6 +1,6 @@
 # snes-pi-os
 
-Sistema Linux mínimo e dedicado que transforma um **Raspberry Pi 1** (Model B de 512 MB; BCM2835, ARM1176 @ 700 MHz) num console de Super Nintendo: liga direto num menu de jogos, com capas, favoritos e saves automáticos.
+Sistema Linux mínimo e dedicado que transforma um **Raspberry Pi 1** (Model B de 512 MB; BCM2835, ARM1176 de 700 MHz, com overclock para 900 MHz) num console de Super Nintendo: liga direto num menu de jogos, com capas, favoritos e saves automáticos.
 
 Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jogar, com boot curto e um sistema que aguenta ser desligado na tomada.
 
@@ -13,13 +13,13 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 
 ## Status
 
-> **Em desenvolvimento. Ainda não testado em um Raspberry Pi de verdade.**
+> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; controles USB, saves e jogos com chips especiais ainda sem teste.
 
 | Parte | Situação |
 |---|---|
-| Imagem do cartão (Buildroot) | Compila no CI e gera a `sdcard.img` com 3 partições |
+| Imagem do cartão (Buildroot) | Compila no CI e gera a `sdcard.img` com 3 partições; **liga no hardware** com tela de abertura |
 | PiSNES (emulador) | **Roda no hardware** (Pi 1 Model B, 900 MHz): Mortal Kombat II, Aladdin, Donkey Kong Country |
-| Launcher (`launcher/`) | Primeira versão completa; testado no Mac (janela SDL2, capturas e teste de cabeçalhos) |
+| Launcher (`launcher/`) | **Roda no hardware** (HDMI 1080p, teclado USB), com música, capas e abertura dos jogos; controle USB (verificar) |
 | Teste de boot no QEMU | No CI, a cada build: kernel, init, montagens e launcher no framebuffer |
 | Modo rede (enviar jogos pela página web) | Especificado e desenhado; não implementado |
 
