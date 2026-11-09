@@ -78,7 +78,7 @@ static int is_mountpoint(const char *path)
 typedef struct {
 	const char *roms_dir, *emu, *fonts_dir, *music, *shot, *shot_screen, *shot_filter;
 	const char *splash_msg;
-	int shot_select, shot_pads, scanlines, require_mount, list, splash;
+	int shot_select, shot_pads, scanlines, require_mount, list, splash, shot_debug;
 	char saves_dir[600], covers_dir[600];
 } config_t;
 
@@ -122,6 +122,7 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--list")) c->list = 1;
 		else if (!strcmp(a, "--splash") && v) { c->splash = atoi(v); i++; }
 		else if (!strcmp(a, "--splash-msg") && v) { c->splash_msg = v; i++; }
+		else if (!strcmp(a, "--shot-debug")) c->shot_debug = 1;
 		else { usage(); return -1; }
 	}
 	c->require_mount = strcmp(c->roms_dir, "/roms") == 0;
@@ -143,7 +144,42 @@ static int parse_args(config_t *c, int argc, char **argv)
 	return 0;
 }
 
-/* Executa o emulador e espera; devolve o status de saída ou -1 */
+/*
+ * Depuração: com o arquivo vazio <roms>/.snespi/depurar, o monitor anota
+ * CPU, threads e kernel no emulador.log a cada 5 s durante o jogo. Sem ele
+ * (padrão), o log tem só o registro básico de cada jogo. Liga e desliga
+ * pelo menu do sistema.
+ */
+static void debug_path(const config_t *c, char *out, size_t n)
+{
+	snprintf(out, n, "%s/.snespi/depurar", c->roms_dir);
+}
+
+static int debug_enabled(const config_t *c)
+{
+	char p[720];
+	debug_path(c, p, sizeof(p));
+	return access(p, F_OK) == 0;
+}
+
+/* Liga/desliga; devolve o novo estado */
+static int debug_toggle(const config_t *c)
+{
+	char p[720], dir[700];
+	debug_path(c, p, sizeof(p));
+	if (debug_enabled(c)) {
+		unlink(p);
+	} else {
+		snprintf(dir, sizeof(dir), "%s/.snespi", c->roms_dir);
+		mkdir(dir, 0755);
+		int fd = open(p, O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
+		if (fd >= 0)
+			close(fd);
+	}
+	sync();
+	return debug_enabled(c);
+}
+
 /*
  * Executa o emulador e espera; devolve o status de saída ou -1.
  * A saída do emulador (stdout e stderr, onde aparecem asserts e erros de
@@ -192,15 +228,21 @@ static int run_game(const config_t *c, const rom_t *r)
 		dprintf(STDERR_FILENO, "execl: %s\n", strerror(errno));
 		_exit(127);
 	}
+	int monitor = logfd >= 0 && debug_enabled(c);
 	if (logfd >= 0) {
 		fsync(logfd);
-		monitor_start(pid, logfd);
+		if (monitor) {
+			dprintf(logfd, "snespi-launcher: depura\xC3\xA7\xC3\xA3o ligada (monitor a cada 5 s)\n");
+			monitor_start(pid, logfd);
+		}
 	}
 	/*
-	 * Espera o emulador. O monitor grava uma amostra (CPU por thread,
-	 * carga, kernel) e faz fsync do log aos 2 s e depois a cada 5 s: se o
-	 * jogo travar e o aparelho for desligado na tomada, o log mostra o
-	 * que estava acontecendo (sem fsync, o FAT perde o que estava na memória).
+	 * Espera o emulador. Com a depuração ligada, o monitor grava uma amostra
+	 * (CPU por thread, carga, kernel) e faz fsync do log aos 2 s e depois a
+	 * cada 5 s: se o jogo travar e o aparelho for desligado na tomada, o log
+	 * mostra o que estava acontecendo. Sem ela, um único fsync aos 10 s
+	 * guarda as etapas de partida do emulador (sem fsync, o FAT perde o que
+	 * estava na memória) e o cartão não é gravado de novo até o fim do jogo.
 	 */
 	/*
 	 * Botão de desligar no meio do jogo: SIGTERM, que o PiSNES (patch 0007)
@@ -208,7 +250,7 @@ static int run_game(const config_t *c, const rom_t *r)
 	 * EMU_QUIT_MS (travado), SIGKILL.
 	 */
 	int st = 0, rc;
-	long long next_tick = now_ms() + 2000, term_at = 0;
+	long long next_tick = now_ms() + (monitor ? 2000 : 10000), term_at = 0;
 	power_watch_open();
 	for (;;) {
 		pid_t w = waitpid(pid, &st, WNOHANG);
@@ -229,13 +271,18 @@ static int run_game(const config_t *c, const rom_t *r)
 			kill(pid, SIGKILL);
 			term_at = now_ms();	/* não repete a cada volta */
 		}
-		if (logfd >= 0 && now_ms() >= next_tick) {
-			monitor_tick();
-			next_tick = now_ms() + 5000;
+		if (logfd >= 0 && next_tick && now_ms() >= next_tick) {
+			if (monitor) {
+				monitor_tick();
+				next_tick = now_ms() + 5000;
+			} else {
+				fsync(logfd);
+				next_tick = 0;
+			}
 		}
 	}
 	power_watch_close();
-	if (logfd >= 0)
+	if (monitor)
 		monitor_stop();
 	if (st == -1)
 		rc = -1;
@@ -458,8 +505,10 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 		.power_reboot = !strcmp(c->shot_screen, "reboot"),
 	};
 	st.sel = c->shot_select < 0 ? 0 : c->shot_select;
-	if (scr == SCR_MENU)	/* --select escolhe a linha da lista; o menu fica no 1º item */
-		st.menu_sel = MENU_OFF;
+	if (scr == SCR_MENU) {	/* --select escolhe a linha da lista; o menu fica no 1º item */
+		st.menu_sel = c->shot_debug ? MENU_DEBUG : MENU_OFF;
+		st.debug = c->shot_debug;
+	}
 	view_to_state(&st, &v, f);
 	if ((scr == SCR_WARN || scr == SCR_LAUNCH) && v.n == 0) {
 		fprintf(stderr, "snespi-launcher: filtro vazio\n");
@@ -653,6 +702,7 @@ int main(int argc, char **argv)
 		if (btn == IN_START && (scr == SCR_LIST || scr == SCR_EMPTY || scr == SCR_NOMOUNT)) {
 			st.menu_under = scr;
 			st.menu_sel = MENU_OFF;
+			st.debug = debug_enabled(&cfg);
 			scr = SCR_MENU;
 			held = IN_NONE;
 			dirty = 1;
@@ -666,6 +716,9 @@ int main(int argc, char **argv)
 				   (btn == IN_A && st.menu_sel == MENU_BACK)) {
 				scr = st.menu_under;
 				held = IN_NONE;
+				dirty = 1;
+			} else if (btn == IN_A && st.menu_sel == MENU_DEBUG) {
+				st.debug = debug_toggle(&cfg);
 				dirty = 1;
 			} else if (btn == IN_A) {
 				int rb = st.menu_sel == MENU_REBOOT;

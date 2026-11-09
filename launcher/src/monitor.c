@@ -17,10 +17,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
 #define MAX_TASKS 32
+/* com a depuração ligada numa sessão longa: para de anotar ao passar disto */
+#define MAX_LOG_BYTES (256 * 1024)
 
 static int logfd = -1, kmsg = -1;
 static pid_t emu;
@@ -91,6 +94,14 @@ void monitor_tick(void)
 {
 	if (logfd < 0)
 		return;
+	struct stat lst;
+	if (fstat(logfd, &lst) == 0 && lst.st_size > MAX_LOG_BYTES) {
+		dprintf(logfd, "[monitor] log passou de %d KB: amostras suspensas at\xC3\xA9 o fim do jogo\n",
+			MAX_LOG_BYTES / 1024);
+		fsync(logfd);
+		monitor_stop();
+		return;
+	}
 	char path[96], buf[512];
 	long long now = mono_ms();
 	double dt = (now - t_prev) / 1000.0;

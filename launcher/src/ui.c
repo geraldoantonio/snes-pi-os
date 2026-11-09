@@ -736,10 +736,13 @@ static int hint(surface_t *s, int x, int cy, int kb, const char *key, const char
 
 static void draw_menu(surface_t *s, const ui_state_t *st)
 {
-	static const char *const title[MENU_COUNT] = { "Desligar", "Reiniciar", "Voltar" };
+	static const char *const title[MENU_COUNT] = {
+		"Desligar", "Reiniciar", "Depura\xC3\xA7\xC3\xA3o", "Voltar",
+	};
 	static const char *const desc[MENU_COUNT] = {
 		"Grava tudo e desliga. Tire da tomada com o LED apagado.",
 		"Desliga e liga de novo, sem tirar da tomada.",
+		"Grava CPU e sistema durante o jogo no emulador.log.",
 		"Fecha este menu.",
 	};
 	ui_state_t under = *st;
@@ -772,6 +775,13 @@ static void draw_menu(surface_t *s, const ui_state_t *st)
 		if (on)
 			gfx_pixmap(s, &ICON_ARROW, ix, y + 18, 2, C_INK, 0);
 		txt_mid(s, MONO_SEMI, 22, tx, y + 22, on ? C_INK : C_TEXT, title[i], 0);
+		if (i == MENU_DEBUG) {	/* estado, alinhado à direita */
+			const char *v = st->debug ? "LIGADA" : "DESLIGADA";
+			int vw = tw(MONO_SEMI, 13, v, 2) + 20;
+			uint16_t c = on ? C_INK : (st->debug ? C_BLUE : C_MUTED);
+			gfx_frame(s, ix + iw - vw, y + 10, vw, 24, 2, c);
+			txt_mid(s, MONO_SEMI, 13, ix + iw - vw + 10, y + 22, c, v, 2);
+		}
 		txt_fit(s, MONO_REG, 15, tx, y + 50, iw - 30, on ? C_INK : C_MUTED, desc[i]);
 	}
 	y += 28 - 8;

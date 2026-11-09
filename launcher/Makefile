@@ -58,6 +58,7 @@ shots: snespi-launcher-preview
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/nomount.png --screen nomount
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/menu.png --screen menu --select 1
 	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/menu-teclado.png --screen menu --select 1 --pads 0
+	HOME=build/test-roms ./snespi-launcher-preview --roms build/test-roms --fonts fonts --shot build/shots/menu-depuracao.png --screen menu --select 1 --shot-debug
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/desligando.png --screen power
 	./snespi-launcher-preview --roms build/empty-roms --fonts fonts --shot build/shots/reiniciando.png --screen reboot
 	./snespi-launcher-preview --fonts fonts --shot build/shots/abertura.png --screen splash --splash 15 --splash-msg "Iniciando o sistema"

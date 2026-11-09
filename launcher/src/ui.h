@@ -22,7 +22,7 @@ typedef enum {
 typedef enum { FILTER_ALL, FILTER_FAV, FILTER_RECENT, FILTER_COUNT } filter_t;
 
 /* itens do menu do sistema, na ordem da tela */
-enum { MENU_OFF, MENU_REBOOT, MENU_BACK, MENU_COUNT };
+enum { MENU_OFF, MENU_REBOOT, MENU_DEBUG, MENU_BACK, MENU_COUNT };
 
 typedef struct {
 	const rom_list_t *roms;
@@ -39,6 +39,7 @@ typedef struct {
 	screen_t menu_under;	/* tela desenhada atrás do SCR_MENU */
 	int menu_sel;		/* item escolhido em SCR_MENU (MENU_*) */
 	int power_reboot;	/* SCR_POWER: 1 reiniciando, 0 desligando */
+	int debug;		/* monitor do emulador ligado (/roms/.snespi/depurar) */
 } ui_state_t;
 
 int ui_init(const char *fonts_dir);
