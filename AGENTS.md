@@ -20,15 +20,15 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 ## Estado atual
 
-> Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-09**.
+> Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-20**.
 
 - **Versão publicada:** `v0.2.0` (pré-lançamento, 2026-11-09): ROMS ampliada no primeiro boot, menu do sistema (desligar, reiniciar, depuração), botão de desligar e LED no GPIO, teclado do jogo remapeado, save gravado no `SIGTERM`. Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
-- **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado.
+- **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo (`snes9x.cfg` do overlay, 2026-11-20; jogador 2 sem teste).
 - **Sem teste no hardware:** Start › Reiniciar, botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
-- **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; controles USB, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
+- **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; segundo controle, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
 ## Próximos passos (em ordem)
