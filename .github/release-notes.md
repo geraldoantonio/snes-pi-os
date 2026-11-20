@@ -1,6 +1,6 @@
 Imagem do snes-pi-os para o **Raspberry Pi 1** (Model B de 512 MB; o B+ também deve funcionar).
 
-> **Pré-lançamento:** testada num Raspberry Pi 1 Model B (os jogos abrem e rodam), mas ainda sem validação completa de controles, saves e jogos. Se testar, conte como foi nas Issues.
+> **Pré-lançamento:** testada num Raspberry Pi 1 Model B: os jogos abrem e rodam, com teclado ou até dois controles USB estilo Super Nintendo (testado com o Knup KP-3124). Saves e jogos com chips especiais ainda sem validação completa. Se testar, conte como foi nas Issues.
 
 ## Como instalar
 
