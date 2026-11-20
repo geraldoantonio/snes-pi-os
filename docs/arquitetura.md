@@ -45,7 +45,7 @@ O `rpi-userland` foi **removido do Buildroot em 2026.02** (não compila com CMak
 ## Comportamento do `snes9x` que afeta o sistema
 
 - Faz `realpath(argv[0])` e `chdir` para a pasta do binário. O launcher deve executá-lo por **caminho absoluto**, nunca pelo `PATH`.
-- Lê `snes9x.cfg` da pasta do binário. Sem o arquivo, usa os padrões (mapeamento de controle de Xbox 360).
+- Lê `snes9x.cfg` da pasta do binário. Sem o arquivo, usa os padrões (mapeamento de controle de Xbox 360); o do overlay é para controle estilo SNES.
 - ROMs passadas por caminho absoluto são carregadas diretamente.
 - Sai com **Select+Start** no controle 1 (fixo no código) ou Esc no teclado, gravando a SRAM antes de sair. Também grava a SRAM automaticamente (`AutoSaveDelay=30`).
 

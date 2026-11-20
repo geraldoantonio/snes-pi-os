@@ -69,6 +69,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [x] **Teclado no jogo remapeado** (`snes9x.cfg` do overlay): A = C, B = X, X = D, Y = S, L = A, R = Z, Start = Enter, Select = Espaço; Esc ainda sai. Funciona no Pi (2026-11-09).
 - [ ] **LED de status** (GPIO17, pinos 11 e 9, ainda não montado): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
 - [x] **Ampliação da ROMS no primeiro boot** (`S01roms`): funciona no Pi (2026-11-09, cartão de 32 GB): 512 MB → 30.284 MB, arquivos devolvidos, e o diagnóstico (que roda depois) já estava pronto com 22 s de boot, então a formatação é rápida. Depois disso, os dois jogos de teste abriram e saíram com código 0, e `recentes.txt`/`favoritos.txt` ficaram gravados.
+- [ ] **Controles USB estilo SNES** (2 × Knup KP-3124, 2026-11-20): navegam no launcher. No Mortal Kombat II, o Start ficava "salvando" e o jogo não começava: o `snes9x.cfg` tinha o mapeamento de Xbox 360, com `QSAVE=9` (o Start destes controles). Trocado pelo mapeamento estilo SNES, com quick save/load só por Select + R / Select + L (verificar no Pi: botões A/B/X/Y/L/R, Start, direcional e o jogador 2).
 - [x] Depois de desligar pelo menu, `recentes.txt`, `favoritos.txt` e a partição ROMS ficaram íntegros (2026-11-09). Desligar na tomada ainda pode perder o `recentes.txt`.
 
 ## Plano B

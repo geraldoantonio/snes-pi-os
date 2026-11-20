@@ -30,7 +30,7 @@ Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 - Liga direto no menu (launcher próprio em C, desenhando no framebuffer) e volta a ele ao sair do jogo
 - Capas dos jogos (`/roms/capas/<nome>.jpg|png`), favoritos e os 5 últimos jogados
 - Aviso antes de abrir jogos com chips que o emulador não suporta (Super FX, SA-1, SDD-1, C4, SPC7110, S-RTC)
-- Controle USB (Xbox 360 é o mais garantido) ou teclado; dois jogadores com dois controles
+- Controle USB estilo Super Nintendo (testado no menu com o Knup KP-3124) ou teclado; dois jogadores com dois controles
 - Raiz somente leitura; só a partição de jogos e saves é gravada
 - Menu do sistema (Start) para desligar ou reiniciar com segurança; botão de desligar e LED de status opcionais no GPIO
 - Dois jogos de teste gratuitos na imagem, para validar logo após gravar o cartão

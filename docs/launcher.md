@@ -87,4 +87,4 @@ Regras do upload:
 ## Resolvido
 
 - **Sair do jogo:** o PiSNES sai com Select+Start no controle 1 (fixo no código) ou Esc no teclado, e grava a SRAM antes de sair. O launcher só precisa esperar o processo terminar.
-- **Mapeamento:** o padrão do PiSNES é de controle de Xbox 360. Um gamepad USB genérico vai precisar de um `snes9x.cfg` próprio (códigos de botão do `jstest`).
+- **Mapeamento:** o `snes9x.cfg` do overlay é para controle USB genérico estilo SNES (Knup KP-3124: X=0, A=1, B=2, Y=3, L=4, R=5, Select=8, Start=9, direcional nos eixos 0 e 1), a mesma numeração que o launcher usa. O modelo do PiSNES era de Xbox 360 e tinha `QSAVE=9`, que nesses controles é o Start: segurar o Start gravava o estado sem parar e o jogo não começava. Com controle de Xbox, o Start (botão 7) não funciona no jogo; para os dois tipos, o launcher teria de escolher um `snes9x.cfg` por controle (ainda não feito).
