@@ -28,6 +28,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
 - **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo (`snes9x.cfg` do overlay, 2026-11-20; jogador 2 sem teste).
 - **Sem teste no hardware:** Start › Reiniciar, botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **Controle arcade (Raspberry Pi Pico):** firmware em `firmware/arcade/` (2026-11-20), imita o controle USB estilo SNES, dois jogadores num Pico. Compila e passa em `make test`; **sem teste no hardware** (ver `docs/controle-arcade.md`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; segundo controle, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
@@ -49,7 +50,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 Releases são **públicas** e viram o download da página do projeto. Só crie uma quando o dono pedir.
 
-**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256` e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (o manual só gera um artefato temporário de 14 dias).
+**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256`, o firmware do controle arcade (`snespi-arcade-1p.uf2` e `-2p.uf2`, do job `firmware`) e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (o manual só gera um artefato temporário de 14 dias).
 
 **Passo a passo:**
 
@@ -84,7 +85,7 @@ gh release delete v0.2.0 --cleanup-tag
 | Secrets | `CLOUDFLARE_API_TOKEN` (modelo "Edit Cloudflare Workers", conta + zona `geraldojunior.dev`) e `CLOUDFLARE_ACCOUNT_ID`. Quem cria e troca o token é o dono. |
 | Página | Worker `snespi-site` (só arquivos estáticos), domínio `snespi.geraldojunior.dev`. Publicada pelo `site.yml` a cada push que mude `site/`. Validar sem publicar: `cd site && npx wrangler@4.158.0 deploy --dry-run`. |
 | Design | Canvas "Launcher snes-pi-os" no claude.ai (privado do dono): telas do launcher, modo rede e página de upload. As fontes do canvas ainda usam Pixelify nos títulos; o launcher real usa IBM Plex Mono. |
-| Artefatos do CI | `snespi-sdcard-<sha>` (imagem) e `qemu-boot-<sha>` (`tela.png` + `serial.log`), 14 dias. |
+| Artefatos do CI | `snespi-arcade-<sha>` (firmware do controle arcade, a cada push), `snespi-sdcard-<sha>` (imagem) e `qemu-boot-<sha>` (`tela.png` + `serial.log`), 14 dias. |
 
 ## Regras de trabalho
 
@@ -107,7 +108,8 @@ gh release delete v0.2.0 --cleanup-tag
 | `external/package/snespi-homebrew/` | Baixa exemplos do OpenSNES (MIT) para a partição ROMS |
 | `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S01roms`, `S99game`, `snespi-frontend`, `snes9x.cfg` com o teclado do jogo) |
 | `launcher/` | Launcher em C: `src/` (gfx, font, rom, cover, prefs, ui, main, plataformas), `fonts/`, `third_party/stb_*`, `tests/` |
-| `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py` |
+| `firmware/arcade/` | Firmware do controle arcade para o Raspberry Pi Pico (pico-sdk 2.3.1 + TinyUSB): `src/pad.c` (filtro e relatório, testado no computador), `src/pins.h` (pinos), `src/usb_descriptors.c` |
+| `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py`, `build-firmware.sh` + `firmware-container.sh` (controle arcade) |
 | `site/` | Página pública estática (`public/`) e `wrangler.jsonc` (Cloudflare Workers, domínio `snespi.geraldojunior.dev`) |
 | `.github/workflows/` | `build.yml` (check, imagem, Release em tags, QEMU) e `site.yml` (deploy do site) |
 | `.github/release-notes.md` | Texto das Releases (instruções de instalação) |
@@ -122,6 +124,10 @@ make run            # janela SDL2, ROMs de teste, emulador falso (tests/fake-emu
 make test           # gera ROMs de teste e confere a leitura dos cabeçalhos
 make shots          # capturas das telas em build/shots/ (confira o visual por elas)
 make clean
+
+# Controle arcade (Pico)
+make -C firmware/arcade test   # lógica, no computador
+make -C firmware/arcade uf2    # compila no Docker (volume snespi-pico); saída em firmware/arcade/build/
 
 # Validar a defconfig sem compilar (precisa de uma árvore do Buildroot 2025.02.19)
 make -C <buildroot> BR2_EXTERNAL=$PWD/external O=/tmp/out snespi_defconfig
@@ -156,6 +162,7 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
   - Mapeamento: controles com a convenção do kernel (Xbox etc.) confirmam com `BTN_SOUTH` (A do Xbox), voltam com `BTN_EAST`, favoritam com `BTN_WEST`. Controles genéricos estilo SNES confirmam com o botão da direita.
   - Sem relógio no Pi: "recentes" é por ordem de abertura, nunca por data.
   - Música do menu: o launcher **tem de soltar o ALSA antes de abrir o emulador** (`music_stop()` antes do `fork`), senão o PiSNES encontra o áudio ocupado. A música padrão é CC0 (`launcher/music/`); não troque por faixa sem licença livre.
+- **Controle arcade (Pico):** o relatório HID tem de continuar igual ao do controle genérico estilo SNES (coleção *Joystick*, botões X = 0, A = 1, B = 2, Y = 3, L = 4, R = 5, Select = 8, Start = 9, eixos X/Y com centro em 0x7f). Se mudar, o launcher e o `snes9x.cfg` deixam de servir para os dois. O PiSNES só abre os dois primeiros joysticks.
 - **QEMU** (`raspi1ap`) não emula a GPU VideoCore: o PiSNES não abre lá. O teste de boot cobre kernel, init, montagens e o launcher no framebuffer.
   - O QEMU 8.2 também não emula todo o bloco de energia/watchdog (`/soc/watchdog@7e100000`): o kernel cai em `bcm2835_power_probe` ("external abort"). O `qemu-smoke.sh` desliga esse nó numa **cópia** do device tree só para o teste. Falha no QEMU não significa falha no Pi: leia o `serial.log` do artefato `qemu-boot-*` antes de mexer na imagem.
 - **`gh secret set` via `!` no Claude Code** não é interativo e grava valor vazio; use `pbpaste | gh secret set NOME` ou a interface do GitHub.
