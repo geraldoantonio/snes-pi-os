@@ -13,13 +13,13 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 
 ## Status
 
-> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; controles USB, saves e jogos com chips especiais ainda sem teste.
+> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; dois controles USB estilo SNES funcionam; saves e jogos com chips especiais ainda sem teste.
 
 | Parte | Situação |
 |---|---|
 | Imagem do cartão (Buildroot) | Compila no CI e gera a `sdcard.img` com 3 partições; **liga no hardware** com tela de abertura |
 | PiSNES (emulador) | **Roda no hardware** (Pi 1 Model B, 900 MHz): Mortal Kombat II, Aladdin, Donkey Kong Country |
-| Launcher (`launcher/`) | **Roda no hardware** (HDMI 1080p, teclado USB), com música, capas e abertura dos jogos; controle USB (verificar) |
+| Launcher (`launcher/`) | **Roda no hardware** (HDMI 1080p, teclado e controles USB estilo SNES), com música, capas e abertura dos jogos |
 | Teste de boot no QEMU | No CI, a cada build: kernel, init, montagens e launcher no framebuffer |
 | Modo rede (enviar jogos pela página web) | Especificado e desenhado; não implementado |
 
@@ -30,7 +30,7 @@ Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 - Liga direto no menu (launcher próprio em C, desenhando no framebuffer) e volta a ele ao sair do jogo
 - Capas dos jogos (`/roms/capas/<nome>.jpg|png`), favoritos e os 5 últimos jogados
 - Aviso antes de abrir jogos com chips que o emulador não suporta (Super FX, SA-1, SDD-1, C4, SPC7110, S-RTC)
-- Controle USB estilo Super Nintendo (testado no menu com o Knup KP-3124) ou teclado; dois jogadores com dois controles
+- Controle USB estilo Super Nintendo (testado com dois Knup KP-3124, no menu e no jogo) ou teclado; dois jogadores com dois controles
 - Raiz somente leitura; só a partição de jogos e saves é gravada
 - Menu do sistema (Start) para desligar ou reiniciar com segurança; botão de desligar e LED de status opcionais no GPIO
 - Dois jogos de teste gratuitos na imagem, para validar logo após gravar o cartão
