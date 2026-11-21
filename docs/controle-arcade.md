@@ -2,7 +2,7 @@
 
 Um painel arcade (alavanca e botões) ligado a um **Raspberry Pi Pico (RP2040)**, que aparece no USB como joystick. O firmware fica em [`firmware/arcade/`](../firmware/arcade/) (C, pico-sdk 2.3.1 + TinyUSB).
 
-> **Estado:** funciona no Pi (2026-11-20, versão `2p`): no **Teste - Controles**, os dois jogadores respondem. Antes disso, os 24 pinos foram conferidos no macOS com um fio ao GND. **Ainda sem teste com chaves de verdade, no launcher e na saída do jogo com Select + Start (verificar)**.
+> **Estado:** funciona no Pi (2026-11-20, versão `2p`): navega no launcher, no **Teste - Controles** cada botão dos dois jogadores acende no lugar certo, e Select + Start sai do jogo. Os testes foram com um fio ao GND; **falta montar com chaves de verdade (verificar)**.
 
 ## Como funciona
 
@@ -104,9 +104,10 @@ Não cobre o USB (o QEMU não recebe o Pico de verdade) nem o kernel da imagem d
 
 - [x] Cada pino dá a direção ou o botão certo, no jogador certo (macOS, lendo os relatórios HID, 2026-11-20).
 - [x] No Pi, o Pico aparece como dois controles e os dois jogadores respondem no Teste - Controles (2026-11-20).
-- [ ] Launcher: alavanca navega, A confirma, B volta, Start abre o menu.
-- [ ] Teste - Controles: conferir botão a botão se cada um acende no lugar certo, nos dois jogadores.
-- [ ] Select + Start sai do jogo; Select + R e Select + L gravam e carregam o estado.
+- [x] Launcher: navega com o Pico (2026-11-20).
+- [x] Teste - Controles: cada botão acende no lugar certo, nos dois jogadores (2026-11-20).
+- [x] Select + Start sai do jogo (2026-11-20).
+- [ ] Select + R e Select + L gravam e carregam o estado.
 - [ ] Sem toques duplos nem botão preso (repique); se houver, aumente `PAD_DEBOUNCE_MS` em `pad.h`.
 - [ ] Select + Start ao ligar o cabo entra no BOOTSEL.
 - [ ] O Pi 1 alimenta o Pico pela porta USB sem aviso de subtensão.
