@@ -5,6 +5,7 @@
 #   snespi-rede up [PASTA_ROMS]     cabo (eth0); sem cabo, adaptador Wi-Fi USB
 #   snespi-rede scan [PASTA_ROMS]   redes Wi-Fi por perto (wpa_cli scan_results)
 #   snespi-rede down [PASTA_ROMS]   derruba tudo
+#   snespi-rede init                no boot: inicializa o adaptador Wi-Fi e o desliga
 #
 # Última linha da saída do "up", com os campos separados por TAB:
 #   ok <interface> <ip> <wifi> <rede>
@@ -205,8 +206,25 @@ scan)
 down)
 	down
 	;;
+init)
+	# No teste no Pi (2026-11-21, Realtek 0bda:8176), o hub USB da placa caía
+	# em laço enquanto o adaptador nunca tinha sido ligado, e ficava estável
+	# depois de uma conexão. Ligar e desligar a interface faz o driver
+	# programar o chip e deixá-lo em repouso. Não sobe rede nenhuma: sem
+	# wpa_supplicant e sem endereço. (verificar no hardware)
+	n=0
+	while [ -z "$(wlan_if)" ] && [ "$n" -lt 10 ]; do
+		sleep 1
+		n=$((n + 1))
+	done
+	W=$(wlan_if)
+	[ -n "$W" ] || exit 0
+	ip link set "$W" up 2>/dev/null
+	sleep 2
+	ip link set "$W" down 2>/dev/null
+	;;
 *)
-	echo "Uso: $0 {up|scan|down} [PASTA_ROMS]"
+	echo "Uso: $0 {up|scan|down|init} [PASTA_ROMS]"
 	exit 1
 	;;
 esac

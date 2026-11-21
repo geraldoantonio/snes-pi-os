@@ -18,6 +18,10 @@ start)
 		[ -w "$g" ] && echo performance > "$g"
 	done
 
+	# Adaptador Wi-Fi USB: inicializa o chip e o deixa em repouso (ver
+	# snespi-rede). Em segundo plano, para não atrasar o menu.
+	[ -x /usr/bin/snespi-rede ] && /usr/bin/snespi-rede init </dev/null >/dev/null 2>&1 &
+
 	# Avança a barra da tela de abertura (ver S00splash)
 	[ -x /usr/bin/snespi-launcher ] &&
 		/usr/bin/snespi-launcher --splash 45 --splash-msg "Preparando som e controles" \
