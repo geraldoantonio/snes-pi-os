@@ -22,14 +22,15 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 > Atualize esta seção ao fim de cada sessão. Última atualização: **2026-11-20**.
 
-- **Versão publicada:** `v0.2.0` (pré-lançamento, 2026-11-09): ROMS ampliada no primeiro boot, menu do sistema (desligar, reiniciar, depuração), botão de desligar e LED no GPIO, teclado do jogo remapeado, save gravado no `SIGTERM`. Download também pelo site.
+- **Versão publicada:** `v0.2.1` (pré-lançamento, 2026-11-20): mapeamento de controle USB estilo SNES no jogo (na `v0.2.0`, o Start desses controles gravava o estado sem parar). A `v0.2.0` (2026-11-09) trouxe a ROMS ampliada no primeiro boot, o menu do sistema (desligar, reiniciar, depuração), botão de desligar e LED no GPIO, teclado do jogo remapeado e save gravado no `SIGTERM`. Download também pelo site.
 - **Hardware (Pi 1 Model B rev 2, HDMI 1080p, teclado USB, fonte 5 V / 3 A, cartão de 32 GB classe 4):** boot, tela de abertura, launcher, música do menu e **os jogos rodam** (Mortal Kombat II, Aladdin, Donkey Kong Country), com overclock de 900 MHz (`arm_freq=900`, governor `performance`), 37 °C e sem throttling.
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
-- **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo (`snes9x.cfg` do overlay, 2026-11-20; jogador 2 sem teste).
-- **Sem teste no hardware:** Start › Reiniciar, botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo, dois jogadores (`snes9x.cfg` do overlay, 2026-11-20; Bomberman com dois controles sem travar); som no jogo; saves do jogo (gravados ao sair e mantidos depois de desligar); desligar na tomada não corrompeu a ROMS; Aladdin e MK II rodaram sem a lentidão de antes.
+- **Botão de desligar no GPIO3:** desliga e religa o Pi (2026-11-20); falta apertar no meio do jogo.
+- **Sem teste no hardware:** Start › Reiniciar e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
 - **Controle arcade (Raspberry Pi Pico):** firmware em `firmware/arcade/` (2026-11-20), imita o controle USB estilo SNES, dois jogadores num Pico. Gravado num Pico e conferido no macOS: os 24 pinos dão a entrada certa no jogador certo; o descritor HID passa no teste com kernel Linux no QEMU (`make linux-test`); **nada testado no Pi** (ver `docs/controle-arcade.md`).
-- **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; segundo controle, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
+- **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; jogos com chips especiais sem teste; a lentidão crescente de antes não se repetiu, mas a causa não foi achada. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
 ## Próximos passos (em ordem)
@@ -40,11 +41,11 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
    - **Teste - Controles** acende os botões dos jogadores 1 e 2 no emulador;
    - **Teste - Breakout** tem imagem e som; Back + Start volta ao menu; o save aparece;
    - desligar na tomada e ligar de novo não corrompe a partição ROMS.
-   Sem saída na TV, a depuração precisa de adaptador USB-serial (login em `ttyAMA0`, 115200).
+   Sem saída na TV, a depuração precisa de adaptador USB-serial (mensagens do kernel em `ttyAMA0`, 115200; não há login).
 2. Corrigir o que o teste mostrar. Tudo isso está em `docs/pendencias.md`, na seção "A testar no hardware".
 3. **Modo rede** (especificado em `docs/launcher.md` e desenhado no canvas): programa `snespi-upload` em C, QR code (ex.: `qrcodegen`), tela no launcher acionada por Start, Ethernet + `udhcpc` só sob demanda.
-4. Limpeza antes de uma versão estável: tirar o login na serial e o `hello_pi` da defconfig; avaliar `fsck.fat` no boot para a partição ROMS; um `snes9x.cfg` para controles genéricos.
-5. Quando o hardware estiver validado: Releases deixam de ser pré-lançamento (ver **Releases**).
+4. Limpeza antes de uma versão estável: feita (sem login na serial, sem `hello_pi`, `snes9x.cfg` para controles genéricos). O `fsck.fat` no boot ficou de fora: desligar na tomada não corrompeu a ROMS.
+5. Releases: o `--prerelease` já saiu do `build.yml`; a próxima tag (`v1.0.0`) sai como versão estável. Depois dela, apontar o botão do site para `releases/latest`.
 
 ## Releases
 
@@ -70,7 +71,7 @@ Releases são **públicas** e viram o download da página do projeto. Só crie u
 
 **Versionamento:** `0.x.y` enquanto não houver teste completo no hardware. Novo recurso sobe o `x`; só correções sobem o `y`.
 
-**Pré-lançamento:** o passo "Criar release" usa `--prerelease`. Quando o hardware for validado, tire o `--prerelease` do `build.yml`; aí o link `releases/latest` passa a funcionar e o botão do site pode apontar para ele.
+**Pré-lançamento:** até a `v0.2.1`, o passo "Criar release" usava `--prerelease`. Com o hardware validado (2026-11-20), a opção saiu do `build.yml`: as próximas tags viram versões normais, o link `releases/latest` passa a funcionar e o botão do site pode apontar para ele.
 
 **Release com problema:** não reaproveite a tag. Corrija e publique a próxima versão. Para apagar uma Release, só com autorização do dono:
 ```sh

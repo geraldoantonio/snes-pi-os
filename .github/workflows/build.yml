@@ -136,8 +136,7 @@ jobs:
             "$RUNNER_TEMP"/uf2/snespi-arcade-*.uf2 \
             --repo "$GITHUB_REPOSITORY" \
             --title "snes-pi-os $GITHUB_REF_NAME" \
-            --notes-file "$GITHUB_WORKSPACE/.github/release-notes.md" \
-            --prerelease
+            --notes-file "$GITHUB_WORKSPACE/.github/release-notes.md"
 
       # Boota a imagem no QEMU (raspi1ap, mesmo SoC do Pi 1). Não testa a GPU
       # (PiSNES) nem áudio, mas pega erros de kernel, init, montagens e se o

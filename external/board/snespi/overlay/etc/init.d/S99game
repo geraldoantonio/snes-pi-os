@@ -26,6 +26,11 @@ start)
 	if ! mountpoint -q /roms; then
 		echo "S99game: AVISO: /roms não está montado (3ª partição)"
 	fi
+
+	# Fim dos scripts de boot, no log do kernel (nível 5, "notice"). Com o
+	# loglevel=3 do cmdline.txt não aparece na tela; o teste do QEMU
+	# (loglevel=6) espera por esta linha na serial.
+	echo "<5>snespi: boot completo (S99game)" >/dev/kmsg 2>/dev/null
 	;;
 stop)
 	# Garante que saves pendentes vão para o cartão

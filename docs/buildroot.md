@@ -94,7 +94,7 @@ Como o frontend sobe: `inittab` → `tty1::respawn:/usr/bin/snespi-frontend`. Pe
 Outras escolhas da defconfig:
 
 - `mdev`, para carregar módulos de gamepads (ex.: `xpad`, `hid-sony`) pelo modalias.
-- Login (`getty`) só na serial `ttyAMA0` a 115200, para depuração; remover no fim.
+- Sem login em nenhum terminal (`BR2_TARGET_GENERIC_GETTY` desligado). O kernel ainda escreve as mensagens de boot na serial `ttyAMA0` a 115200, o que ajuda a depurar com um adaptador USB-serial.
 - Sem `urandom-scripts` (o `seedrng` grava em `/var/lib`, na raiz somente leitura).
 
 > `gpu_mem=16` é arriscado: o PiSNES usa EGL/GLES2/dispmanx e precisa de memória de GPU. Começar com 64 e reduzir só depois de medir. O `config_default.txt` do Buildroot usa 100.
@@ -103,7 +103,7 @@ Pontos a verificar no hardware: se `dtparam=audio=on` é necessário; se o FAT m
 
 ## 6. Ordem de validação no hardware
 
-1. Imagem com `BR2_PACKAGE_RPI_USERLAND_HELLO=y`: rodar `hello_triangle`. Se falhar, a pilha GLES legada não funciona e o plano precisa mudar antes de seguir.
+1. Imagem com `BR2_PACKAGE_RPI_USERLAND_HELLO=y`: rodar `hello_triangle`. Se falhar, a pilha GLES legada não funciona e o plano precisa mudar antes de seguir. (Feito: funcionou; o `hello_pi` saiu da defconfig depois.)
 2. Imagem com o PiSNES e o GUI nativo (`snes9x.gui`).
 3. Imagem com o launcher próprio.
 

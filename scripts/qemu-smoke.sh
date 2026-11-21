@@ -1,7 +1,8 @@
 #!/bin/sh
 # Teste de boot no QEMU (máquina raspi1ap, mesmo SoC BCM2835 do Pi 1).
 #
-# Boota a sdcard.img, espera o login aparecer na serial (init terminou),
+# Boota a sdcard.img, espera na serial a linha "snespi: boot" (o S99game,
+# último script do boot, a escreve no log do kernel; a imagem não tem login),
 # tira uma captura da tela (onde o launcher deve estar) e confere que ela
 # tem conteúdo.
 #
@@ -65,15 +66,15 @@ while [ "$elapsed" -lt "$TIMEOUT" ]; do
 		echo "FALHOU: kernel panic"
 		break
 	fi
-	if grep -q "login:" "$LOG" 2>/dev/null; then
-		echo "Boot completo em ~${elapsed}s (login na serial)"
+	if grep -q "snespi: boot" "$LOG" 2>/dev/null; then
+		echo "Boot completo em ~${elapsed}s (S99game terminou)"
 		result=0
 		break
 	fi
 	sleep 5
 	elapsed=$((elapsed + 5))
 done
-[ "$elapsed" -ge "$TIMEOUT" ] && echo "FALHOU: sem login na serial em ${TIMEOUT}s"
+[ "$elapsed" -ge "$TIMEOUT" ] && echo "FALHOU: o boot não terminou em ${TIMEOUT}s (sem \"snespi: boot\" na serial)"
 
 if [ "$result" -eq 0 ]; then
 	# tempo para o launcher abrir e desenhar
@@ -87,6 +88,6 @@ if [ "$result" -eq 0 ]; then
 fi
 
 echo "---- partes relevantes do log serial ----"
-grep -E "Linux version|Machine model|mmcblk0|EXT4-fs|vfat|FAT-fs|S99game|snespi|login:|panic|Oops|error" "$LOG" | head -60 || true
+grep -E "Linux version|Machine model|mmcblk0|EXT4-fs|vfat|FAT-fs|S99game|snespi|panic|Oops|error" "$LOG" | head -60 || true
 rm -f "$SD" "$DTB"
 exit "$result"
