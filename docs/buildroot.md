@@ -25,12 +25,13 @@ O Debian 12 traz CMake 3.25, o que evita o problema do CMake ≥ 4 com o `rpi-us
 
 ### No GitHub Actions
 
-O workflow `.github/workflows/build.yml` tem dois jobs:
+O workflow `.github/workflows/build.yml` tem três jobs:
 
 - `check` (a cada push na `main` e em PRs, cerca de 1 min): `check-package` nos pacotes e validação da `snespi_defconfig`.
+- `firmware` (cerca de 2 min; em tags `arcade-v*`, manual e em push na `main` ou PR que mude `firmware/` ou os scripts dele): testes e compilação do firmware do controle arcade. Publica os `.uf2` como artefato por 14 dias; nas tags `arcade-v*`, cria a Release do firmware.
 - `image` (manual, pelo botão "Run workflow"; em tags `v*`; toda segunda; e em push na `main` que mude `external/`, `launcher/` ou os scripts do build): build completo no contêiner Debian 12, com cache de `dl/` e `ccache`. Publica `sdcard.img.xz` como artefato por 14 dias. As tags só leem o cache gravado na `main`.
-- Em tags `v*` (ex.: `git tag v0.1.0 && git push origin v0.1.0`), o mesmo job cria uma **Release pública** marcada como pré-lançamento, com `snes-pi-os-<tag>.img.xz`, o `.sha256` e as notas de `.github/release-notes.md`. É o link de download da página do projeto.
-- Em seguida, no mesmo job, o **teste de boot no QEMU** (`scripts/qemu-smoke.sh`): boota a imagem na máquina `raspi1ap` (mesmo SoC BCM2835), espera o login na serial e tira uma captura da tela, que deve mostrar o launcher. Publica `tela.png` e `serial.log` como artefato `qemu-boot-*`. Se falhar, o build fica vermelho, mas a imagem já foi publicada.
+- Em tags `v*` (ex.: `git tag v0.1.0 && git push origin v0.1.0`), o mesmo job cria uma **Release pública** (até a `v0.2.1`, marcada como pré-lançamento), com `snes-pi-os-<tag>.img.xz`, o `.sha256` e as notas de `.github/release-notes.md`. É o link de download da página do projeto.
+- Em seguida, no mesmo job, o **teste de boot no QEMU** (`scripts/qemu-smoke.sh`): boota a imagem na máquina `raspi1ap` (mesmo SoC BCM2835), espera a linha "snespi: boot completo" do `S99game` na serial e tira uma captura da tela, que deve mostrar o launcher. Publica `tela.png` e `serial.log` como artefato `qemu-boot-*`. Se falhar, o build fica vermelho, mas a imagem já foi publicada.
   - Pega: kernel e device tree, init, raiz somente leitura, montagem de `/roms`, `S99game` e o launcher desenhando no framebuffer.
   - Não pega: GPU VideoCore (o PiSNES não abre no QEMU), áudio, firmware (`config.txt` e `start.elf` são ignorados; o QEMU carrega o kernel direto, com a linha de comando definida no script) e desempenho.
 
