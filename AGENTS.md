@@ -46,7 +46,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 2. Corrigir o que o teste mostrar. Tudo isso está em `docs/pendencias.md`, na seção "A testar no hardware".
 3. **Modo rede:** implementado (ver `docs/launcher.md`). Falta testar no Pi pelo cabo e com um adaptador Wi-Fi USB (lista em `docs/pendencias.md`) e conferir as telas com o canvas.
 4. Limpeza antes de uma versão estável: feita (sem login na serial, sem `hello_pi`, `snes9x.cfg` para controles genéricos). O `fsck.fat` no boot ficou de fora: desligar na tomada não corrompeu a ROMS.
-5. Releases: o `--prerelease` já saiu do `build.yml`; a próxima tag (`v1.0.0`) sai como versão estável. Depois dela, apontar o botão do site para `releases/latest`.
+5. Releases: a `v1.0.0` saiu como versão estável. A próxima é a **`v1.1.0`**, com o modo rede (recurso novo sobe o número do meio); o site já a cita, então o merge da branch `modulo-de-rede` na `main` e a tag devem sair juntos. Falta também apontar o botão do site para `releases/latest`.
 
 ## Releases
 
