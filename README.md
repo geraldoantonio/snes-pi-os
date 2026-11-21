@@ -22,7 +22,7 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 | Launcher (`launcher/`) | **Roda no hardware** (HDMI 1080p, teclado e controles USB estilo SNES), com música, capas e abertura dos jogos |
 | Controle arcade (`firmware/arcade/`) | Firmware para Raspberry Pi Pico, versão 1.0.0: **funciona no hardware** com dois jogadores (testado com fio; falta o painel montado) |
 | Teste de boot no QEMU | No CI, a cada build: kernel, init, montagens e launcher no framebuffer |
-| Modo rede (enviar jogos pela página web) | Especificado e desenhado; não implementado |
+| Modo rede (enviar jogos pela página web, por cabo ou Wi-Fi USB) | Implementado (Start › Receber jogos); **não testado no hardware** |
 
 Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 

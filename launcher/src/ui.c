@@ -692,7 +692,11 @@ static void draw_empty(surface_t *s, const ui_state_t *st, int nomount)
 		y += step(s, x, y, 2, w, "Abra a unidade ROMS e copie os arquivos .sfc, .smc, .fig ou .swc.");
 		y += step(s, x, y, 3, w, "Opcional: crie a pasta capas com imagens .jpg ou .png de mesmo nome da ROM.");
 		y += step(s, x, y, 4, w, "Ejete o cart\xC3\xA3o, coloque de volta no Pi e ligue.");
-		txt(s, MONO_REG, 14, x, y + 8, C_MUTED, "Use apenas jogos que voc\xC3\xAA tem o direito de usar.", 0);
+		/* sem tirar o cartão: o modo rede, pelo menu do sistema */
+		int nx = x + txt(s, MONO_REG, 16, x, y + 4, C_TEXT2, "Ou envie pela rede: ", 0);
+		nx += keycap(s, nx, y + 4 + lh(MONO_REG, 16) / 2, st->pads > 0 ? "START" : "ESPAÇO") + 10;
+		txt(s, MONO_SEMI, 16, nx, y + 4, C_TEXT, "Receber jogos", 0);
+		txt(s, MONO_REG, 14, x, y + 44, C_MUTED, "Use apenas jogos que voc\xC3\xAA tem o direito de usar.", 0);
 	} else {
 		txt(s, MONO_SEMI, 18, x, y, C_ACCENT, "ERRO NO CART\xC3\x83O", 3);
 		y += 26 + 22;

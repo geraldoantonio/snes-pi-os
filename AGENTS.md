@@ -29,6 +29,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo, dois jogadores (`snes9x.cfg` do overlay, 2026-11-20; Bomberman com dois controles sem travar); som no jogo; saves do jogo (gravados ao sair e mantidos depois de desligar); desligar na tomada não corrompeu a ROMS; Aladdin e MK II rodaram sem a lentidão de antes.
 - **Botão de desligar no GPIO3:** desliga e religa o Pi (2026-11-20); falta apertar no meio do jogo.
 - **Sem teste no hardware:** Start › Reiniciar e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **Modo rede (2026-11-21, branch `modulo-de-rede`, sem push):** Start › Receber jogos sobe a rede sob demanda (cabo ou adaptador Wi-Fi USB), mostra endereço, PIN e QR code e recebe jogos e capas pela página do `snespi-upload`. Testado só no computador (`make test`, `make run`, script no `ash` do BusyBox, defconfig validada). **A imagem com `wpa_supplicant` e `linux-firmware` ainda não foi compilada, e nada disso rodou no Pi.**
 - **Controle arcade (Raspberry Pi Pico):** firmware em `firmware/arcade/`, versão 1.0.0 (2026-11-20, Release `arcade-v1.0.0`, separada da imagem), imita o controle USB estilo SNES, dois jogadores num Pico. **Funciona no Pi:** navega no launcher, cada botão dos dois jogadores acende no lugar certo no "Teste - Controles" e Select + Start sai do jogo (testes com fio ao GND). Falta montar com chaves de verdade (ver `docs/controle-arcade.md`; esquema em `site/public/img/ligacao-pico.svg`; seção "Arcade" no site).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; jogos com chips especiais sem teste; a lentidão crescente de antes não se repetiu, mas a causa não foi achada. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
@@ -43,7 +44,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
    - desligar na tomada e ligar de novo não corrompe a partição ROMS.
    Sem saída na TV, a depuração precisa de adaptador USB-serial (mensagens do kernel em `ttyAMA0`, 115200; não há login).
 2. Corrigir o que o teste mostrar. Tudo isso está em `docs/pendencias.md`, na seção "A testar no hardware".
-3. **Modo rede** (especificado em `docs/launcher.md` e desenhado no canvas): programa `snespi-upload` em C, QR code (ex.: `qrcodegen`), tela no launcher acionada por Start, Ethernet + `udhcpc` só sob demanda.
+3. **Modo rede:** implementado (ver `docs/launcher.md`). Falta compilar a imagem (CI ou Docker local), testar no Pi pelo cabo e com um adaptador Wi-Fi USB (lista em `docs/pendencias.md`) e conferir as telas com o canvas.
 4. Limpeza antes de uma versão estável: feita (sem login na serial, sem `hello_pi`, `snes9x.cfg` para controles genéricos). O `fsck.fat` no boot ficou de fora: desligar na tomada não corrompeu a ROMS.
 5. Releases: o `--prerelease` já saiu do `build.yml`; a próxima tag (`v1.0.0`) sai como versão estável. Depois dela, apontar o botão do site para `releases/latest`.
 
@@ -110,8 +111,8 @@ gh release delete v0.2.0 --cleanup-tag
 | `external/package/pisnes/` | PiSNES do fork `RetroPie/pisnes` (`a5b427f`) + patches `0001` a `0007` (cross-compile, correções, logs de diagnóstico, save no `SIGTERM`) |
 | `external/package/snes-launcher/` | Compila `launcher/` (site method `local`, sempre com `make -B`) |
 | `external/package/snespi-homebrew/` | Baixa exemplos do OpenSNES (MIT) para a partição ROMS |
-| `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S01roms`, `S99game`, `snespi-frontend`, `snes9x.cfg` com o teclado do jogo) |
-| `launcher/` | Launcher em C: `src/` (gfx, font, rom, cover, prefs, ui, main, plataformas), `fonts/`, `third_party/stb_*`, `tests/` |
+| `external/board/snespi/` | `config.txt`, `cmdline.txt`, `genimage.cfg.in`, `post-build.sh`, `post-image.sh`, `overlay/` (`fstab`, `S00splash`, `S01roms`, `S99game`, `snespi-frontend`, `snespi-rede` para a rede do modo "Receber jogos", `snes9x.cfg` com o teclado do jogo) |
+| `launcher/` | Launcher em C: `src/` (gfx, font, rom, cover, prefs, ui, net, main, plataformas), `upload/` (servidor `snespi-upload` do modo rede e sua página), `fonts/`, `third_party/` (`stb_*`, `qrcodegen`), `tests/` |
 | `firmware/arcade/` | Firmware do controle arcade para o Raspberry Pi Pico (pico-sdk 2.3.1 + TinyUSB): `src/pad.c` (filtro e relatório, testado no computador), `src/pins.h` (pinos), `src/usb_descriptors.c` |
 | `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py`, `build-firmware.sh` + `firmware-container.sh` (controle arcade) |
 | `site/` | Página pública estática (`public/`) e `wrangler.jsonc` (Cloudflare Workers, domínio `snespi.geraldojunior.dev`) |
@@ -126,7 +127,7 @@ gh release delete v0.2.0 --cleanup-tag
 # Launcher, no computador (macOS/Linux)
 cd launcher
 make run            # janela SDL2, ROMs de teste, emulador falso (tests/fake-emu.sh)
-make test           # gera ROMs de teste e confere a leitura dos cabeçalhos
+make test           # cabeçalhos das ROMs, música, servidor de envio (ASan) e modo rede sem tela
 make shots          # capturas das telas em build/shots/ (confira o visual por elas)
 make clean
 
@@ -168,6 +169,12 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
   - Mapeamento: controles com a convenção do kernel (Xbox etc.) confirmam com `BTN_SOUTH` (A do Xbox), voltam com `BTN_EAST`, favoritam com `BTN_WEST`. Controles genéricos estilo SNES confirmam com o botão da direita.
   - Sem relógio no Pi: "recentes" é por ordem de abertura, nunca por data.
   - Música do menu: o launcher **tem de soltar o ALSA antes de abrir o emulador** (`music_stop()` antes do `fork`), senão o PiSNES encontra o áudio ocupado. A música padrão é CC0 (`launcher/music/`); não troque por faixa sem licença livre.
+- **Modo rede:**
+  - A rede só existe enquanto a tela "Receber jogos" está aberta. Todo caminho de saída do launcher (B, botão de desligar, `SIGTERM`) tem de passar por `net_stop()`, que para o servidor e chama `snespi-rede down`.
+  - O launcher e o `snespi-upload` conversam por linhas com campos separados por TAB na saída padrão (`pronto`, `inicio`, `ok`, `erro`, `bloqueado`), e o `snespi-rede` responde no mesmo formato. Mudou um lado, mude o outro e o `tests/fake-rede.sh`.
+  - O `wpa_cli scan_results` escreve bytes fora do ASCII como `\xNN`; o launcher desfaz isso (`decode_ssid`) e o script devolve o nome ao `wpa_supplicant` em hexadecimal. Não monte `ssid="..."` nem `psk="..."` com texto do usuário.
+  - A página (`launcher/upload/pagina.html`) vira string em C por `sed`, linha a linha: não use aspas duplas nela (atributos e JavaScript com aspas simples).
+  - No Pi a porta é a 80 (o launcher roda como root); no `make run`, 8080.
 - **Controle arcade (Pico):** o relatório HID tem de continuar igual ao do controle genérico estilo SNES (coleção *Joystick*, botões X = 0, A = 1, B = 2, Y = 3, L = 4, R = 5, Select = 8, Start = 9, eixos X/Y com centro em 0x7f). Se mudar, o launcher e o `snes9x.cfg` deixam de servir para os dois. O PiSNES só abre os dois primeiros joysticks. A versão do firmware é própria (`firmware/arcade/VERSION`, vai para o `bcdDevice` do USB e para o nome do `.uf2`) e tem tag e Release próprias (`arcade-v*`, ver **Releases**): ao mudar o firmware, suba a versão e a tabela em `docs/controle-arcade.md`.
 - **QEMU** (`raspi1ap`) não emula a GPU VideoCore: o PiSNES não abre lá. O teste de boot cobre kernel, init, montagens e o launcher no framebuffer.
   - O QEMU 8.2 também não emula todo o bloco de energia/watchdog (`/soc/watchdog@7e100000`): o kernel cai em `bcm2835_power_probe` ("external abort"). O `qemu-smoke.sh` desliga esse nó numa **cópia** do device tree só para o teste. Falha no QEMU não significa falha no Pi: leia o `serial.log` do artefato `qemu-boot-*` antes de mexer na imagem.

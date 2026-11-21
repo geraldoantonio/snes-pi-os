@@ -12,7 +12,7 @@
 | Saída de vídeo | HDMI, composto (conector RCA amarelo) |
 | Áudio | HDMI, jack 3,5 mm |
 | USB | 2 portas |
-| Rede | Ethernet 10/100 (sem Wi-Fi) |
+| Rede | Ethernet 10/100; sem Wi-Fi na placa (o modo rede aceita adaptador Wi-Fi USB) |
 | GPIO | 26 pinos |
 
 Com só 2 portas USB, dois controles ocupam as duas. Para usar também um pendrive (importar ROMs), é preciso um hub USB, de preferência com fonte própria, porque as portas do Model B fornecem pouca corrente **(verificar com os seus acessórios)**.

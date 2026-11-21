@@ -7,7 +7,7 @@
 - [x] **Saída de vídeo principal:** HDMI. O design do launcher é 1280×720 (720p); composto fica sem layout próprio por enquanto.
 - [x] **Placa:** Raspberry Pi 1 Model B rev 2 (2 USB, Ethernet), não B+.
 - [x] **Desligar com segurança:** menu do sistema no launcher (Start) e, opcionalmente, botão no GPIO3 (pinos 5 e 6) e LED de status no GPIO17 (pinos 11 e 9). Reset fica de fora (furos P6, solda). Ver [hardware-e-limites.md](hardware-e-limites.md).
-- [x] **Envio de ROMs:** cartão SD sempre funciona; além disso, um **modo rede** opcional no launcher, com página web de upload pela Ethernet. Desligado por padrão: a rede só sobe enquanto esse modo está aberto. Ver [launcher.md](launcher.md).
+- [x] **Envio de ROMs:** cartão SD sempre funciona; além disso, um **modo rede** opcional no launcher, com página web de upload pela Ethernet ou por adaptador Wi-Fi USB. Desligado por padrão: a rede só sobe enquanto esse modo está aberto. Ver [launcher.md](launcher.md).
 - [x] **Launcher:** próprio, em C (`launcher/`); o GUI nativo do PiSNES não é usado.
 - [x] **Versão do Buildroot:** 2025.02.19 LTS, a última com `rpi-userland` (removido na 2026.02). Ver [buildroot.md](buildroot.md).
 - [x] **Onde compilar:** GitHub Actions (repositório público), em contêiner Debian 12.
@@ -62,7 +62,9 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [x] Gamepad USB genérico: carrega pelo `mdev`; o `snes9x.cfg` do overlay é para ele.
 - [x] Removidos da defconfig: login na serial `ttyAMA0` e `hello_pi` (o kernel ainda escreve as mensagens de boot na serial). Verificar na próxima imagem que o boot segue igual.
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
-- [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
+- [ ] **Modo rede pelo cabo** (Start › Receber jogos, implementado em 2026-11-21, sem teste no Pi): a tela chega ao endereço com QR code; tempo do DHCP; a página abre no celular e o QR code é lido pela câmera; velocidade de upload pela Ethernet 10/100 e gravação no FAT; o jogo enviado aparece na lista ao concluir; a música do menu segue tocando sem engasgar durante o envio; depois de sair, a rede está mesmo desligada (`ip addr` não dá para conferir sem serial: ver se o aparelho some do roteador).
+- [ ] **Modo rede por Wi-Fi USB:** qual adaptador o Pi 1 reconhece (driver e firmware carregam? o `rede.log` mostra o `dmesg`); a lista de redes aparece; o teclado da senha com o controle; conexão com WPA2; nomes de rede com acento; consumo do adaptador na USB do Model B com a fonte de 3 A.
+- [ ] Modo rede: o tamanho da imagem e o tempo de build com `wpa_supplicant`, `libnl` e `linux-firmware` (o `rootfs` local tinha 38 MB usados de 120 MB antes deles).
 - [x] **Desligar pelo menu do sistema** (Start › Desligar): funciona no Pi (2026-11-09).
 - [ ] Start › Reiniciar no Pi.
 - [x] **Botão de desligar** (GPIO3, pinos 5 e 6, botão de gabinete de PC): desliga e religa o Pi parado (2026-11-20), então o `gpio_keys` carrega sozinho. Falta conferir apertando no meio do jogo: o save gravado (patch `0007`, a linha "quit signal, saving SRAM" no `emulador.log`).
@@ -89,7 +91,7 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 8. [x] ~~Primeira imagem: PiSNES com o GUI nativo~~: pulado, o boot foi validado direto com o launcher.
 9. [x] Launcher em C e pacote `snes-launcher`.
 10. [x] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
-11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher (como item do menu do sistema, aberto pelo Start). Pelo cabo e por adaptador Wi-Fi USB (ver [launcher.md](launcher.md): falta `wpa_supplicant`, firmware dos chips e a tela de rede e senha).
+11. [x] Modo rede: `snespi-upload`, QR code e telas no launcher (item "Receber jogos" do menu do sistema), pelo cabo e por adaptador Wi-Fi USB (`snespi-rede`, `wpa_supplicant`, firmware dos chips, lista de redes e teclado da senha). Ver [launcher.md](launcher.md). Feito em 2026-11-21; falta a imagem compilar no CI e o teste no Pi (seção "A testar no hardware").
 12. [ ] (Ideia, adiada) Buscar capas pela internet no launcher, junto com o modo rede: índice do `libretro-thumbnails` gerado no build, rede e hora (`udhcpc`, `ntpd -q`) sob demanda, HTTPS com libcurl e certificados, gravação em `/roms/capas`. Um script para PC também ficou para depois.
 13. [ ] (Ideia, adiada) Teste de compatibilidade dos jogos no computador: programa com o núcleo do PiSNES (SNES9X 1.39, mesmas opções `_ZAURUS`), sem vídeo, que roda cada ROM uns 30 s e marca as que travam, fecham ou ficam com a tela preta. Não mede o desempenho no Pi 1. Hoje a triagem é só pelo cabeçalho (`snespi-launcher --list`, coluna de chip suportado).
 14. [ ] (Ideia) Launcher listar `.zip`: o PiSNES já abre zip (`UNZIP=1` no Makefile, `LoadZip` no `memmap.cpp`), mas o launcher teria de abrir o zip para ler o cabeçalho.
