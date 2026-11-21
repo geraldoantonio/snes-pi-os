@@ -79,7 +79,7 @@ Servidor de upload: programa próprio em C (`snespi-upload`), separado do launch
 
 Regras do upload:
 
-- Extensões aceitas: `.sfc`, `.smc`, `.fig`, `.swc` (e `.zip` se o PiSNES abrir **(verificar)**) para `/roms`; `.jpg` e `.png` para `/roms/capas/`.
+- Extensões aceitas: `.sfc`, `.smc`, `.fig`, `.swc` (o PiSNES também abre `.zip`, mas o launcher ainda não os lista) para `/roms`; `.jpg` e `.png` para `/roms/capas/`.
 - Nome do arquivo saneado (sem `/`, `..` ou caracteres de controle) e tamanho máximo por arquivo (ex.: 16 MB).
 - Grava em arquivo temporário e renomeia no fim, com `fsync`, para não deixar ROM pela metade se cair a energia.
 - Só funciona a partir do menu, nunca durante um jogo.
