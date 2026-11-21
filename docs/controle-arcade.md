@@ -80,13 +80,22 @@ lsusb -v -d 1209:0001 | grep bcdDevice     # Linux: "bcdDevice 1.00" = 1.0.0
 
 No macOS: Informações do Sistema › USB › Controle Arcade › Versão.
 
-Regra (`MAIOR.MENOR.CORREÇÃO`, um dígito cada, limite do `bcdDevice`):
+Regra (`MAIOR.MENOR.CORREÇÃO`):
 
 - **MAIOR:** muda o que o sistema enxerga ou a fiação (relatório HID, numeração dos botões, pinos padrão). Pode exigir mexer no `snes9x.cfg`, no launcher ou no painel.
 - **MENOR:** recurso novo que não quebra painéis já montados.
 - **CORREÇÃO:** só correções.
 
-Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abaixo, faça o commit e, com o merge na `main`, crie a tag `arcade-v<versão>` (ex.: `arcade-v1.0.0`). O CI confere se a tag bate com o `VERSION` e publica a Release "Controle arcade v<versão>" com os `.uf2`. Ela é separada das Releases da imagem (`v*`): mudar o firmware não gera versão nova do sistema.
+Cada campo tem **um dígito só** (de `0.0.0` a `9.9.9`), porque é o que cabe no `bcdDevice`: depois da `1.9.0` vem a `2.0.0`, não a `1.10.0`. Com um valor fora disso, o build para com o erro `VERSION must be MAJOR.MINOR.PATCH with one digit each`.
+
+Para lançar uma versão:
+
+1. Edite o `VERSION` e acrescente uma linha na tabela abaixo.
+2. Faça o commit e o merge na `main`.
+3. Crie e envie a tag `arcade-v<versão>` (ex.: `arcade-v1.0.1`). O CI confere se a tag bate com o `VERSION` e publica a Release "Controle arcade v<versão>" com os `.uf2`.
+4. Atualize o link de download do firmware no site ([`site/public/index.html`](../site/public/index.html), seção `#arcade`), que aponta para a Release de uma versão específica.
+
+A Release do firmware é separada das Releases da imagem (`v*`): mudar o firmware não gera versão nova do sistema.
 
 | Versão | Data | O que mudou |
 |---|---|---|
