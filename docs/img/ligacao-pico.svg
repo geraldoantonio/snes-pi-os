@@ -1,0 +1,174 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 930" width="960" height="930" role="img" aria-labelledby="t d">
+<title id="t">Ligação do controle arcade no Raspberry Pi Pico</title>
+<desc id="d">Raspberry Pi Pico visto de cima, com o USB para cima. Jogador 1: cima, baixo, esquerda, direita, A, B, X, Y, L, R, Select e Start nos GP2 a GP13 (pinos 4 a 7, 9 a 12 e 14 a 17). Jogador 2: nos GP14 a GP22 e GP26 a GP28 (pinos 19 a 22, 24 a 27, 29, 31, 32 e 34). Cada chave liga o pino ao GND.</desc>
+<style>
+	text { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+	.n { font-size: 11px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+	.lbl { font-size: 14px; fill: #E8E6E1; dominant-baseline: central; }
+	.gp { font-size: 12px; fill: #9AA3AE; dominant-baseline: central; }
+	.sub { font-size: 12px; fill: #9AA3AE; }
+</style>
+<rect x="1" y="1" width="958" height="928" fill="#0E1116" stroke="#2A313C" stroke-width="2"/>
+<text x="40" y="50" font-size="15" font-weight="600" letter-spacing="3" fill="#F2A93B">CONTROLE ARCADE NO PICO</text>
+<text x="40" y="76" class="sub" font-size="13">Raspberry Pi Pico (RP2040), visto de cima · cada chave liga o pino ao GND</text>
+<rect x="398" y="116" width="164" height="611" rx="8" fill="#161B22" stroke="#3A4350" stroke-width="2"/>
+<rect x="455" y="106" width="50" height="34" rx="3" fill="#3A4350"/>
+<text x="480" y="124" class="n" fill="#E8E6E1">USB</text>
+<rect x="452" y="353" width="56" height="56" fill="#0E1116" stroke="#3A4350" stroke-width="2"/>
+<text x="480" y="381" class="n" fill="#9AA3AE">RP2040</text>
+<circle cx="462" cy="208" r="9" fill="#0E1116" stroke="#3A4350" stroke-width="2"/>
+<text x="478" y="212" font-size="9" fill="#9AA3AE">BOOTSEL</text>
+<circle cx="420" cy="150" r="12" fill="#2A313C"/><text x="420" y="150" class="n" fill="#9AA3AE">1</text>
+<text x="396" y="150" class="gp" text-anchor="end">GP0</text>
+<text x="334" y="150" class="gp" text-anchor="end">livre</text>
+<circle cx="420" cy="179" r="12" fill="#2A313C"/><text x="420" y="179" class="n" fill="#9AA3AE">2</text>
+<text x="396" y="179" class="gp" text-anchor="end">GP1</text>
+<text x="334" y="179" class="gp" text-anchor="end">livre</text>
+<circle cx="420" cy="208" r="12" fill="#C9CDD3"/><text x="420" y="208" class="n" fill="#0E1116">3</text>
+<text x="396" y="208" class="gp" text-anchor="end">GND</text>
+<text x="334" y="208" class="gp" text-anchor="end">comum das chaves</text>
+<circle cx="420" cy="237" r="12" fill="#F2A93B"/><text x="420" y="237" class="n" fill="#0E1116">4</text>
+<text x="396" y="237" class="gp" text-anchor="end">GP2</text>
+<line x1="350" y1="237" x2="340" y2="237" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="237" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Cima</text>
+<circle cx="420" cy="266" r="12" fill="#F2A93B"/><text x="420" y="266" class="n" fill="#0E1116">5</text>
+<text x="396" y="266" class="gp" text-anchor="end">GP3</text>
+<line x1="350" y1="266" x2="340" y2="266" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="266" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Baixo</text>
+<circle cx="420" cy="295" r="12" fill="#F2A93B"/><text x="420" y="295" class="n" fill="#0E1116">6</text>
+<text x="396" y="295" class="gp" text-anchor="end">GP4</text>
+<line x1="350" y1="295" x2="340" y2="295" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="295" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Esquerda</text>
+<circle cx="420" cy="324" r="12" fill="#F2A93B"/><text x="420" y="324" class="n" fill="#0E1116">7</text>
+<text x="396" y="324" class="gp" text-anchor="end">GP5</text>
+<line x1="350" y1="324" x2="340" y2="324" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="324" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Direita</text>
+<circle cx="420" cy="353" r="12" fill="#C9CDD3"/><text x="420" y="353" class="n" fill="#0E1116">8</text>
+<text x="396" y="353" class="gp" text-anchor="end">GND</text>
+<text x="334" y="353" class="gp" text-anchor="end">comum das chaves</text>
+<circle cx="420" cy="382" r="12" fill="#F2A93B"/><text x="420" y="382" class="n" fill="#0E1116">9</text>
+<text x="396" y="382" class="gp" text-anchor="end">GP6</text>
+<line x1="350" y1="382" x2="340" y2="382" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="382" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> A</text>
+<circle cx="420" cy="411" r="12" fill="#F2A93B"/><text x="420" y="411" class="n" fill="#0E1116">10</text>
+<text x="396" y="411" class="gp" text-anchor="end">GP7</text>
+<line x1="350" y1="411" x2="340" y2="411" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="411" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> B</text>
+<circle cx="420" cy="440" r="12" fill="#F2A93B"/><text x="420" y="440" class="n" fill="#0E1116">11</text>
+<text x="396" y="440" class="gp" text-anchor="end">GP8</text>
+<line x1="350" y1="440" x2="340" y2="440" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="440" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> X</text>
+<circle cx="420" cy="469" r="12" fill="#F2A93B"/><text x="420" y="469" class="n" fill="#0E1116">12</text>
+<text x="396" y="469" class="gp" text-anchor="end">GP9</text>
+<line x1="350" y1="469" x2="340" y2="469" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="469" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Y</text>
+<circle cx="420" cy="498" r="12" fill="#C9CDD3"/><text x="420" y="498" class="n" fill="#0E1116">13</text>
+<text x="396" y="498" class="gp" text-anchor="end">GND</text>
+<text x="334" y="498" class="gp" text-anchor="end">comum das chaves</text>
+<circle cx="420" cy="527" r="12" fill="#F2A93B"/><text x="420" y="527" class="n" fill="#0E1116">14</text>
+<text x="396" y="527" class="gp" text-anchor="end">GP10</text>
+<line x1="350" y1="527" x2="340" y2="527" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="527" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> L</text>
+<circle cx="420" cy="556" r="12" fill="#F2A93B"/><text x="420" y="556" class="n" fill="#0E1116">15</text>
+<text x="396" y="556" class="gp" text-anchor="end">GP11</text>
+<line x1="350" y1="556" x2="340" y2="556" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="556" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> R</text>
+<circle cx="420" cy="585" r="12" fill="#F2A93B"/><text x="420" y="585" class="n" fill="#0E1116">16</text>
+<text x="396" y="585" class="gp" text-anchor="end">GP12</text>
+<line x1="350" y1="585" x2="340" y2="585" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="585" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Select</text>
+<circle cx="420" cy="614" r="12" fill="#F2A93B"/><text x="420" y="614" class="n" fill="#0E1116">17</text>
+<text x="396" y="614" class="gp" text-anchor="end">GP13</text>
+<line x1="350" y1="614" x2="340" y2="614" stroke="#F2A93B" stroke-width="3"/>
+<text x="334" y="614" class="lbl" text-anchor="end"><tspan fill="#F2A93B" font-weight="600">J1</tspan> Start</text>
+<circle cx="420" cy="643" r="12" fill="#C9CDD3"/><text x="420" y="643" class="n" fill="#0E1116">18</text>
+<text x="396" y="643" class="gp" text-anchor="end">GND</text>
+<text x="334" y="643" class="gp" text-anchor="end">comum das chaves</text>
+<circle cx="420" cy="672" r="12" fill="#5BA8E0"/><text x="420" y="672" class="n" fill="#0E1116">19</text>
+<text x="396" y="672" class="gp" text-anchor="end">GP14</text>
+<line x1="350" y1="672" x2="340" y2="672" stroke="#5BA8E0" stroke-width="3"/>
+<text x="334" y="672" class="lbl" text-anchor="end"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Cima</text>
+<circle cx="420" cy="701" r="12" fill="#5BA8E0"/><text x="420" y="701" class="n" fill="#0E1116">20</text>
+<text x="396" y="701" class="gp" text-anchor="end">GP15</text>
+<line x1="350" y1="701" x2="340" y2="701" stroke="#5BA8E0" stroke-width="3"/>
+<text x="334" y="701" class="lbl" text-anchor="end"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Baixo</text>
+<circle cx="540" cy="150" r="12" fill="#2A313C"/><text x="540" y="150" class="n" fill="#9AA3AE">40</text>
+<text x="564" y="150" class="gp" text-anchor="start">VBUS</text>
+<circle cx="540" cy="179" r="12" fill="#2A313C"/><text x="540" y="179" class="n" fill="#9AA3AE">39</text>
+<text x="564" y="179" class="gp" text-anchor="start">VSYS</text>
+<circle cx="540" cy="208" r="12" fill="#C9CDD3"/><text x="540" y="208" class="n" fill="#0E1116">38</text>
+<text x="564" y="208" class="gp" text-anchor="start">GND</text>
+<text x="626" y="208" class="gp" text-anchor="start">comum das chaves</text>
+<circle cx="540" cy="237" r="12" fill="#2A313C"/><text x="540" y="237" class="n" fill="#9AA3AE">37</text>
+<text x="564" y="237" class="gp" text-anchor="start">3V3_EN</text>
+<circle cx="540" cy="266" r="12" fill="#2A313C"/><text x="540" y="266" class="n" fill="#9AA3AE">36</text>
+<text x="564" y="266" class="gp" text-anchor="start">3V3</text>
+<circle cx="540" cy="295" r="12" fill="#2A313C"/><text x="540" y="295" class="n" fill="#9AA3AE">35</text>
+<text x="564" y="295" class="gp" text-anchor="start">ADC_VREF</text>
+<circle cx="540" cy="324" r="12" fill="#5BA8E0"/><text x="540" y="324" class="n" fill="#0E1116">34</text>
+<text x="564" y="324" class="gp" text-anchor="start">GP28</text>
+<line x1="610" y1="324" x2="620" y2="324" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="324" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Start</text>
+<circle cx="540" cy="353" r="12" fill="#2A313C"/><text x="540" y="353" class="n" fill="#9AA3AE">33</text>
+<text x="564" y="353" class="gp" text-anchor="start">AGND</text>
+<circle cx="540" cy="382" r="12" fill="#5BA8E0"/><text x="540" y="382" class="n" fill="#0E1116">32</text>
+<text x="564" y="382" class="gp" text-anchor="start">GP27</text>
+<line x1="610" y1="382" x2="620" y2="382" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="382" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Select</text>
+<circle cx="540" cy="411" r="12" fill="#5BA8E0"/><text x="540" y="411" class="n" fill="#0E1116">31</text>
+<text x="564" y="411" class="gp" text-anchor="start">GP26</text>
+<line x1="610" y1="411" x2="620" y2="411" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="411" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> R</text>
+<circle cx="540" cy="440" r="12" fill="#2A313C"/><text x="540" y="440" class="n" fill="#9AA3AE">30</text>
+<text x="564" y="440" class="gp" text-anchor="start">RUN</text>
+<circle cx="540" cy="469" r="12" fill="#5BA8E0"/><text x="540" y="469" class="n" fill="#0E1116">29</text>
+<text x="564" y="469" class="gp" text-anchor="start">GP22</text>
+<line x1="610" y1="469" x2="620" y2="469" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="469" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> L</text>
+<circle cx="540" cy="498" r="12" fill="#C9CDD3"/><text x="540" y="498" class="n" fill="#0E1116">28</text>
+<text x="564" y="498" class="gp" text-anchor="start">GND</text>
+<text x="626" y="498" class="gp" text-anchor="start">comum das chaves</text>
+<circle cx="540" cy="527" r="12" fill="#5BA8E0"/><text x="540" y="527" class="n" fill="#0E1116">27</text>
+<text x="564" y="527" class="gp" text-anchor="start">GP21</text>
+<line x1="610" y1="527" x2="620" y2="527" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="527" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Y</text>
+<circle cx="540" cy="556" r="12" fill="#5BA8E0"/><text x="540" y="556" class="n" fill="#0E1116">26</text>
+<text x="564" y="556" class="gp" text-anchor="start">GP20</text>
+<line x1="610" y1="556" x2="620" y2="556" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="556" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> X</text>
+<circle cx="540" cy="585" r="12" fill="#5BA8E0"/><text x="540" y="585" class="n" fill="#0E1116">25</text>
+<text x="564" y="585" class="gp" text-anchor="start">GP19</text>
+<line x1="610" y1="585" x2="620" y2="585" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="585" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> B</text>
+<circle cx="540" cy="614" r="12" fill="#5BA8E0"/><text x="540" y="614" class="n" fill="#0E1116">24</text>
+<text x="564" y="614" class="gp" text-anchor="start">GP18</text>
+<line x1="610" y1="614" x2="620" y2="614" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="614" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> A</text>
+<circle cx="540" cy="643" r="12" fill="#C9CDD3"/><text x="540" y="643" class="n" fill="#0E1116">23</text>
+<text x="564" y="643" class="gp" text-anchor="start">GND</text>
+<text x="626" y="643" class="gp" text-anchor="start">comum das chaves</text>
+<circle cx="540" cy="672" r="12" fill="#5BA8E0"/><text x="540" y="672" class="n" fill="#0E1116">22</text>
+<text x="564" y="672" class="gp" text-anchor="start">GP17</text>
+<line x1="610" y1="672" x2="620" y2="672" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="672" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Direita</text>
+<circle cx="540" cy="701" r="12" fill="#5BA8E0"/><text x="540" y="701" class="n" fill="#0E1116">21</text>
+<text x="564" y="701" class="gp" text-anchor="start">GP16</text>
+<line x1="610" y1="701" x2="620" y2="701" stroke="#5BA8E0" stroke-width="3"/>
+<text x="626" y="701" class="lbl" text-anchor="start"><tspan fill="#5BA8E0" font-weight="600">J2</tspan> Esquerda</text>
+<circle cx="48" cy="130" r="8" fill="#F2A93B"/><text x="66" y="130" class="lbl">Jogador 1</text>
+<circle cx="48" cy="156" r="8" fill="#5BA8E0"/><text x="66" y="156" class="lbl">Jogador 2</text>
+<circle cx="48" cy="182" r="8" fill="#C9CDD3"/><text x="66" y="182" class="lbl">GND</text>
+<text x="40" y="780" class="sub" font-size="13" fill="#E8E6E1">Cada chave (botão ou microchave da alavanca):</text>
+<circle cx="54" cy="824" r="12" fill="#F2A93B"/><text x="54" y="824" class="n" fill="#0E1116">GP</text>
+<path d="M66 824 H150" stroke="#F2A93B" stroke-width="4" fill="none"/>
+<circle cx="154" cy="824" r="5" fill="none" stroke="#E8E6E1" stroke-width="2"/>
+<path d="M158 821 L198 802" stroke="#E8E6E1" stroke-width="3" fill="none"/>
+<circle cx="206" cy="824" r="5" fill="none" stroke="#E8E6E1" stroke-width="2"/>
+<path d="M211 824 H296" stroke="#C9CDD3" stroke-width="4" fill="none"/>
+<circle cx="310" cy="824" r="12" fill="#C9CDD3"/><text x="310" y="824" class="n" fill="#0E1116">G</text>
+<text x="132" y="854" class="sub">COM</text><text x="196" y="854" class="sub">NO</text>
+<text x="40" y="886" class="sub">Sem resistor: o firmware liga o pull-up interno (3,3 V).</text>
+<text x="40" y="906" class="sub">Os GNDs podem ser emendados de chave em chave.</text>
+<text x="920" y="886" class="sub" text-anchor="end">Não ligue 5 V (VBUS) nos pinos GP.</text>
+<text x="920" y="906" class="sub" text-anchor="end">Alavanca: a chave apertada fica do lado oposto.</text>
+</svg>

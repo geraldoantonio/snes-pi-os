@@ -25,6 +25,8 @@ Não precisa de resistores: o firmware liga o pull-up interno de cada pino.
 
 Cada chave tem dois terminais: um vai ao pino do Pico e o outro ao **GND**. Nas microchaves, use os terminais **COM** e **NO**. Os GNDs podem ser emendados em corrente, de chave em chave, até qualquer pino GND do Pico (3, 8, 13, 18, 23, 28, 38).
 
+![Ligação do controle arcade no Raspberry Pi Pico](img/ligacao-pico.svg)
+
 | Entrada | Jogador 1 | Pino da placa | Jogador 2 | Pino da placa |
 |---|---|---|---|---|
 | Cima | GP2 | 4 | GP14 | 19 |
