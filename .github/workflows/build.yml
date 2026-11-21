@@ -182,6 +182,17 @@ jobs:
             ${{ runner.temp }}/work/ccache
           key: br-${{ env.BR_VERSION }}-${{ hashFiles('external/**') }}-${{ github.run_id }}
 
+      # Tempo de cada etapa de cada pacote, gravado pelo Buildroot. Para ver
+      # onde o build gasta: some a coluna de duração por pacote.
+      - name: Publicar tempos do build
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-time-${{ github.sha }}
+          path: ${{ runner.temp }}/work/output/build/build-time.log
+          retention-days: 14
+          if-no-files-found: ignore
+
       - name: Publicar imagem
         uses: actions/upload-artifact@v7
         with:

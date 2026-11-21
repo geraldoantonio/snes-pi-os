@@ -89,7 +89,7 @@ gh release delete v0.2.0 --cleanup-tag
 | Secrets | `CLOUDFLARE_API_TOKEN` (modelo "Edit Cloudflare Workers", conta + zona `geraldojunior.dev`) e `CLOUDFLARE_ACCOUNT_ID`. Quem cria e troca o token é o dono. |
 | Página | Worker `snespi-site` (só arquivos estáticos), domínio `snespi.geraldojunior.dev`. Publicada pelo `site.yml` a cada push que mude `site/`. Validar sem publicar: `cd site && npx wrangler@4.158.0 deploy --dry-run`. |
 | Design | Canvas "Launcher snes-pi-os" no claude.ai (privado do dono): telas do launcher, modo rede e página de upload. As fontes do canvas ainda usam Pixelify nos títulos; o launcher real usa IBM Plex Mono. |
-| Artefatos do CI | `snespi-arcade-<sha>` (firmware do controle arcade, em push ou PR que mude o firmware), `snespi-sdcard-<sha>` (imagem) e `qemu-boot-<sha>` (`tela.png` + `serial.log`), 14 dias. |
+| Artefatos do CI | `snespi-arcade-<sha>` (firmware do controle arcade, em push ou PR que mude o firmware), `snespi-sdcard-<sha>` (imagem) `qemu-boot-<sha>` (`tela.png` + `serial.log`) e `build-time-<sha>` (`build-time.log` do Buildroot: duração de cada etapa de cada pacote, para ver onde o build gasta tempo), 14 dias. |
 
 ## Regras de trabalho
 
