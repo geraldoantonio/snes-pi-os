@@ -51,7 +51,9 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 Releases são **públicas** e viram o download da página do projeto. Só crie uma quando o dono pedir.
 
-**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256`, o firmware do controle arcade (`snespi-arcade-1p-v<versão>.uf2` e `-2p-v<versão>.uf2`, do job `firmware`; a versão do firmware é a de `firmware/arcade/VERSION`, não a da tag) e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (o manual só gera um artefato temporário de 14 dias).
+**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256` e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (o manual só gera um artefato temporário de 14 dias).
+
+**Firmware do controle arcade:** tem Release própria, separada da imagem, para uma mudança só no firmware não gerar versão nova do sistema (e vice-versa). Push de uma tag `arcade-v<versão>` → o job `firmware` confere se a tag bate com `firmware/arcade/VERSION` e cria a Release "Controle arcade v<versão>" com `snespi-arcade-1p-v<versão>.uf2`, `snespi-arcade-2p-v<versão>.uf2`, o `.sha256` e as notas de `.github/release-notes-arcade.md`. Ela sai com `--latest=false`, para a imagem continuar sendo a versão "mais recente" (o `releases/latest`). Para lançar: suba o `VERSION` e a tabela em `docs/controle-arcade.md`, faça o merge na `main`, crie a tag `arcade-v<versão>` e atualize o link do firmware no site (`site/public/index.html`, seção `#arcade`). Vale a mesma regra: só com o dono pedindo.
 
 **Passo a passo:**
 
@@ -112,8 +114,9 @@ gh release delete v0.2.0 --cleanup-tag
 | `firmware/arcade/` | Firmware do controle arcade para o Raspberry Pi Pico (pico-sdk 2.3.1 + TinyUSB): `src/pad.c` (filtro e relatório, testado no computador), `src/pins.h` (pinos), `src/usb_descriptors.c` |
 | `scripts/` | `build.sh`, `ci-container.sh` (Debian 12), `qemu-smoke.sh` + `qemu_screendump.py`, `build-firmware.sh` + `firmware-container.sh` (controle arcade) |
 | `site/` | Página pública estática (`public/`) e `wrangler.jsonc` (Cloudflare Workers, domínio `snespi.geraldojunior.dev`) |
-| `.github/workflows/` | `build.yml` (check, imagem, Release em tags, QEMU) e `site.yml` (deploy do site) |
+| `.github/workflows/` | `build.yml` (check, firmware do controle arcade e sua Release em tags `arcade-v*`, imagem, Release em tags `v*`, QEMU) e `site.yml` (deploy do site) |
 | `.github/release-notes.md` | Texto das Releases (instruções de instalação) |
+| `.github/release-notes-arcade.md` | Texto das Releases do firmware do controle arcade (tags `arcade-v*`) |
 | `CLAUDE.md` | Só importa este arquivo, para o Claude Code carregá-lo sozinho |
 
 ## Comandos úteis
@@ -164,7 +167,7 @@ O job `check` do CI roda o `utils/check-package` do Buildroot em `external/` e v
   - Mapeamento: controles com a convenção do kernel (Xbox etc.) confirmam com `BTN_SOUTH` (A do Xbox), voltam com `BTN_EAST`, favoritam com `BTN_WEST`. Controles genéricos estilo SNES confirmam com o botão da direita.
   - Sem relógio no Pi: "recentes" é por ordem de abertura, nunca por data.
   - Música do menu: o launcher **tem de soltar o ALSA antes de abrir o emulador** (`music_stop()` antes do `fork`), senão o PiSNES encontra o áudio ocupado. A música padrão é CC0 (`launcher/music/`); não troque por faixa sem licença livre.
-- **Controle arcade (Pico):** o relatório HID tem de continuar igual ao do controle genérico estilo SNES (coleção *Joystick*, botões X = 0, A = 1, B = 2, Y = 3, L = 4, R = 5, Select = 8, Start = 9, eixos X/Y com centro em 0x7f). Se mudar, o launcher e o `snes9x.cfg` deixam de servir para os dois. O PiSNES só abre os dois primeiros joysticks. A versão do firmware é própria (`firmware/arcade/VERSION`, vai para o `bcdDevice` do USB e para o nome do `.uf2`): ao mudar o firmware, suba a versão e a tabela em `docs/controle-arcade.md`.
+- **Controle arcade (Pico):** o relatório HID tem de continuar igual ao do controle genérico estilo SNES (coleção *Joystick*, botões X = 0, A = 1, B = 2, Y = 3, L = 4, R = 5, Select = 8, Start = 9, eixos X/Y com centro em 0x7f). Se mudar, o launcher e o `snes9x.cfg` deixam de servir para os dois. O PiSNES só abre os dois primeiros joysticks. A versão do firmware é própria (`firmware/arcade/VERSION`, vai para o `bcdDevice` do USB e para o nome do `.uf2`) e tem tag e Release próprias (`arcade-v*`, ver **Releases**): ao mudar o firmware, suba a versão e a tabela em `docs/controle-arcade.md`.
 - **QEMU** (`raspi1ap`) não emula a GPU VideoCore: o PiSNES não abre lá. O teste de boot cobre kernel, init, montagens e o launcher no framebuffer.
   - O QEMU 8.2 também não emula todo o bloco de energia/watchdog (`/soc/watchdog@7e100000`): o kernel cai em `bcm2835_power_probe` ("external abort"). O `qemu-smoke.sh` desliga esse nó numa **cópia** do device tree só para o teste. Falha no QEMU não significa falha no Pi: leia o `serial.log` do artefato `qemu-boot-*` antes de mexer na imagem.
 - **`gh secret set` via `!` no Claude Code** não é interativo e grava valor vazio; use `pbpaste | gh secret set NOME` ou a interface do GitHub.
