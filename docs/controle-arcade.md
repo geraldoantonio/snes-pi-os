@@ -90,7 +90,7 @@ Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abai
 
 | Versão | Data | O que mudou |
 |---|---|---|
-| 1.0.0 | 2026-11-20 | Primeira versão: dois jogadores num Pico, layout do controle estilo SNES, BOOTSEL com Select + Start ao ligar. Testada no Pi. |
+| 1.0.0 | 2026-11-20 | Primeira versão: dois jogadores num Pico, layout do controle estilo SNES, BOOTSEL com Select + Start ao ligar. Testada no Pi. O `.uf2` da Release `arcade-v1.0.0` foi gravado e conferido no macOS (versão no USB e dois pinos de cada jogador); no Pi, o teste foi com um build anterior do mesmo código. |
 
 ## No snes-pi-os
 
