@@ -18,11 +18,12 @@ SNES_LAUNCHER_DEPENDENCIES = alsa-lib
 define SNES_LAUNCHER_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -B -C $(@D) \
 		CC="$(TARGET_CC)" CFLAGS="$(TARGET_CFLAGS)" LDFLAGS="$(TARGET_LDFLAGS)" \
-		snespi-launcher
+		snespi-launcher snespi-upload
 endef
 
 define SNES_LAUNCHER_INSTALL_TARGET_CMDS
 	$(INSTALL) -D -m 0755 $(@D)/snespi-launcher $(TARGET_DIR)/usr/bin/snespi-launcher
+	$(INSTALL) -D -m 0755 $(@D)/snespi-upload $(TARGET_DIR)/usr/bin/snespi-upload
 	$(INSTALL) -d $(TARGET_DIR)/usr/share/snespi/fonts
 	$(INSTALL) -m 0644 $(@D)/fonts/*.ttf $(@D)/fonts/OFL-*.txt \
 		$(TARGET_DIR)/usr/share/snespi/fonts/

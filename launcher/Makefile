@@ -5,6 +5,7 @@
 #   make shots           gera capturas de todas as telas com ROMs de teste
 #   make run             abre o launcher numa janela (SDL2), com ROMs de teste e
 #                        emulador falso; ARGS="..." passa opções extras
+#   make snespi-upload   servidor de envio de jogos do modo rede
 #   make install DESTDIR=... PREFIX=/usr
 
 CC ?= cc
@@ -17,7 +18,17 @@ PYTHON ?= python3
 COMMON = src/gfx.c src/font.c src/rom.c src/cover.c src/prefs.c src/music.c src/ui.c src/shot.c src/main.c src/monitor.c
 HEADERS = $(wildcard src/*.h)
 
-all: snespi-launcher
+all: snespi-launcher snespi-upload
+
+# Servidor de envio do modo rede (programa separado, iniciado pelo launcher).
+# A página vai embutida: cada linha de pagina.html vira uma string em C.
+upload/pagina.h: upload/pagina.html
+	{ echo 'static const char PAGINA_HTML[] ='; \
+	  sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/^/"/' -e 's/$$/\\n"/' upload/pagina.html; \
+	  echo ';'; } > $@
+
+snespi-upload: upload/upload.c upload/pagina.h
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ upload/upload.c
 
 snespi-launcher: $(COMMON) src/video_fb.c src/input_evdev.c src/system_linux.c src/music_alsa.c $(HEADERS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(COMMON) src/video_fb.c src/input_evdev.c src/system_linux.c src/music_alsa.c \
@@ -70,15 +81,24 @@ test: snespi-launcher-preview
 	$(PYTHON) -I tests/check-headers.py ./snespi-launcher-preview build/test-roms
 	$(CC) -O2 -std=gnu11 -w -o build/music-decode-test tests/music-decode-test.c src/music.c src/music_none.c -lm
 	./build/music-decode-test music/menu.wav 70
+	$(MAKE) test-upload
 
-install: snespi-launcher
+# Servidor de envio com ASan/UBSan: envios normais e entradas malformadas
+test-upload: upload/pagina.h
+	mkdir -p build
+	$(CC) -g -O1 -std=gnu11 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined \
+		-o build/snespi-upload-asan upload/upload.c
+	$(PYTHON) -I tests/upload-test.py build/snespi-upload-asan
+
+install: snespi-launcher snespi-upload
 	install -D -m 0755 snespi-launcher $(DESTDIR)$(PREFIX)/bin/snespi-launcher
+	install -D -m 0755 snespi-upload $(DESTDIR)$(PREFIX)/bin/snespi-upload
 	install -d $(DESTDIR)$(PREFIX)/share/snespi/fonts
 	install -m 0644 fonts/*.ttf fonts/OFL-*.txt $(DESTDIR)$(PREFIX)/share/snespi/fonts/
 	install -D -m 0644 music/menu.wav $(DESTDIR)$(PREFIX)/share/snespi/musica/menu.wav
 	install -D -m 0644 music/LICENCA.txt $(DESTDIR)$(PREFIX)/share/snespi/musica/LICENCA.txt
 
 clean:
-	rm -rf snespi-launcher snespi-launcher-preview snespi-launcher-desktop build
+	rm -rf snespi-launcher snespi-launcher-preview snespi-launcher-desktop snespi-upload upload/pagina.h build
 
-.PHONY: all preview desktop run shots test install clean
+.PHONY: all preview desktop run shots test test-upload install clean
