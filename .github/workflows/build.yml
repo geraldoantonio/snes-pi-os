@@ -20,24 +20,38 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       image: ${{ steps.changes.outputs.image }}
+      firmware: ${{ steps.changes.outputs.firmware }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      # Push na main: a imagem só é compilada se algo que vai nela mudou
-      - name: A imagem mudou?
+      # O que mudou desde o último push na main (ou, num PR, desde a base).
+      # A imagem só é compilada por push na main; o firmware, por push na
+      # main ou PR. Se o git diff falhar (base desconhecida), conta como
+      # mudança.
+      - name: O que mudou?
         id: changes
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: >-
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          github.event_name == 'pull_request'
         env:
-          BEFORE: ${{ github.event.before }}
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
-          if git diff --quiet "$BEFORE" HEAD -- external launcher \
+          mudou() { ! git diff --quiet "$BASE" HEAD -- "$@" 2>/dev/null; }
+          if [ "$EVENT" = push ] && mudou external launcher \
               scripts/build.sh scripts/ci-container.sh scripts/qemu-smoke.sh \
-              scripts/qemu_screendump.py .github/workflows/build.yml 2>/dev/null; then
-            echo "image=false" >> "$GITHUB_OUTPUT"
-          else
+              scripts/qemu_screendump.py .github/workflows/build.yml; then
             echo "image=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=false" >> "$GITHUB_OUTPUT"
+          fi
+          if mudou firmware scripts/build-firmware.sh scripts/firmware-container.sh \
+              .github/workflows/build.yml .github/release-notes-arcade.md; then
+            echo "firmware=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "firmware=false" >> "$GITHUB_OUTPUT"
           fi
           cat "$GITHUB_OUTPUT"
 
@@ -59,8 +73,14 @@ jobs:
           grep -q '^BR2_PACKAGE_PISNES=y' /tmp/out/.config
 
   # Rápido (~2 min): testa e compila o firmware do controle arcade (Pico).
-  # Em tags arcade-v*, cria a Release do firmware (separada da imagem).
+  # Roda em tags arcade-v* (cria a Release do firmware, separada da imagem),
+  # manual e em push na main ou PR que mude o firmware.
   firmware:
+    needs: check
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.ref, 'refs/tags/arcade-v') ||
+      needs.check.outputs.firmware == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write   # criar a Release nas tags arcade-v*

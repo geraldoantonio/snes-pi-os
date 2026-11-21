@@ -55,7 +55,7 @@ GP0 e GP1 (pinos 1 e 2) ficam livres. Para mudar os pinos, edite `firmware/arcad
    cd firmware/arcade
    make uf2        # gera build/snespi-arcade-1p-v<versão>.uf2 e build/snespi-arcade-2p-v<versão>.uf2
    ```
-   Para só usar, baixe os arquivos prontos na Release "Controle arcade" da [página de versões](https://github.com/geraldoantonio/snes-pi-os/releases). O CI também os compila a cada push (artefato `snespi-arcade-<sha>`).
+   Para só usar, baixe os arquivos prontos na Release "Controle arcade" da [página de versões](https://github.com/geraldoantonio/snes-pi-os/releases). O CI também os compila em cada push ou PR que mude o firmware (artefato `snespi-arcade-<sha>`).
 2. Segure o botão **BOOTSEL** do Pico e ligue o cabo USB no computador. Aparece a unidade `RPI-RP2`.
 3. Copie o `.uf2` para a unidade. O Pico reinicia sozinho já como controle.
 
