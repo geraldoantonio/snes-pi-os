@@ -25,7 +25,7 @@ Não precisa de resistores: o firmware liga o pull-up interno de cada pino.
 
 Cada chave tem dois terminais: um vai ao pino do Pico e o outro ao **GND**. Nas microchaves, use os terminais **COM** e **NO**. Os GNDs podem ser emendados em corrente, de chave em chave, até qualquer pino GND do Pico (3, 8, 13, 18, 23, 28, 38).
 
-![Ligação do controle arcade no Raspberry Pi Pico](img/ligacao-pico.svg)
+![Ligação do controle arcade no Raspberry Pi Pico](../site/public/img/ligacao-pico.svg)
 
 | Entrada | Jogador 1 | Pino da placa | Jogador 2 | Pino da placa |
 |---|---|---|---|---|
@@ -90,7 +90,7 @@ Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abai
 
 | Versão | Data | O que mudou |
 |---|---|---|
-| 1.0.0 | 2026-11-20 | Primeira versão: dois jogadores num Pico, layout do controle estilo SNES, BOOTSEL com Select + Start ao ligar. Testada no Pi. |
+| 1.0.0 | 2026-11-20 | Primeira versão: dois jogadores num Pico, layout do controle estilo SNES, BOOTSEL com Select + Start ao ligar. Testada no Pi. O `.uf2` da Release `arcade-v1.0.0` foi gravado num Pico e conferido no macOS (versão no USB e dois pinos de cada jogador) e no Pi (dois jogadores). |
 
 ## No snes-pi-os
 
