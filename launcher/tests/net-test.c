@@ -57,13 +57,14 @@ int main(int argc, char **argv)
 	CHECK(n.phase == NET_CONNECTING && strlen(n.pin) == 4, "net_start entra em CONNECTING com PIN");
 	wait_leave(&n, NET_CONNECTING);
 	CHECK(n.phase == NET_READY, "chega em READY");
-	CHECK(strstr(n.url, ":18099/") && strstr(n.url, n.pin) && n.ssid[0] == 0, "endereço com porta e PIN");
+	CHECK(strstr(n.url, ":18099") && !strstr(n.url, n.pin) && n.ssid[0] == 0, "endereço com porta e sem o PIN");
+	CHECK(strstr(n.qr, n.url) == n.qr && strstr(n.qr, "/?pin=") && strstr(n.qr, n.pin), "QR code com o PIN na query");
 
 	/* um jogo e um arquivo recusado */
 	snprintf(cmd, sizeof(cmd),
 		 "printf 'rom de teste' > /tmp/snespi-net-jogo.sfc && printf x > /tmp/snespi-net-doc.pdf && "
 		 "curl -s -o /dev/null -F 'arquivo=@/tmp/snespi-net-jogo.sfc;filename=Jogo Novo.sfc' "
-		 "-F 'arquivo=@/tmp/snespi-net-doc.pdf' http://127.0.0.1:18099/%s/enviar", n.pin);
+		 "-F 'arquivo=@/tmp/snespi-net-doc.pdf' 'http://127.0.0.1:18099/enviar?pin=%s'", n.pin);
 	CHECK(system(cmd) == 0, "curl enviou");
 	pump(&n, 500);
 	CHECK(n.ok_count == 1 && n.err_count == 1 && n.nfiles == 2, "contagem de recebidos e recusados");
@@ -74,6 +75,9 @@ int main(int argc, char **argv)
 	snprintf(path, sizeof(path), "%s/Jogo Novo.sfc", dir);
 	CHECK(access(path, F_OK) == 0, "arquivo gravado na pasta");
 
+	snprintf(cmd, sizeof(cmd), "curl -sf -m 2 -o /dev/null 'http://127.0.0.1:18099/pin?pin=%s'", n.pin);
+	CHECK(system(cmd) == 0, "PIN certo responde com o servidor no ar");
+
 	/* procurar redes: nomes repetidos viram um, \xNN vira UTF-8, oculta some */
 	net_scan(&n);
 	wait_leave(&n, NET_SCANNING);
@@ -82,7 +86,7 @@ int main(int argc, char **argv)
 	      "a mais forte primeiro, sem repetir");
 	CHECK(n.naps == 3 && !strcmp(n.aps[1].ssid, "Fam\xC3\xADlia Silva"), "nome com acento decodificado");
 	CHECK(n.naps == 3 && !n.aps[2].secure, "rede aberta");
-	snprintf(cmd, sizeof(cmd), "curl -s -m 2 -o /dev/null http://127.0.0.1:18099/%s", n.pin);
+	snprintf(cmd, sizeof(cmd), "curl -sf -m 2 -o /dev/null 'http://127.0.0.1:18099/pin?pin=%s'", n.pin);
 	CHECK(system(cmd) != 0, "servidor parado enquanto escolhe a rede");
 
 	/* escolher a rede grava wifi.txt e conecta de novo, com outro PIN */
@@ -121,7 +125,7 @@ int main(int argc, char **argv)
 	CHECK(n.phase == NET_READY, "READY de novo");
 	net_stop(&n);
 	CHECK(n.phase == NET_OFF, "net_stop deixa em OFF");
-	snprintf(cmd, sizeof(cmd), "curl -s -m 2 -o /dev/null http://127.0.0.1:18099/%s", n.pin);
+	snprintf(cmd, sizeof(cmd), "curl -sf -m 2 -o /dev/null 'http://127.0.0.1:18099/pin?pin=%s'", n.pin);
 	CHECK(system(cmd) != 0, "servidor parado depois de sair");
 
 	snprintf(cmd, sizeof(cmd), "rm -rf '%s' /tmp/snespi-net-jogo.sfc /tmp/snespi-net-doc.pdf", dir);

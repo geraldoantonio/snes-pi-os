@@ -90,7 +90,7 @@ class Servidor:
 
     def cabecalho(self, tamanho, caminho=None):
         return ("POST %s HTTP/1.1\r\nHost: x\r\nContent-Type: multipart/form-data; boundary=%s\r\n"
-                "Content-Length: %d\r\n\r\n" % (caminho or "/%s/enviar" % PIN, B, tamanho)).encode()
+                "Content-Length: %d\r\n\r\n" % (caminho or "/enviar?pin=%s" % PIN, B, tamanho)).encode()
 
     def temporarios(self):
         d = os.path.join(self.pasta, ".snespi")
@@ -122,15 +122,22 @@ def main():
     with tempfile.TemporaryDirectory() as pasta:
         s = Servidor(binario, pasta)
 
-        # página e PIN
-        r = s.get("/" + PIN)
-        confere(r.startswith(b"HTTP/1.1 200") and b"Enviar jogos" in r, "GET /PIN devolve a página")
-        confere(s.get("/%s/" % PIN).startswith(b"HTTP/1.1 200"), "GET /PIN/ devolve a página")
-        for ruim in ("/", "/0000", "/" + PIN + "5", "/" + PIN[:3], "/favicon.ico", "/%s/outra" % PIN):
+        # página na raiz (sem PIN) e conferência do PIN
+        r = s.get("/")
+        confere(r.startswith(b"HTTP/1.1 200") and b"Enviar jogos" in r and b"Digite o PIN" in r, "GET / devolve a página")
+        confere(s.get("/?pin=" + PIN).startswith(b"HTTP/1.1 200"), "GET /?pin= (QR code) devolve a página")
+        confere(PIN.encode() not in r, "a página não traz o PIN")
+        confere(s.get("/pin?pin=" + PIN).startswith(b"HTTP/1.1 200"), "GET /pin com o PIN certo devolve 200")
+        confere(s.get("/pin?a=1&pin=" + PIN).startswith(b"HTTP/1.1 200"), "PIN em qualquer posição da query")
+        for ruim in ("/pin", "/pin?pin=", "/pin?pin=0000", "/pin?pin=" + PIN + "5", "/pin?pin=" + PIN[:3],
+                     "/pin?xpin=" + PIN):
+            confere(s.get(ruim).startswith(b"HTTP/1.1 403"), "GET %s devolve 403" % ruim)
+        for ruim in ("/" + PIN, "/favicon.ico", "/enviar", "/outra?pin=" + PIN):
             confere(s.get(ruim).startswith(b"HTTP/1.1 404"), "GET %s devolve 404" % ruim)
-        confere(s.envia([("a.sfc", b"x" * 10)], caminho="/0000/enviar").startswith(b"HTTP/1.1 404"),
-                "POST com PIN errado devolve 404")
-        confere(le(pasta, "a.sfc") is None, "POST com PIN errado não grava")
+        for caminho in ("/enviar?pin=0000", "/enviar"):
+            confere(s.envia([("a.sfc", b"x" * 10)], caminho=caminho).startswith(b"HTTP/1.1 403"),
+                    "POST %s devolve 403" % caminho)
+        confere(le(pasta, "a.sfc") is None, "POST sem o PIN certo não grava")
 
         # ROM com dados que parecem delimitador, em pedaços pequenos
         rom = bytes(random.getrandbits(8) for _ in range(200000))
@@ -184,11 +191,11 @@ def main():
         lixo = [
             b"\x00\xff\xfe" * 500,
             b"GET " + b"/" * 20000 + b" HTTP/1.1\r\n\r\n",
-            b"POST /%s/enviar HTTP/1.1\r\n\r\n" % PIN.encode(),
-            b"POST /%s/enviar HTTP/1.1\r\nContent-Length: -5\r\nContent-Type: multipart/form-data; boundary=x\r\n\r\n" % PIN.encode(),
-            b"POST /%s/enviar HTTP/1.1\r\nContent-Length: 99999999999999999999\r\nContent-Type: multipart/form-data; boundary=x\r\n\r\nabc" % PIN.encode(),
-            b"POST /%s/enviar HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: multipart/form-data; boundary=" % PIN.encode() + b"b" * 4000 + b"\r\n\r\n0123456789",
-            b"POST /%s/enviar HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: text/plain\r\n\r\n0123456789" % PIN.encode(),
+            b"POST /enviar?pin=%s HTTP/1.1\r\n\r\n" % PIN.encode(),
+            b"POST /enviar?pin=%s HTTP/1.1\r\nContent-Length: -5\r\nContent-Type: multipart/form-data; boundary=x\r\n\r\n" % PIN.encode(),
+            b"POST /enviar?pin=%s HTTP/1.1\r\nContent-Length: 99999999999999999999\r\nContent-Type: multipart/form-data; boundary=x\r\n\r\nabc" % PIN.encode(),
+            b"POST /enviar?pin=%s HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: multipart/form-data; boundary=" % PIN.encode() + b"b" * 4000 + b"\r\n\r\n0123456789",
+            b"POST /enviar?pin=%s HTTP/1.1\r\nContent-Length: 10\r\nContent-Type: text/plain\r\n\r\n0123456789" % PIN.encode(),
             s.cabecalho(40) + b"--" + B.encode() + b"XX",
             s.cabecalho(6000) + b"--" + B.encode() + b"\r\n" + b"H" * 5900,
             s.cabecalho(200) + ("--%s\r\nContent-Disposition: form-data; name=\"a\"; filename=\"\r\n\r\n" % B).encode(),
@@ -207,11 +214,11 @@ def main():
             s.bruto(bytes(ruido), fecha_escrita=True)
         depois = sorted(f for f in os.listdir(pasta) if f != "f.sfc")
         confere(antes == depois, "entradas malformadas não criam arquivos: %r" % (set(depois) - set(antes)))
-        confere(s.get("/" + PIN).startswith(b"HTTP/1.1 200"), "servidor segue atendendo depois do lixo")
+        confere(s.get("/pin?pin=" + PIN).startswith(b"HTTP/1.1 200"), "servidor segue atendendo depois do lixo")
 
         # conexões paradas (reserva do navegador) não travam o servidor
         paradas = [socket.create_connection(("127.0.0.1", s.porta)) for _ in range(3)]
-        confere(s.get("/" + PIN).startswith(b"HTTP/1.1 200"), "atende com 3 conexões paradas")
+        confere(s.get("/").startswith(b"HTTP/1.1 200"), "atende com 3 conexões paradas")
         for c in paradas:
             c.close()
 
@@ -222,11 +229,14 @@ def main():
 
         # PIN errado vezes demais: bloqueia até reabrir o modo rede
         s = Servidor(binario, pasta)
+        for i in range(40):
+            s.get("/")  # abrir a página não conta como tentativa
+        confere(s.get("/pin?pin=" + PIN).startswith(b"HTTP/1.1 200"), "abrir a página muitas vezes não bloqueia")
         for i in range(30):
-            s.get("/%04d" % i)
+            s.get("/pin?pin=%04d" % (i + 5000))
         ev = s.le_eventos(0.5)
         confere("bloqueado" in ev, "30 PINs errados bloqueiam: %r" % ev)
-        confere(not s.get("/" + PIN).startswith(b"HTTP/1.1 200"), "bloqueado não atende nem o PIN certo")
+        confere(not s.get("/pin?pin=" + PIN).startswith(b"HTTP/1.1 200"), "bloqueado não atende nem o PIN certo")
         rc, erro = s.encerra()
         confere(rc == 0 and "Sanitizer" not in erro, "encerra depois do bloqueio")
 

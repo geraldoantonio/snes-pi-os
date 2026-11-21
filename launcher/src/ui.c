@@ -855,7 +855,7 @@ static void draw_qr(surface_t *s, int x, int y, int box, const char *text)
 {
 	static uint8_t qr[qrcodegen_BUFFER_LEN_FOR_VERSION(10)];
 	static uint8_t tmp[qrcodegen_BUFFER_LEN_FOR_VERSION(10)];
-	static char cached[96];
+	static char cached[128];
 	static int ok;
 	if (strcmp(cached, text) != 0) {
 		snprintf(cached, sizeof(cached), "%s", text);
@@ -911,17 +911,18 @@ static void draw_net_ready(surface_t *s, const ui_state_t *st)
 	int y = 96;
 	txt(s, MONO_SEMI, 34, x, y, C_TEXT, "Receber jogos", 0);
 	y += 44 + 16;
-	y += step(s, x, y, 1, w, "No celular ou no computador, na mesma rede, aponte a câmera "
-				 "para o código ao lado ou abra este endereço:");
-	/* endereço, com o PIN em destaque */
-	gfx_fill(s, x + 50, y, w - 50, 60, C_PANEL);
-	gfx_frame(s, x + 50, y, w - 50, 60, 2, C_LINE2);
-	char base[96];
-	size_t ul = strlen(n->url), pl = strlen(n->pin);
-	snprintf(base, sizeof(base), "%.*s", (int)(ul > pl ? ul - pl : 0), n->url);
-	int ux = x + 50 + 20;
-	ux += txt_mid(s, MONO_SEMI, 30, ux, y + 30, C_TEXT, base, 0);
-	txt_mid(s, MONO_SEMI, 30, ux, y + 30, C_ACCENT, n->pin, 0);
+	y += step(s, x, y, 1, w, "No celular, aponte a câmera para o código ao lado. "
+				 "Ou abra este endereço, na mesma rede, e digite o PIN:");
+	/* endereço e, ao lado, o PIN em destaque (o QR code já leva o PIN) */
+	const int pw = 190, aw = w - 50 - 16 - pw;
+	gfx_fill(s, x + 50, y, aw, 60, C_PANEL);
+	gfx_frame(s, x + 50, y, aw, 60, 2, C_LINE2);
+	txt_fit(s, MONO_SEMI, 28, x + 50 + 20, y + 30, aw - 40, C_TEXT, n->url);
+	const int px = x + 50 + aw + 16;
+	gfx_fill(s, px, y, pw, 60, C_PANEL);
+	gfx_frame(s, px, y, pw, 60, 2, C_ACCENT);
+	int lw = txt_mid(s, MONO_SEMI, 14, px + 16, y + 30, C_MUTED, "PIN", 2);
+	txt_mid(s, MONO_SEMI, 30, px + 16 + lw + 14, y + 30, C_ACCENT, n->pin, 4);
 	y += 60 + 20;
 	y += step(s, x, y, 2, w, "Escolha os jogos (.sfc .smc .fig .swc) e as capas (.jpg .png).");
 	y += step(s, x, y, 3, w, kb ? "Quando terminar, aperte Esc aqui para voltar à lista."
@@ -970,7 +971,7 @@ static void draw_net_ready(surface_t *s, const ui_state_t *st)
 
 	/* direita: QR code e a conexão em uso */
 	const int qx = 880, qy = 96, qs = 336;
-	draw_qr(s, qx, qy, qs, n->url);
+	draw_qr(s, qx, qy, qs, n->qr);
 	char conn[80];
 	if (n->ssid[0])
 		snprintf(conn, sizeof(conn), "Wi-Fi · %s", n->ssid);

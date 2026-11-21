@@ -70,7 +70,7 @@ Além do cartão SD, o menu do sistema tem **Receber jogos** (Start › Receber 
 Fluxo:
 
 1. O launcher chama `snespi-rede up` (script do overlay). Com o cabo ligado, sobe a `eth0` e roda o `udhcpc` do BusyBox. Sem cabo, usa o adaptador Wi-Fi USB com a rede de `/roms/wifi.txt`. A tela mostra "Conectando à rede" (B cancela).
-2. Com o endereço em mãos, o launcher sorteia um PIN de 4 dígitos e inicia o `snespi-upload`. A tela mostra `http://192.168.x.x/1234`, o QR code do endereço e a conexão em uso. Sem o PIN no caminho, o servidor responde 404.
+2. Com o endereço em mãos, o launcher sorteia um PIN de 4 dígitos e inicia o `snespi-upload`. A tela mostra o endereço (`http://192.168.x.x`, na raiz), o PIN ao lado, o QR code e a conexão em uso. A página abre para qualquer aparelho da rede, mas pede o PIN antes de mostrar o envio, e o servidor recusa (403) envios sem ele. O QR code leva o PIN na query (`http://192.168.x.x/?pin=1234`) e a página já vem preenchida: pelo celular não se digita nada. (Até 2026-11-21 o PIN ia no caminho, `http://192.168.x.x/1234`; mudou por ser ruim de digitar e não dizer o que era.)
 3. No celular ou no PC, a página deixa escolher ou arrastar arquivos e mostra o progresso de cada um. A tela do Pi lista os últimos arquivos recebidos e os recusados, com o motivo.
 4. B conclui: o launcher para o servidor, chama `snespi-rede down`, faz `sync` e relê a lista (capas novas inclusive). O botão de desligar e o fim do launcher também derrubam a rede.
 
@@ -83,7 +83,7 @@ Se algo falha, a tela diz o motivo (sem cabo nem adaptador, Wi-Fi sem rede escol
 - O script passa o nome em hexadecimal e a chave já derivada (`wpa_passphrase`) ao `wpa_supplicant`, para aspas, espaços e acentos não quebrarem a configuração. Só WPA/WPA2 com senha e redes abertas; WPA3 puro não entra (exigiria OpenSSL na imagem).
 - O cabo tem prioridade: com ele ligado, o Wi-Fi nem é tentado.
 
-**Servidor de upload** (`snespi-upload`, `launcher/upload/`): programa próprio em C, separado do launcher e instalado pelo mesmo pacote. Serve a página embutida (`pagina.html`, que vira uma string em C no build) e recebe `multipart/form-data` em streaming direto para o disco. Cada conexão é atendida num processo filho, até 4 de uma vez: os navegadores abrem conexões de reserva e as deixam paradas, o que travaria um servidor de uma conexão só. Ele avisa o launcher de cada arquivo por linhas na saída padrão. O `httpd` do BusyBox não está na config padrão do Buildroot, e o tratamento do upload teria de ser escrito em C de qualquer forma.
+**Servidor de upload** (`snespi-upload`, `launcher/upload/`): programa próprio em C, separado do launcher e instalado pelo mesmo pacote. Rotas: `GET /` (a página), `GET /pin?pin=N` (200 se o PIN confere, 403 se não) e `POST /enviar?pin=N` (os arquivos). Serve a página embutida (`pagina.html`, que vira uma string em C no build) e recebe `multipart/form-data` em streaming direto para o disco. Cada conexão é atendida num processo filho, até 4 de uma vez: os navegadores abrem conexões de reserva e as deixam paradas, o que travaria um servidor de uma conexão só. Ele avisa o launcher de cada arquivo por linhas na saída padrão. O `httpd` do BusyBox não está na config padrão do Buildroot, e o tratamento do upload teria de ser escrito em C de qualquer forma.
 
 Regras do upload:
 
@@ -92,9 +92,11 @@ Regras do upload:
 - Até 16 MB por arquivo.
 - Grava em `/roms/.snespi/envio-<pid>.tmp` e renomeia no fim, com `fsync` do arquivo e da pasta, para não deixar ROM pela metade se cair a energia.
 - Só funciona a partir do menu, nunca durante um jogo.
-- Depois de 30 endereços com PIN errado, o servidor para de atender e a tela pede para abrir o modo de novo (PIN novo). O PIN protege contra envio por engano ou por curiosos na rede de casa; a conexão é HTTP, sem criptografia.
+- Depois de 30 tentativas com PIN errado (abrir a página não conta), o servidor para de atender e a tela pede para abrir o modo de novo (PIN novo). O PIN protege contra envio por engano ou por curiosos na rede de casa; a conexão é HTTP, sem criptografia.
 
 Testes no computador: `make test-upload` compila o servidor com ASan/UBSan e manda envios normais, nomes perigosos, corpos cortados e lixo; `make test-net` roda o modo rede sem tela, com uma rede falsa e o servidor de verdade. No `make run`, o item do menu funciona com `tests/fake-rede.sh` e o servidor na porta 8080 (`SNESPI_FAKE_WIFI=1 make run` finge um adaptador Wi-Fi; `SNESPI_FAKE_REDE=sem-rede` e os outros motivos simulam os erros). Capturas: `rede*.png` e `menu-rede.png`.
+
+Ideia (não feita): anunciar o nome `snespi.local` por mDNS, para a tela mostrar `http://snespi.local` em vez do IP. Resolve em iPhone, Mac, Windows 10 ou mais novo e Android 12 ou mais novo; o IP teria de continuar na tela para os outros. Exige um serviço de mDNS na imagem.
 
 ## Resolvido
 

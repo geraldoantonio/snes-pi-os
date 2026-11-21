@@ -9,7 +9,7 @@
 typedef enum {
 	NET_OFF,
 	NET_CONNECTING,	/* script "up" rodando */
-	NET_READY,	/* servidor no ar: endereço e PIN na tela */
+	NET_READY,	/* servidor no ar: endereço, PIN e QR code na tela */
 	NET_ERROR,	/* err diz o motivo */
 	NET_SCANNING,	/* script "scan" rodando */
 	NET_WIFI_LIST,	/* escolher a rede Wi-Fi */
@@ -45,7 +45,9 @@ typedef struct {
 	int tick;			/* avança enquanto conecta ou procura (animação) */
 
 	/* NET_READY */
-	char ip[48], pin[8], url[96];
+	char ip[48], pin[8];
+	char url[96];			/* o que se digita: http://<ip> (a página pede o PIN) */
+	char qr[128];			/* o do QR code: url + /?pin=<pin>, já preenchido */
 	char ssid[NET_SSID_LEN];	/* rede Wi-Fi em uso; vazio = cabo */
 	int port;
 	int has_wifi;			/* há adaptador Wi-Fi no aparelho */

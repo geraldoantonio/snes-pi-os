@@ -204,7 +204,7 @@ void net_start(net_state_t *n)
 	proc_kill(&server, 2000);
 	n->phase = NET_CONNECTING;
 	n->tick = 0;
-	n->err[0] = n->ip[0] = n->url[0] = n->ssid[0] = n->receiving[0] = 0;
+	n->err[0] = n->ip[0] = n->url[0] = n->qr[0] = n->ssid[0] = n->receiving[0] = 0;
 	n->nfiles = n->ok_count = n->err_count = 0;
 	n->port = g_port;
 	new_pin(n);
@@ -281,9 +281,10 @@ static void up_done(net_state_t *n, int st)
 		n->has_wifi = atoi(f[3]);
 		snprintf(n->ssid, sizeof(n->ssid), "%s", nf >= 5 ? f[4] : "");
 		if (n->port == 80)
-			snprintf(n->url, sizeof(n->url), "http://%s/%s", n->ip, n->pin);
+			snprintf(n->url, sizeof(n->url), "http://%s", n->ip);
 		else
-			snprintf(n->url, sizeof(n->url), "http://%s:%d/%s", n->ip, n->port, n->pin);
+			snprintf(n->url, sizeof(n->url), "http://%s:%d", n->ip, n->port);
+		snprintf(n->qr, sizeof(n->qr), "%s/?pin=%s", n->url, n->pin);
 		start_server(n);	/* segue em NET_CONNECTING até o "pronto" */
 		return;
 	}

@@ -3,10 +3,16 @@
  *
  *   snespi-upload --dir /roms --pin 1234 [--port 80] [--max-mb 16]
  *
- * Serve a página de envio em http://<ip>/<pin> e recebe os arquivos por
- * POST /<pin>/enviar (multipart/form-data), gravando direto no disco:
- * ROMs (.sfc .smc .fig .swc) em --dir e capas (.jpg .jpeg .png) em
- * --dir/capas. Qualquer caminho sem o PIN responde 404.
+ * Serve a página de envio na raiz (http://<ip>/), que pede o PIN mostrado
+ * na TV; o QR code do launcher abre /?pin=<pin>, e a página já vem com ele
+ * preenchido. Rotas:
+ *
+ *   GET  /                    a página (qualquer um na rede pode abrir)
+ *   GET  /pin?pin=<pin>       200 se o PIN confere, 403 se não
+ *   POST /enviar?pin=<pin>    os arquivos (multipart/form-data); 403 sem o PIN
+ *
+ * Grava direto no disco: ROMs (.sfc .smc .fig .swc) em --dir e capas
+ * (.jpg .jpeg .png) em --dir/capas.
  *
  * O launcher inicia este programa só enquanto a tela "Receber jogos" está
  * aberta e lê os eventos da saída padrão, um por linha, com campos
@@ -472,29 +478,20 @@ static const char *header_value(const char *head, const char *name)
 	return NULL;
 }
 
-/* 1: caminho com o PIN certo (rest aponta para o que vem depois); 0: não */
-static int check_pin(const char *path, const char **rest)
+/*
+ * PIN da query (?pin=1234): 1 confere, 0 errado, -1 não veio. A comparação
+ * olha todos os caracteres, para o tempo de resposta não dar pista.
+ */
+static int check_pin(const char *query)
 {
+	char got[32];
+	if (!query || header_param(query, "pin", got, sizeof(got)) != 0 || !got[0])
+		return -1;
 	size_t n = strlen(g_pin);
-	if (path[0] != '/' || strncmp(path + 1, g_pin, n) != 0)
-		return 0;
-	const char *r = path + 1 + n;
-	if (*r != 0 && *r != '/')
-		return 0;
-	*rest = r;
-	return 1;
-}
-
-/* Parece uma tentativa de PIN ("/" + só dígitos)? As outras (favicon etc.) não contam */
-static int looks_like_pin(const char *path)
-{
-	const char *p = path + 1;
-	if (path[0] != '/' || !*p)
-		return 0;
-	for (; *p && *p != '/'; p++)
-		if (!isdigit((unsigned char)*p))
-			return 0;
-	return 1;
+	unsigned diff = strlen(got) != n;
+	for (size_t i = 0; i < n && got[i]; i++)
+		diff |= (unsigned)(got[i] ^ g_pin[i]);
+	return diff == 0;
 }
 
 /* Atende uma conexão (processo filho); devolve o código de saída */
@@ -532,20 +529,25 @@ static int serve(int fd)
 	}
 	char *q = strchr(path, '?');
 	if (q)
-		*q = 0;
+		*q++ = 0;
+	const int get = strcmp(method, "GET") == 0, post = strcmp(method, "POST") == 0;
 
-	const char *rest;
-	if (!check_pin(path, &rest)) {
-		respond_text(fd, "404 Not Found", "");
-		return looks_like_pin(path) ? EXIT_BAD_PIN : 0;
-	}
-
-	if (strcmp(method, "GET") == 0 && (rest[0] == 0 || strcmp(rest, "/") == 0)) {
+	if (get && strcmp(path, "/") == 0) {
 		respond(fd, "200 OK", "text/html; charset=utf-8", PAGINA_HTML, strlen(PAGINA_HTML));
 		return 0;
 	}
-	if (strcmp(method, "POST") != 0 || strcmp(rest, "/enviar") != 0) {
+	if (!(get && strcmp(path, "/pin") == 0) && !(post && strcmp(path, "/enviar") == 0)) {
 		respond_text(fd, "404 Not Found", "");
+		return 0;
+	}
+	/* daqui para baixo, só com o PIN; cada PIN errado conta para o bloqueio */
+	int pin = check_pin(q);
+	if (pin != 1) {
+		respond_text(fd, "403 Forbidden", "pin\n");
+		return pin == 0 ? EXIT_BAD_PIN : 0;
+	}
+	if (get) {
+		respond_text(fd, "200 OK", "ok\n");
 		return 0;
 	}
 

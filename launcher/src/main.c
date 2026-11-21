@@ -434,7 +434,8 @@ static void shot_net_state(net_state_t *n, const char *screen, const char *err)
 	n->port = 80;
 	snprintf(n->pin, sizeof(n->pin), "4821");
 	snprintf(n->ip, sizeof(n->ip), "192.168.0.42");
-	snprintf(n->url, sizeof(n->url), "http://%s/%s", n->ip, n->pin);
+	snprintf(n->url, sizeof(n->url), "http://%s", n->ip);
+	snprintf(n->qr, sizeof(n->qr), "%s/?pin=%s", n->url, n->pin);
 	snprintf(n->ssid, sizeof(n->ssid), "Rede de Casa");
 	n->naps = (int)(sizeof(aps) / sizeof(aps[0]));
 	memcpy(n->aps, aps, sizeof(aps));
