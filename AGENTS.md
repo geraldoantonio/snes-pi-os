@@ -40,11 +40,11 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
    - **Teste - Controles** acende os botões dos jogadores 1 e 2 no emulador;
    - **Teste - Breakout** tem imagem e som; Back + Start volta ao menu; o save aparece;
    - desligar na tomada e ligar de novo não corrompe a partição ROMS.
-   Sem saída na TV, a depuração precisa de adaptador USB-serial (login em `ttyAMA0`, 115200).
+   Sem saída na TV, a depuração precisa de adaptador USB-serial (mensagens do kernel em `ttyAMA0`, 115200; não há login).
 2. Corrigir o que o teste mostrar. Tudo isso está em `docs/pendencias.md`, na seção "A testar no hardware".
 3. **Modo rede** (especificado em `docs/launcher.md` e desenhado no canvas): programa `snespi-upload` em C, QR code (ex.: `qrcodegen`), tela no launcher acionada por Start, Ethernet + `udhcpc` só sob demanda.
-4. Limpeza antes de uma versão estável: tirar o login na serial e o `hello_pi` da defconfig; avaliar `fsck.fat` no boot para a partição ROMS; um `snes9x.cfg` para controles genéricos.
-5. Quando o hardware estiver validado: Releases deixam de ser pré-lançamento (ver **Releases**).
+4. Limpeza antes de uma versão estável: feita (sem login na serial, sem `hello_pi`, `snes9x.cfg` para controles genéricos). O `fsck.fat` no boot ficou de fora: desligar na tomada não corrompeu a ROMS.
+5. Releases: o `--prerelease` já saiu do `build.yml`; a próxima tag (`v1.0.0`) sai como versão estável. Depois dela, apontar o botão do site para `releases/latest`.
 
 ## Releases
 
@@ -70,7 +70,7 @@ Releases são **públicas** e viram o download da página do projeto. Só crie u
 
 **Versionamento:** `0.x.y` enquanto não houver teste completo no hardware. Novo recurso sobe o `x`; só correções sobem o `y`.
 
-**Pré-lançamento:** o passo "Criar release" usa `--prerelease`. Quando o hardware for validado, tire o `--prerelease` do `build.yml`; aí o link `releases/latest` passa a funcionar e o botão do site pode apontar para ele.
+**Pré-lançamento:** até a `v0.2.1`, o passo "Criar release" usava `--prerelease`. Com o hardware validado (2026-11-20), a opção saiu do `build.yml`: as próximas tags viram versões normais, o link `releases/latest` passa a funcionar e o botão do site pode apontar para ele.
 
 **Release com problema:** não reaproveite a tag. Corrija e publique a próxima versão. Para apagar uma Release, só com autorização do dono:
 ```sh

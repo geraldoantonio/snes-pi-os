@@ -2,13 +2,13 @@
 
 ## Decisões
 
-- [ ] **Controle:** USB (assumido) ou GPIO (`mk_arcade_joystick_rpi`)?
+- [x] **Controle:** USB. Testado com dois controles estilo SNES (Knup KP-3124); GPIO (`mk_arcade_joystick_rpi`) ficou de fora.
 - [x] **Licença do código original:** MIT (arquivo `LICENSE`). O PiSNES deriva do SNES9X, cuja licença é não comercial; os patches nele seguem a licença do PiSNES, e o launcher continua um programa separado, sem linkar com o emulador.
 - [x] **Saída de vídeo principal:** HDMI. O design do launcher é 1280×720 (720p); composto fica sem layout próprio por enquanto.
 - [x] **Placa:** Raspberry Pi 1 Model B rev 2 (2 USB, Ethernet), não B+.
 - [x] **Desligar com segurança:** menu do sistema no launcher (Start) e, opcionalmente, botão no GPIO3 (pinos 5 e 6) e LED de status no GPIO17 (pinos 11 e 9). Reset fica de fora (furos P6, solda). Ver [hardware-e-limites.md](hardware-e-limites.md).
 - [x] **Envio de ROMs:** cartão SD sempre funciona; além disso, um **modo rede** opcional no launcher, com página web de upload pela Ethernet. Desligado por padrão: a rede só sobe enquanto esse modo está aberto. Ver [launcher.md](launcher.md).
-- [ ] **Launcher:** começar com o GUI nativo do PiSNES e trocar depois, ou já escrever o launcher próprio?
+- [x] **Launcher:** próprio, em C (`launcher/`); o GUI nativo do PiSNES não é usado.
 - [x] **Versão do Buildroot:** 2025.02.19 LTS, a última com `rpi-userland` (removido na 2026.02). Ver [buildroot.md](buildroot.md).
 - [x] **Onde compilar:** GitHub Actions (repositório público), em contêiner Debian 12.
 
@@ -22,9 +22,9 @@
 
 ## A verificar no build
 
-- [ ] Se o patch do Makefile basta e se o C antigo de `unzip/` compila com o GCC da 2025.02.
-- [ ] Se o CMake do contêiner (3.25) compila o `rpi-userland` sem problemas.
-- [ ] Espaço em disco e tempo do build no GitHub Actions.
+- [x] O patch do Makefile basta e o C antigo de `unzip/` compila com o GCC da 2025.02.
+- [x] O CMake do contêiner (3.25) compila o `rpi-userland`.
+- [x] Espaço em disco e tempo do build no GitHub Actions: cabe depois do passo "Liberar disco"; ~25–30 min com cache.
 
 ## Resultado do primeiro teste no hardware (v0.1.0)
 
@@ -49,8 +49,8 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 
 ## A testar no hardware
 
-- [ ] **Primeiro de tudo:** `hello_triangle` (pilha GLES legada com kernel 6.6 no Pi 1).
-- [ ] Estabilidade e temperatura com overclock (`arm_freq=900`, `sdram_freq=500`, sugeridos pelo readme do PiSNES). **Ativado por padrão** depois de Mortal Kombat II ficar lento a 700 MHz, com o governor `performance` no `S99game`. O `diagnostico.txt` mostra a frequência, a temperatura e o `get_throttled`.
+- [x] `hello_triangle` (pilha GLES legada com kernel 6.6 no Pi 1): funciona (ver acima).
+- [x] Estabilidade e temperatura com overclock (37 °C, sem throttling; jogos rodando 15 min ou mais sem travar, 2026-11-20) (`arm_freq=900`, `sdram_freq=500`, sugeridos pelo readme do PiSNES). **Ativado por padrão** depois de Mortal Kombat II ficar lento a 700 MHz, com o governor `performance` no `S99game`. O `diagnostico.txt` mostra a frequência, a temperatura e o `get_throttled`.
 - [ ] Menor `gpu_mem` que ainda funciona com dispmanx/GLES2.
 - [ ] Se `dtparam=audio=on` é necessário para o áudio.
 - [ ] Tempo de boot até o menu.
@@ -59,8 +59,8 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [x] Raiz somente leitura + `HOME=/roms`: o save do jogo fica gravado e volta depois de desligar (2026-11-20).
 - [ ] Se um link simbólico `snes9x.cfg` → `/roms/snes9x.cfg` funciona.
 - [x] O FAT de `/roms` monta depois de desligar na tomada, sem corromper (2026-11-20, sem `fsck.fat`). Falta ver se `utf8` mostra acentos nos nomes.
-- [ ] Gamepad USB genérico: se carrega pelo `mdev` e qual `snes9x.cfg` ele precisa.
-- [ ] Remover depois: login na serial `ttyAMA0` e `hello_pi`.
+- [x] Gamepad USB genérico: carrega pelo `mdev`; o `snes9x.cfg` do overlay é para ele.
+- [x] Removidos da defconfig: login na serial `ttyAMA0` e `hello_pi` (o kernel ainda escreve as mensagens de boot na serial). Verificar na próxima imagem que o boot segue igual.
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
 - [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
 - [x] **Desligar pelo menu do sistema** (Start › Desligar): funciona no Pi (2026-11-09).
@@ -79,14 +79,14 @@ Se a compatibilidade do PiSNES (SNES9X 1.39) for insuficiente, ou se a pilha GLE
 ## Próximos passos de implementação
 
 1. [x] Criar `external/` (BR2_EXTERNAL) com `external.desc`, `external.mk` e `Config.in`.
-2. [x] Escrever `package/pisnes` com o patch do Makefile (patch testado só com `--dry-run`).
-3. [x] Criar `snespi_defconfig` (validada pelo kconfig; não compilada).
-4. [x] Workflow do GitHub Actions (ainda não executado).
-5. [ ] Primeiro build no CI e correções.
-6. [x] Overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`) e layout do `genimage` com a 3ª partição (não compilados).
-7. [ ] Imagem de teste com `hello_triangle`.
-8. [ ] Primeira imagem: PiSNES com o GUI nativo, para validar o boot.
-9. [x] Launcher em C e pacote `snes-launcher` (primeira versão; testado só com capturas fora do Pi).
-10. [ ] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
+2. [x] Escrever `package/pisnes` com o patch do Makefile.
+3. [x] Criar `snespi_defconfig`.
+4. [x] Workflow do GitHub Actions.
+5. [x] Primeiro build no CI e correções.
+6. [x] Overlay (`S99game`, `config.txt`, `cmdline.txt`, `fstab`) e layout do `genimage` com a 3ª partição.
+7. [x] Imagem de teste com `hello_triangle`.
+8. [x] ~~Primeira imagem: PiSNES com o GUI nativo~~: pulado, o boot foi validado direto com o launcher.
+9. [x] Launcher em C e pacote `snes-launcher`.
+10. [x] Testar o launcher no hardware: framebuffer em 1280×720, controles USB, volta do emulador. Usar os jogos de teste da partição ROMS (Controles e Breakout, do OpenSNES).
 11. [ ] Modo rede: `snespi-upload`, QR code e tela no launcher (como item do menu do sistema, aberto pelo Start).
 12. [ ] (Ideia, adiada) Buscar capas pela internet no launcher, junto com o modo rede: índice do `libretro-thumbnails` gerado no build, rede e hora (`udhcpc`, `ntpd -q`) sob demanda, HTTPS com libcurl e certificados, gravação em `/roms/capas`. Um script para PC também ficou para depois.
