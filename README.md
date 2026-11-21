@@ -5,7 +5,7 @@ Sistema Linux mínimo e dedicado que transforma um **Raspberry Pi 1** (Model B d
 Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jogar, com boot curto e um sistema que aguenta ser desligado na tomada.
 
 - **Para quem vai usar:** instruções, controles e perguntas frequentes em **https://snespi.geraldojunior.dev**
-- **Download:** [Releases](https://github.com/geraldoantonio/snes-pi-os/releases) (imagem `.img.xz` para gravar no cartão SD)
+- **Download:** [versão mais recente](https://github.com/geraldoantonio/snes-pi-os/releases/latest) (imagem `.img.xz` para gravar no cartão SD)
 
 ![Menu do snes-pi-os: lista de jogos à esquerda e, à direita, capa, região, save e compatibilidade do jogo selecionado](site/public/img/lista.png)
 
@@ -13,7 +13,7 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 
 ## Status
 
-> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; dois controles USB estilo SNES, som e saves funcionam; jogos com chips especiais ainda sem teste.
+> **Versão 1.0.** Testada num Pi 1 Model B de verdade: boot, menu, jogos, som, saves, dois controles USB estilo SNES e o botão de desligar funcionam. Jogos com chips especiais (Super FX, SA-1 etc.) não rodam no PiSNES; o LED de status ainda sem teste.
 
 | Parte | Situação |
 |---|---|
