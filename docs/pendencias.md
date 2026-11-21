@@ -64,7 +64,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).
 - [ ] **Modo rede pelo cabo** (Start › Receber jogos, implementado em 2026-11-21, sem teste no Pi): a tela chega ao endereço com QR code; tempo do DHCP; a página abre no celular e o QR code é lido pela câmera; velocidade de upload pela Ethernet 10/100 e gravação no FAT; o jogo enviado aparece na lista ao concluir; a música do menu segue tocando sem engasgar durante o envio; depois de sair, a rede está mesmo desligada (`ip addr` não dá para conferir sem serial: ver se o aparelho some do roteador).
 - [ ] **Modo rede por Wi-Fi USB:** qual adaptador o Pi 1 reconhece (driver e firmware carregam? o `rede.log` mostra o `dmesg`); a lista de redes aparece; o teclado da senha com o controle; conexão com WPA2; nomes de rede com acento; consumo do adaptador na USB do Model B com a fonte de 3 A.
-- [ ] Modo rede: o tamanho da imagem e o tempo de build com `wpa_supplicant`, `libnl` e `linux-firmware` (o `rootfs` local tinha 38 MB usados de 120 MB antes deles).
+- [x] Modo rede: a imagem compila com `wpa_supplicant`, `libnl` e `linux-firmware` (build local do zero em 2026-11-21, commit `fb87cd1`): `rootfs` com 50 MB usados de 120 MB, firmware com menos de 1 MB, imagem `.xz` de 34 MB (33 MB na `v1.0.0`). Falta o build no CI.
 - [x] **Desligar pelo menu do sistema** (Start › Desligar): funciona no Pi (2026-11-09).
 - [ ] Start › Reiniciar no Pi.
 - [x] **Botão de desligar** (GPIO3, pinos 5 e 6, botão de gabinete de PC): desliga e religa o Pi parado (2026-11-20), então o `gpio_keys` carrega sozinho. Falta conferir apertando no meio do jogo: o save gravado (patch `0007`, a linha "quit signal, saving SRAM" no `emulador.log`).
