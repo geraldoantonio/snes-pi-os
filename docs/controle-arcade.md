@@ -2,7 +2,7 @@
 
 Um painel arcade (alavanca e botões) ligado a um **Raspberry Pi Pico (RP2040)**, que aparece no USB como joystick. O firmware fica em [`firmware/arcade/`](../firmware/arcade/) (C, pico-sdk 2.3.1 + TinyUSB).
 
-> **Estado:** gravado num Pico (2026-11-20, versão `2p`): no macOS ele aparece como "snes-pi-os Controle Arcade" (`1209:0001`), com dois joysticks HID de relatório de 4 bytes. **Botões e alavanca ainda sem teste, e nada foi testado no Pi (verificar)**.
+> **Estado:** gravado num Pico (2026-11-20, versão `2p`) e conferido no macOS, pino a pino, com um fio ao GND: os 24 pinos dão a direção ou o botão certo, o jogador 1 na interface USB 0 e o jogador 2 na 1. **Ainda sem teste no Pi e sem chaves de verdade (verificar)**.
 
 ## Como funciona
 
@@ -66,6 +66,8 @@ Para regravar com o painel fechado: ligue o cabo segurando **Select + Start do j
 | `snespi-arcade-2p.uf2` | painel de dois jogadores (ou de um, com os pinos do jogador 2 soltos) |
 | `snespi-arcade-1p.uf2` | painel de um jogador que vai ser usado junto com outro controle USB |
 
+Testadores de controle no navegador podem mostrar só um dos dois jogadores (visto no Chrome do macOS); as duas interfaces respondem mesmo assim.
+
 O PiSNES só usa os **dois primeiros** joysticks. Com a versão `2p`, o Pico já ocupa os dois, e um controle USB extra fica de fora do jogo; para arcade + controle USB, use a `1p`. Quem vira jogador 1 depende da ordem em que o Linux encontra os aparelhos **(verificar no Pi)**.
 
 ## No snes-pi-os
@@ -90,7 +92,8 @@ O firmware usa o identificador USB `1209:0001`, o PID de teste do [pid.codes](ht
 
 ## Lista de verificação (hardware)
 
-- [ ] O Pico aparece como dois joysticks (`js0` e `js1`) e o LED acende.
+- [x] Cada pino dá a direção ou o botão certo, no jogador certo (macOS, lendo os relatórios HID, 2026-11-20).
+- [ ] No Linux, o Pico aparece como dois joysticks (`js0` e `js1`), o jogador 1 primeiro, e o LED acende.
 - [ ] Launcher: alavanca navega, A confirma, B volta, Start abre o menu.
 - [ ] Teste - Controles: todos os botões dos jogadores 1 e 2 acendem no lugar certo.
 - [ ] Select + Start sai do jogo; Select + R e Select + L gravam e carregam o estado.
