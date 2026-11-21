@@ -44,8 +44,8 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [x] **Os jogos abrem e rodam no PiSNES** pelo launcher. A correção do terminal resolveu a tela preta.
 - [x] **Mortal Kombat II roda bem** com a imagem `8f2b625` (900 MHz + governor `performance`). Antes travava; a CPU era o gargalo, não a ROM (que tem a soma de verificação diferente da original).
 - [ ] **Aladdin:** roda, música e inimigos seguem, mas às vezes o Aladdin demora a responder ao teclado. Suspeita (verificar): leitura do teclado pelo terminal no SDL 1.2 (fbcon) com várias teclas juntas. Testar com controle USB e, com a depuração ligada (Start › Depuração), ler o monitor no `emulador.log`. Na segunda vez, rodou normal: intermitente.
-- [ ] **Lentidão crescente até travar, com o som parando** (Mortal Kombat II e Aladdin, já a 900 MHz, 37 °C, sem throttling no boot). Em 2026-11-20, com a `v0.2.x` e controles USB, o Bomberman rodou mais de 15 min com dois jogadores sem esse problema; falta repetir com o MK II e o Aladdin. O log vai até `entering main loop`, sem erro. O Aladdin é leve, o que aponta para o sistema, não para a ROM. Com a depuração ligada (Start › Depuração), o launcher grava no log, a cada 5 s, a CPU e o estado de cada thread do emulador e as mensagens do kernel.
-- [ ] Ainda a confirmar: som no jogo, controles dos jogadores 1 e 2, Select + Start / Esc voltando ao menu, saves, tela de abertura no boot.
+- [x] **Lentidão crescente até travar, com o som parando** (Mortal Kombat II e Aladdin, já a 900 MHz, 37 °C, sem throttling no boot). Não se repetiu em 2026-11-20 com a `v0.2.x` e controles USB: Bomberman mais de 15 min com dois jogadores, Aladdin e Mortal Kombat II rodaram normal. Causa não identificada; se voltar, ligar a depuração. O log vai até `entering main loop`, sem erro. O Aladdin é leve, o que aponta para o sistema, não para a ROM. Com a depuração ligada (Start › Depuração), o launcher grava no log, a cada 5 s, a CPU e o estado de cada thread do emulador e as mensagens do kernel.
+- [x] Som no jogo, controles dos jogadores 1 e 2, Select + Start voltando ao menu e saves funcionam (2026-11-20).
 
 ## A testar no hardware
 
@@ -56,9 +56,9 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] Tempo de boot até o menu.
 - [ ] Tela de abertura (`S00splash` → `S99game` → launcher): se aparece logo no começo do boot, se a barra avança sem texto do console por cima e quanto tempo cada `--splash` acrescenta ao boot.
 - [ ] Jogos com chips especiais: pelo Makefile, Super FX, SA-1, C4, SDD-1, SPC7110 e S-RTC não são compilados. Ver [hardware-e-limites.md](hardware-e-limites.md).
-- [ ] Efeito de raiz somente leitura + `HOME=/roms` nos saves.
+- [x] Raiz somente leitura + `HOME=/roms`: o save do jogo fica gravado e volta depois de desligar (2026-11-20).
 - [ ] Se um link simbólico `snes9x.cfg` → `/roms/snes9x.cfg` funciona.
-- [ ] Se o FAT de `/roms` monta depois de desligar na tomada (sem `fsck.fat` por enquanto) e se `utf8` mostra acentos.
+- [x] O FAT de `/roms` monta depois de desligar na tomada, sem corromper (2026-11-20, sem `fsck.fat`). Falta ver se `utf8` mostra acentos nos nomes.
 - [ ] Gamepad USB genérico: se carrega pelo `mdev` e qual `snes9x.cfg` ele precisa.
 - [ ] Remover depois: login na serial `ttyAMA0` e `hello_pi`.
 - [ ] Se o PiSNES abre ROMs `.zip` (o Makefile compila com `UNZIP=1`).

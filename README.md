@@ -13,7 +13,7 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 
 ## Status
 
-> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; dois controles USB estilo SNES funcionam; saves e jogos com chips especiais ainda sem teste.
+> **Em desenvolvimento (pré-lançamento).** Boot, menu e jogos já rodam num Pi 1 Model B de verdade; dois controles USB estilo SNES, som e saves funcionam; jogos com chips especiais ainda sem teste.
 
 | Parte | Situação |
 |---|---|
