@@ -65,7 +65,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] Modo rede: tempo do DHCP, velocidade de upload pela Ethernet 10/100 e gravação no FAT.
 - [x] **Desligar pelo menu do sistema** (Start › Desligar): funciona no Pi (2026-11-09).
 - [ ] Start › Reiniciar no Pi.
-- [ ] **Botão de desligar** (GPIO3, pinos 5 e 6, ainda não montado): o botão desliga do menu e do meio do jogo, com o save gravado (patch `0007`, ver no `emulador.log` a linha "quit signal, saving SRAM"); se a tela "Desligando" fica até o fim; se o botão religa o Pi parado; se o `gpio_keys` carrega sozinho.
+- [x] **Botão de desligar** (GPIO3, pinos 5 e 6, botão de gabinete de PC): desliga e religa o Pi parado (2026-11-20), então o `gpio_keys` carrega sozinho. Falta conferir apertando no meio do jogo: o save gravado (patch `0007`, a linha "quit signal, saving SRAM" no `emulador.log`).
 - [x] **Teclado no jogo remapeado** (`snes9x.cfg` do overlay): A = C, B = X, X = D, Y = S, L = A, R = Z, Start = Enter, Select = Espaço; Esc ainda sai. Funciona no Pi (2026-11-09).
 - [ ] **LED de status** (GPIO17, pinos 11 e 9, ainda não montado): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
 - [x] **Ampliação da ROMS no primeiro boot** (`S01roms`): funciona no Pi (2026-11-09, cartão de 32 GB): 512 MB → 30.284 MB, arquivos devolvidos, e o diagnóstico (que roda depois) já estava pronto com 22 s de boot, então a formatação é rápida. Depois disso, os dois jogos de teste abriram e saíram com código 0, e `recentes.txt`/`favoritos.txt` ficaram gravados.

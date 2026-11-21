@@ -45,10 +45,10 @@ Detalhes e próximos passos em [docs/pendencias.md](docs/pendencias.md).
 
 | Peça | Pinos | O que faz |
 |---|---|---|
-| Botão (normalmente aberto) | 5 (GPIO3) e 6 (GND) | Fecha o jogo gravando o save e desliga; com o aparelho desligado, liga de novo (verificar) |
+| Botão (normalmente aberto) | 5 (GPIO3) e 6 (GND) | Fecha o jogo gravando o save e desliga; com o aparelho desligado, liga de novo |
 | LED + resistor de 330 Ω | 11 (GPIO17) e 9 (GND) | Pisca no boot, aceso no menu, pisca rápido ao desligar; **apagado = pode tirar da tomada** |
 
-A imagem já vem configurada (overlays `gpio-shutdown` e `gpio-led` no `config.txt`). Sem botão, o mesmo desligamento fica no menu do sistema: **Start** (ou Espaço) › **Desligar**. Ainda sem teste no hardware (verificar). Detalhes em [docs/hardware-e-limites.md](docs/hardware-e-limites.md).
+A imagem já vem configurada (overlays `gpio-shutdown` e `gpio-led` no `config.txt`). Sem botão, o mesmo desligamento fica no menu do sistema: **Start** (ou Espaço) › **Desligar**. O botão e o menu funcionam no Pi; o LED ainda sem teste (verificar). Detalhes em [docs/hardware-e-limites.md](docs/hardware-e-limites.md).
 
 ## Visão geral técnica
 

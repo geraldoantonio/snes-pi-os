@@ -31,7 +31,7 @@ Esquema: [`site/public/img/ligacao-gpio.svg`](../site/public/img/ligacao-gpio.sv
 | LED + resistor de 330 Ω | 11 (GPIO17) → resistor → perna longa; perna curta → 9 (GND) | `dtoverlay=gpio-led,gpio=17,label=snespi-status,trigger=heartbeat` |
 
 - **Botão:** o kernel (módulo `gpio_keys`, carregado pelo `S99game`) gera a tecla `KEY_POWER`, e o **launcher** desliga: no menu, na hora; no meio do jogo, manda `SIGTERM` ao PiSNES, que grava o save (patch `0007`) e sai, e então desliga. O desligamento é o `poweroff` do BusyBox, que roda os scripts de parada e desmonta `/roms`. Se o launcher não estiver rodando (ex.: GUI nativo), o botão não faz nada.
-- **Ligar de novo:** com o Pi parado, encostar o GPIO3 no GND faz o firmware religar **(verificar no Pi 1)**. O botão não corta a energia; para isso, seria preciso um circuito externo (MOSFET ou módulo com trava) acionado pelo overlay `gpio-poweroff`.
+- **Ligar de novo:** com o Pi parado, encostar o GPIO3 no GND faz o firmware religar (funciona no Pi 1 Model B, 2026-11-20). O botão não corta a energia; para isso, seria preciso um circuito externo (MOSFET ou módulo com trava) acionado pelo overlay `gpio-poweroff`.
 - **LED:** pisca em batimento no boot (`heartbeat`), fica aceso no menu (o launcher troca para `default-on`), pisca rápido ao desligar (`timer`) e o driver `leds-gpio` o apaga no fim do desligamento: apagado, pode tirar da tomada **(verificar)**.
 - O GPIO3 é também o SCL do I²C e tem pull-up de 1,8 kΩ na placa; nada usa I²C nesta imagem. No **Model B rev 1** o pino 5 é o GPIO1: troque para `gpio_pin=1`.
 - Não use o GPIO14/15 (pinos 8 e 10): é a serial de depuração (`ttyAMA0`).

@@ -27,7 +27,8 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **Problemas resolvidos no caminho** (detalhes em `docs/pendencias.md` e em **Armadilhas**): código 134 (`realpath` com FORTIFY, patch `0005`); tela preta ao abrir jogo (SDL esperando troca de terminal com `tty1` em `KD_GRAPHICS`); lentidão do MK2 a 700 MHz.
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
 - **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo, dois jogadores (`snes9x.cfg` do overlay, 2026-11-20; Bomberman com dois controles sem travar); som no jogo; saves do jogo (gravados ao sair e mantidos depois de desligar); desligar na tomada não corrompeu a ROMS; Aladdin e MK II rodaram sem a lentidão de antes.
-- **Sem teste no hardware:** Start › Reiniciar, botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
+- **Botão de desligar no GPIO3:** desliga e religa o Pi (2026-11-20); falta apertar no meio do jogo.
+- **Sem teste no hardware:** Start › Reiniciar e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; jogos com chips especiais sem teste; a lentidão crescente de antes não se repetiu, mas a causa não foi achada. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 
