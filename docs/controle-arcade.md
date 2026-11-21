@@ -53,7 +53,7 @@ GP0 e GP1 (pinos 1 e 2) ficam livres. Para mudar os pinos, edite `firmware/arcad
 1. Compile (precisa de Docker; a primeira vez baixa o pico-sdk):
    ```sh
    cd firmware/arcade
-   make uf2        # gera build/snespi-arcade-1p.uf2 e build/snespi-arcade-2p.uf2
+   make uf2        # gera build/snespi-arcade-1p-v<versão>.uf2 e build/snespi-arcade-2p-v<versão>.uf2
    ```
    O CI também compila os dois arquivos a cada push (artefato `snespi-arcade-<sha>`) e os anexa às Releases.
 2. Segure o botão **BOOTSEL** do Pico e ligue o cabo USB no computador. Aparece a unidade `RPI-RP2`.
@@ -63,12 +63,34 @@ Para regravar com o painel fechado: ligue o cabo segurando **Select + Start do j
 
 | Arquivo | Uso |
 |---|---|
-| `snespi-arcade-2p.uf2` | painel de dois jogadores (ou de um, com os pinos do jogador 2 soltos) |
-| `snespi-arcade-1p.uf2` | painel de um jogador que vai ser usado junto com outro controle USB |
+| `snespi-arcade-2p-v<versão>.uf2` | painel de dois jogadores (ou de um, com os pinos do jogador 2 soltos) |
+| `snespi-arcade-1p-v<versão>.uf2` | painel de um jogador que vai ser usado junto com outro controle USB |
 
 Testadores de controle no navegador podem mostrar só um dos dois jogadores (visto no Chrome do macOS); as duas interfaces respondem mesmo assim.
 
 O PiSNES só usa os **dois primeiros** joysticks. Com a versão `2p`, o Pico já ocupa os dois, e um controle USB extra fica de fora do jogo; para arcade + controle USB, use a `1p`. Quem vira jogador 1 depende da ordem em que o Linux encontra os aparelhos **(verificar no Pi)**.
+
+## Versões do firmware
+
+O firmware tem versão própria, separada da versão da imagem: fica em [`firmware/arcade/VERSION`](../firmware/arcade/VERSION) e vai para o nome do `.uf2` e para o campo `bcdDevice` do USB (1.2.3 vira `0x0123`), então dá para saber qual versão está gravada sem abrir o painel:
+
+```sh
+lsusb -v -d 1209:0001 | grep bcdDevice     # Linux: "bcdDevice 1.00" = 1.0.0
+```
+
+No macOS: Informações do Sistema › USB › Controle Arcade › Versão.
+
+Regra (`MAIOR.MENOR.CORREÇÃO`, um dígito cada, limite do `bcdDevice`):
+
+- **MAIOR:** muda o que o sistema enxerga ou a fiação (relatório HID, numeração dos botões, pinos padrão). Pode exigir mexer no `snes9x.cfg`, no launcher ou no painel.
+- **MENOR:** recurso novo que não quebra painéis já montados.
+- **CORREÇÃO:** só correções.
+
+Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abaixo e faça o commit. Os `.uf2` saem no artefato do CI e são anexados à próxima Release da imagem; não há tag própria do firmware.
+
+| Versão | Data | O que mudou |
+|---|---|---|
+| 1.0.0 | 2026-11-20 | Primeira versão: dois jogadores num Pico, layout do controle estilo SNES, BOOTSEL com Select + Start ao ligar. Testada no Pi. |
 
 ## No snes-pi-os
 
