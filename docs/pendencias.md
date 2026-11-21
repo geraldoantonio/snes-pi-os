@@ -2,7 +2,7 @@
 
 ## Decisões
 
-- [x] **Controle:** USB. Testado com dois controles estilo SNES (Knup KP-3124); GPIO (`mk_arcade_joystick_rpi`) ficou de fora.
+- [x] **Controle:** USB. Testado com dois controles estilo SNES (Knup KP-3124). Para painel arcade, um Raspberry Pi Pico com firmware próprio (`firmware/arcade/`) que imita esse controle, em vez de ligar os botões no GPIO do Pi (`mk_arcade_joystick_rpi`): não mexe no kernel nem no `snes9x.cfg`, e os controles atuais continuam valendo. Ver [controle-arcade.md](controle-arcade.md).
 - [x] **Licença do código original:** MIT (arquivo `LICENSE`). O PiSNES deriva do SNES9X, cuja licença é não comercial; os patches nele seguem a licença do PiSNES, e o launcher continua um programa separado, sem linkar com o emulador.
 - [x] **Saída de vídeo principal:** HDMI. O design do launcher é 1280×720 (720p); composto fica sem layout próprio por enquanto.
 - [x] **Placa:** Raspberry Pi 1 Model B rev 2 (2 USB, Ethernet), não B+.
@@ -70,6 +70,7 @@ Terceiro teste (imagem local `d385f29`, 2026-11-07):
 - [ ] **LED de status** (GPIO17, pinos 11 e 9, ainda não montado): pisca no boot, aceso no menu, pisca ao desligar e apaga no fim.
 - [x] **Ampliação da ROMS no primeiro boot** (`S01roms`): funciona no Pi (2026-11-09, cartão de 32 GB): 512 MB → 30.284 MB, arquivos devolvidos, e o diagnóstico (que roda depois) já estava pronto com 22 s de boot, então a formatação é rápida. Depois disso, os dois jogos de teste abriram e saíram com código 0, e `recentes.txt`/`favoritos.txt` ficaram gravados.
 - [ ] **Controles USB estilo SNES** (2 × Knup KP-3124, 2026-11-20): navegam no launcher. No Mortal Kombat II, o Start ficava "salvando" e o jogo não começava: o `snes9x.cfg` tinha o mapeamento de Xbox 360, com `QSAVE=9` (o Start destes controles). Trocado pelo mapeamento estilo SNES, com quick save/load só por Select + R / Select + L. No "Teste - Controles" (imagem local `fef9dc5-joy`), o controle funcionou (2026-11-20); no Mortal Kombat II também (Start entra no jogo). Os dois controles funcionam (jogadores 1 e 2): Bomberman com dois jogadores por mais de 15 min, sem travar nem ficar lento (2026-11-20). No MK II, o R não faz nada no jogo, mas acende no "Teste - Controles": é a configuração de botões do próprio jogo.
+- [x] **Controle arcade com Pico** (`firmware/arcade/`, 2026-11-20): gravado num Pico; os 24 pinos conferidos no macOS (fio ao GND) e, no Pi, navega no launcher, cada botão dos dois jogadores acende no lugar certo no "Teste - Controles" e Select + Start sai do jogo. Falta montar com chaves de verdade. Lista em [controle-arcade.md](controle-arcade.md).
 - [x] Depois de desligar pelo menu, `recentes.txt`, `favoritos.txt` e a partição ROMS ficaram íntegros (2026-11-09). Desligar na tomada ainda pode perder o `recentes.txt`.
 
 ## Plano B
