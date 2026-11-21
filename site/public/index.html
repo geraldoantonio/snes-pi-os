@@ -26,6 +26,7 @@
 			<a href="#instalar">Instalar</a>
 			<a href="#controles">Controles</a>
 			<a href="#botao">Botão e LED</a>
+			<a href="#arcade">Arcade</a>
 			<a href="#compatibilidade">Compatibilidade</a>
 			<a href="#duvidas">Dúvidas</a>
 		</nav>
@@ -105,7 +106,7 @@
 			<li><b>Cartão SD</b><span>De 2 GB ou mais. O Model B usa o cartão SD de tamanho normal (um microSD com adaptador também serve).</span></li>
 			<li><b>Fonte</b><span>Micro-USB de 5 V. Prefira uma de 2 A, principalmente com controle de Xbox, que puxa bastante energia.</span></li>
 			<li><b>TV ou monitor</b><span>Com entrada HDMI. O menu foi feito para 720p e a imagem é ajustada à tela.</span></li>
-			<li><b>Controle</b><span>Controle USB estilo Super Nintendo (testado com o Knup KP-3124; dois controles para dois jogadores) ou um teclado USB.</span></li>
+			<li><b>Controle</b><span>Controle USB estilo Super Nintendo (testado com o Knup KP-3124; dois controles para dois jogadores) ou um teclado USB. Dá também para <a href="#arcade">montar um controle arcade</a>.</span></li>
 			<li><b>Um computador</b><span>Para gravar a imagem no cartão e copiar os jogos.</span></li>
 		</ul>
 	</div>
@@ -275,6 +276,61 @@
 		<div class="note">
 			<svg viewBox="0 0 16 16" fill="#F2A93B" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v8H7zm0 10h2v2H7z"/></svg>
 			<span>Os pinos do Pi trabalham com 3,3 V: nunca ligue 5 V neles. Faça as ligações com o aparelho fora da tomada. Recurso novo, ainda em teste no hardware.</span>
+		</div>
+	</div>
+</section>
+
+<section class="block" id="arcade">
+	<div class="wrap">
+		<p class="eyebrow">OPCIONAL</p>
+		<h2>Controle arcade com Raspberry Pi Pico</h2>
+		<p class="intro">Quer alavanca e botões de fliperama? Um <b>Raspberry Pi Pico</b> liga o painel ao Pi por um cabo USB e aparece como controle estilo Super Nintendo: os botões valem pelo nome, no menu e no jogo, e não é preciso configurar nada. Um Pico só atende <b>dois jogadores</b> e ocupa uma porta USB.</p>
+		<figure class="screen wiring">
+			<img src="img/ligacao-pico.svg" width="960" height="930" loading="lazy" alt="Raspberry Pi Pico visto de cima, com o USB para cima. Jogador 1: cima, baixo, esquerda, direita, A, B, X, Y, L, R, Select e Start nos pinos GP2 a GP13. Jogador 2: nos pinos GP14 a GP22 e GP26 a GP28. Cada chave liga o seu pino a um pino GND.">
+		</figure>
+		<div class="grid c2 wiring-info">
+			<div class="card">
+				<h3>Peças</h3>
+				<ul>
+					<li>Um Raspberry Pi Pico (RP2040) e um cabo micro-USB de dados</li>
+					<li>Por jogador: uma alavanca arcade de 4 chaves e 8 botões (A, B, X, Y, L, R, Select, Start)</li>
+					<li>Fios, de preferência com os conectores dos botões</li>
+				</ul>
+			</div>
+			<div class="card">
+				<h3>Ligação</h3>
+				<ul>
+					<li>Cada chave tem dois fios: um no pino do desenho, outro em qualquer pino <b>GND</b>. Os GNDs podem ser emendados de chave em chave.</li>
+					<li>Não precisa de resistor.</li>
+					<li>Na alavanca, a chave apertada fica do lado oposto ao movimento.</li>
+				</ul>
+			</div>
+		</div>
+		<div style="height: 20px"></div>
+		<ol class="steps">
+			<li>
+				<div>
+					<h3>Baixe o firmware</h3>
+					<p>Na página de <a href="https://github.com/geraldoantonio/snes-pi-os/releases">versões no GitHub</a>, baixe o arquivo <code>snespi-arcade-2p-…uf2</code> (dois jogadores; serve também para um só). O <code>snespi-arcade-1p-…uf2</code> é para usar o painel de um jogador junto com outro controle USB.</p>
+				</div>
+			</li>
+			<li>
+				<div>
+					<h3>Grave no Pico</h3>
+					<p>Segure o botão <b>BOOTSEL</b> do Pico e ligue o cabo USB no computador. Aparece uma unidade chamada <code>RPI-RP2</code>: copie o arquivo <code>.uf2</code> para ela. O Pico reinicia sozinho, já como controle.</p>
+				</div>
+			</li>
+			<li>
+				<div>
+					<h3>Ligue no Pi e teste</h3>
+					<p>Conecte o Pico numa porta USB do Pi e abra o <b>Teste - Controles</b> no menu: cada botão apertado acende na tela, para os dois jogadores.</p>
+				</div>
+			</li>
+		</ol>
+		<div style="height: 20px"></div>
+		<div class="note">
+			<svg viewBox="0 0 16 16" fill="#F2A93B" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 2h2v8H7zm0 10h2v2H7z"/></svg>
+			<span>Os pinos do Pico trabalham com 3,3 V: nunca ligue 5 V neles (cuidado com botões iluminados, que usam 5 V ou 12 V no LED). Recurso novo: testado no Pi com os dois jogadores, mas ainda sem um painel completo montado. <a href="https://github.com/geraldoantonio/snes-pi-os/blob/main/docs/controle-arcade.md">Guia completo no GitHub</a>.</span>
 		</div>
 	</div>
 </section>
