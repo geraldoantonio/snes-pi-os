@@ -69,7 +69,7 @@ start() {
 		finish
 	fi
 
-	splash 25 "Ampliando a parti\303\247\303\243o de jogos (s\303\263 no primeiro boot)"
+	splash 25 "Ampliando a partição de jogos (só no primeiro boot)"
 	log "copiando $used KB para a RAM"
 	rm -rf "$BACKUP"
 	mkdir -p "$BACKUP"
