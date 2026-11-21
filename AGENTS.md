@@ -28,7 +28,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 - **ROMS ampliada até o fim do cartão no primeiro boot** (`S01roms`): funciona no Pi.
 - **Funcionam no Pi:** desligar pelo menu do sistema (Start › Desligar), com `recentes.txt` e favoritos preservados; teclado do jogo remapeado; controle USB estilo SNES (Knup KP-3124) no launcher e no jogo (`snes9x.cfg` do overlay, 2026-11-20; jogador 2 sem teste).
 - **Sem teste no hardware:** Start › Reiniciar, botão de desligar no GPIO3 e LED de status no GPIO17 (esquema em `site/public/img/ligacao-gpio.svg`).
-- **Controle arcade (Raspberry Pi Pico):** firmware em `firmware/arcade/` (2026-11-20), imita o controle USB estilo SNES, dois jogadores num Pico. Compila e passa em `make test`; **sem teste no hardware** (ver `docs/controle-arcade.md`).
+- **Controle arcade (Raspberry Pi Pico):** firmware em `firmware/arcade/` (2026-11-20), imita o controle USB estilo SNES, dois jogadores num Pico. Gravado num Pico, que o macOS reconhece como dois joysticks HID; **botões sem teste e nada testado no Pi** (ver `docs/controle-arcade.md`).
 - **Em aberto:** atraso intermitente do teclado no Aladdin (uma vez); `recentes.txt` perdido ao desligar na tomada logo depois de abrir um jogo; segundo controle, saves e jogos com chips especiais ainda sem teste. Ferramentas de depuração: `diagnostico.txt` e `emulador.log` na partição ROMS; o monitor do emulador vem desligado (Start › Depuração ou o arquivo `.snespi/depurar`).
 - **Build local:** Docker com o volume `snespi-work` (ver **Comandos úteis** e a armadilha sobre build incremental); recompila só o launcher em ~1 min.
 

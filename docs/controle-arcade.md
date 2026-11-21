@@ -2,7 +2,7 @@
 
 Um painel arcade (alavanca e botões) ligado a um **Raspberry Pi Pico (RP2040)**, que aparece no USB como joystick. O firmware fica em [`firmware/arcade/`](../firmware/arcade/) (C, pico-sdk 2.3.1 + TinyUSB).
 
-> **Estado:** o firmware compila e a lógica passa nos testes (`make test`), mas **ainda não foi gravado num Pico nem testado no Pi (verificar)**.
+> **Estado:** gravado num Pico (2026-11-20, versão `2p`): no macOS ele aparece como "snes-pi-os Controle Arcade" (`1209:0001`), com dois joysticks HID de relatório de 4 bytes. **Botões e alavanca ainda sem teste, e nada foi testado no Pi (verificar)**.
 
 ## Como funciona
 
