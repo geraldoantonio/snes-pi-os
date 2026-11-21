@@ -15,6 +15,10 @@
 #define USB_VID 0x1209
 #define USB_PID 0x0001
 
+#ifndef ARCADE_VERSION_BCD
+#error "ARCADE_VERSION_BCD vem do CMakeLists.txt (arquivo VERSION)"
+#endif
+
 enum { STR_LANG, STR_MAKER, STR_PRODUCT, STR_SERIAL, STR_PLAYER1, STR_PLAYER2 };
 
 static const tusb_desc_device_t desc_device = {
@@ -24,7 +28,7 @@ static const tusb_desc_device_t desc_device = {
 	.bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
 	.idVendor = USB_VID,
 	.idProduct = USB_PID,
-	.bcdDevice = 0x0100,
+	.bcdDevice = ARCADE_VERSION_BCD,	/* versão do firmware: 1.2.3 = 0x0123 */
 	.iManufacturer = STR_MAKER,
 	.iProduct = STR_PRODUCT,
 	.iSerialNumber = STR_SERIAL,

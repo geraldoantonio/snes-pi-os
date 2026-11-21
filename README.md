@@ -20,6 +20,7 @@ Não é uma distro genérica: só o necessário para ligar, escolher o jogo e jo
 | Imagem do cartão (Buildroot) | Compila no CI e gera a `sdcard.img` com 3 partições; **liga no hardware** com tela de abertura |
 | PiSNES (emulador) | **Roda no hardware** (Pi 1 Model B, 900 MHz): Mortal Kombat II, Aladdin, Donkey Kong Country |
 | Launcher (`launcher/`) | **Roda no hardware** (HDMI 1080p, teclado e controles USB estilo SNES), com música, capas e abertura dos jogos |
+| Controle arcade (`firmware/arcade/`) | Firmware para Raspberry Pi Pico, versão 1.0.0: **funciona no hardware** com dois jogadores (testado com fio; falta o painel montado) |
 | Teste de boot no QEMU | No CI, a cada build: kernel, init, montagens e launcher no framebuffer |
 | Modo rede (enviar jogos pela página web) | Especificado e desenhado; não implementado |
 

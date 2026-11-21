@@ -7,7 +7,7 @@
 #
 # Variáveis:
 #   WORK  pasta de trabalho (pico-sdk e builds); padrão: firmware/arcade/build
-#   OUT   onde ficam os .uf2; padrão: $WORK
+#   OUT   onde ficam os .uf2 (snespi-arcade-<N>p-v<versão>.uf2); padrão: $WORK
 set -eu
 
 SDK_VERSION=2.3.1
@@ -29,7 +29,9 @@ fi
 # projeto, e no contêiner o repositório é somente leitura.
 rm -rf "$WORK/src"
 mkdir -p "$WORK/src"
-cp -R "$src/CMakeLists.txt" "$src/src" "$WORK/src/"
+cp -R "$src/CMakeLists.txt" "$src/VERSION" "$src/src" "$WORK/src/"
+version="$(cat "$src/VERSION")"
+rm -f "$OUT"/snespi-arcade-*.uf2
 
 for players in 1 2; do
 	b="$WORK/build-${players}p"
@@ -37,6 +39,6 @@ for players in 1 2; do
 		-DCMAKE_BUILD_TYPE=Release -DARCADE_PLAYERS="$players" \
 		-DPICOTOOL_FETCH_FROM_GIT_PATH="$WORK/picotool" >/dev/null
 	make -C "$b" -j"$(nproc 2>/dev/null || echo 2)" >/dev/null
-	cp "$b/snespi-arcade-${players}p.uf2" "$OUT/"
+	cp "$b/snespi-arcade-${players}p.uf2" "$OUT/snespi-arcade-${players}p-v$version.uf2"
 done
 ls -l "$OUT"/snespi-arcade-*.uf2
