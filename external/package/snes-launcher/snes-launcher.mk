@@ -8,7 +8,8 @@
 SNES_LAUNCHER_VERSION = 1.0
 SNES_LAUNCHER_SITE = $(BR2_EXTERNAL_SNESPI_PATH)/../launcher
 SNES_LAUNCHER_SITE_METHOD = local
-SNES_LAUNCHER_LICENSE = MIT, OFL-1.1 (fonts), Public Domain (stb), CC0-1.0 (menu music)
+SNES_LAUNCHER_LICENSE = MIT, MIT (qrcodegen), OFL-1.1 (fonts), Public Domain (stb), \
+	CC0-1.0 (menu music)
 SNES_LAUNCHER_LICENSE_FILES = LICENSE fonts/OFL-IBMPlexMono.txt fonts/OFL-PixelifySans.txt \
 	music/LICENCA.txt
 SNES_LAUNCHER_DEPENDENCIES = alsa-lib

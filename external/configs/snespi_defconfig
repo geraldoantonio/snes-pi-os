@@ -16,7 +16,8 @@ BR2_TARGET_GENERIC_HOSTNAME="snespi"
 BR2_TARGET_GENERIC_ISSUE="snes-pi-os"
 # Raiz somente leitura (seguro contra desligar na tomada)
 # BR2_TARGET_GENERIC_REMOUNT_ROOTFS_RW is not set
-# Sem rede: o raspberrypi_defconfig liga DHCP em eth0
+# Sem rede no boot (o raspberrypi_defconfig liga DHCP em eth0): ela so sobe
+# no modo "Receber jogos" do launcher, pelo script snespi-rede
 BR2_SYSTEM_DHCP=""
 # mdev carrega módulos (gamepads, áudio) pelo modalias
 BR2_ROOTFS_DEVICE_CREATION_DYNAMIC_MDEV=y
@@ -67,6 +68,19 @@ BR2_PACKAGE_UTIL_LINUX_BINARIES=y
 BR2_PACKAGE_UTIL_LINUX_PARTX=y
 BR2_PACKAGE_DOSFSTOOLS=y
 BR2_PACKAGE_DOSFSTOOLS_MKFS_FAT=y
+# Modo rede por adaptador Wi-Fi USB: wpa_supplicant (o wpa_cli procura as
+# redes, o wpa_passphrase deriva a chave) e o firmware dos chips USB mais
+# comuns, cujos drivers ja vem no kernel (rtl8xxxu/rtl8192cu, rt2800usb,
+# mt7601u, ath9k_htc). Pelo cabo, o udhcpc do BusyBox basta.
+BR2_PACKAGE_WPA_SUPPLICANT=y
+BR2_PACKAGE_WPA_SUPPLICANT_CLI=y
+BR2_PACKAGE_WPA_SUPPLICANT_PASSPHRASE=y
+BR2_PACKAGE_LINUX_FIRMWARE=y
+BR2_PACKAGE_LINUX_FIRMWARE_ATHEROS_9271=y
+BR2_PACKAGE_LINUX_FIRMWARE_MEDIATEK_MT7601U=y
+BR2_PACKAGE_LINUX_FIRMWARE_RALINK_RT2XX=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_81XX=y
+BR2_PACKAGE_LINUX_FIRMWARE_RTL_87XX=y
 
 # Imagem
 BR2_TARGET_ROOTFS_EXT2=y

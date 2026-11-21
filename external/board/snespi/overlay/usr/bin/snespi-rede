@@ -1,0 +1,214 @@
+#!/bin/sh
+# Rede do modo "Receber jogos" do launcher. Fora dele, nada de rede fica
+# ligado: o launcher chama "up" ao abrir a tela e "down" ao fechar.
+#
+#   snespi-rede up [PASTA_ROMS]     cabo (eth0); sem cabo, adaptador Wi-Fi USB
+#   snespi-rede scan [PASTA_ROMS]   redes Wi-Fi por perto (wpa_cli scan_results)
+#   snespi-rede down [PASTA_ROMS]   derruba tudo
+#
+# Última linha da saída do "up", com os campos separados por TAB:
+#   ok <interface> <ip> <wifi> <rede>
+#   erro <motivo> <wifi>          sem-rede, sem-wifi, wifi-falhou, dhcp
+# <wifi> é 1 se há adaptador Wi-Fi; <rede> é o nome da rede Wi-Fi em uso.
+#
+# A rede Wi-Fi vem de PASTA_ROMS/wifi.txt: nome na 1ª linha e senha na 2ª
+# (sem a 2ª linha, rede aberta). O launcher grava esse arquivo pela tela de
+# senha; também dá para criar no computador.
+#
+# Cada passo vai para /tmp/snespi-rede/rede.log; se der erro, o log é
+# copiado para PASTA_ROMS/.snespi/rede.log, para ler no computador.
+
+ROMS="${2:-/roms}"
+RUN=/tmp/snespi-rede
+LOG="$RUN/rede.log"
+ETH=eth0
+CTRL=/var/run/wpa_supplicant
+
+mkdir -p "$RUN"
+
+log() { echo "$*" >> "$LOG"; }
+
+# Primeira interface sem fio (o nome depende do driver: wlan0, wlx...)
+wlan_if() {
+	for d in /sys/class/net/*; do
+		if [ -d "$d/wireless" ] || [ -d "$d/phy80211" ]; then
+			basename "$d"
+			return
+		fi
+	done
+}
+
+has_wifi() {
+	if [ -n "$(wlan_if)" ]; then echo 1; else echo 0; fi
+}
+
+stop_pid() {
+	[ -f "$1" ] || return 0
+	pid=$(cat "$1" 2>/dev/null)
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+	rm -f "$1"
+}
+
+down() {
+	for f in "$RUN"/udhcpc-*.pid; do
+		stop_pid "$f"
+	done
+	stop_pid "$RUN/wpa.pid"
+	for i in "$ETH" $(wlan_if); do
+		[ -d "/sys/class/net/$i" ] || continue
+		ip addr flush dev "$i" 2>/dev/null
+		ip link set "$i" down 2>/dev/null
+	done
+}
+
+# Em caso de erro: guarda o log no cartão, derruba a rede e avisa o launcher
+fail() {
+	log "erro: $1"
+	{
+		echo "--- interfaces"
+		ls /sys/class/net
+		echo "--- kernel (USB, firmware, Wi-Fi)"
+		dmesg | grep -i -E 'usb [0-9]|firmware|wlan|80211|rtl|rt2|mt76|ath|smsc' | tail -n 40
+	} >> "$LOG" 2>&1
+	if [ -d "$ROMS" ]; then
+		mkdir -p "$ROMS/.snespi" && cp "$LOG" "$ROMS/.snespi/rede.log" && sync
+	fi
+	wifi=$(has_wifi)
+	down
+	printf 'erro\t%s\t%s\n' "$1" "$wifi"
+	exit 1
+}
+
+ip_of() {
+	ip -4 addr show dev "$1" 2>/dev/null | awk '/inet /{sub(/\/.*/, "", $2); print $2; exit}'
+}
+
+# DHCP: até ~16 s. O udhcpc fica em segundo plano renovando o endereço.
+dhcp() {
+	log "dhcp em $1"
+	udhcpc -i "$1" -n -t 8 -T 2 -p "$RUN/udhcpc-$1.pid" >> "$LOG" 2>&1 || return 1
+	[ -n "$(ip_of "$1")" ]
+}
+
+# 0 se o cabo está ligado (espera a negociação do link, até 5 s)
+eth_carrier() {
+	[ -d "/sys/class/net/$ETH" ] || return 1
+	ip link set "$ETH" up 2>> "$LOG" || return 1
+	n=0
+	while [ "$n" -lt 5 ]; do
+		[ "$(cat "/sys/class/net/$ETH/carrier" 2>/dev/null)" = 1 ] && return 0
+		sleep 1
+		n=$((n + 1))
+	done
+	return 1
+}
+
+wpa_running() {
+	wpa_cli -p "$CTRL" -i "$1" ping > /dev/null 2>&1
+}
+
+# Inicia o wpa_supplicant com o arquivo de configuração dado
+wpa_start() {
+	wpa_supplicant -B -D nl80211 -i "$1" -c "$2" -P "$RUN/wpa.pid" >> "$LOG" 2>&1
+}
+
+wifi_up() {
+	W="$1"
+	FILE="$ROMS/wifi.txt"
+	[ -s "$FILE" ] || fail sem-wifi
+	# tira o BOM e o \r que editores do Windows põem
+	SSID=$(awk 'NR==1{sub(/^\357\273\277/, ""); sub(/\r$/, ""); print; exit}' "$FILE")
+	PASS=$(awk 'NR==2{sub(/\r$/, ""); print; exit}' "$FILE")
+	[ -n "$SSID" ] || fail sem-wifi
+	log "wifi: interface $W, rede \"$SSID\""
+
+	# Nome em hexadecimal e chave já derivada (wpa_passphrase): assim aspas,
+	# espaços e acentos no nome ou na senha não quebram o arquivo.
+	HEX=$(printf '%s' "$SSID" | hexdump -v -e '/1 "%02x"')
+	PSK=""
+	if [ -n "$PASS" ]; then
+		PSK=$(wpa_passphrase "$SSID" "$PASS" 2>> "$LOG" | awk -F= '/^[ \t]*psk=/{print $2; exit}')
+		if [ -z "$PSK" ]; then
+			log "senha fora do tamanho do WPA (8 a 63 caracteres)"
+			fail wifi-falhou
+		fi
+	fi
+	{
+		echo "ctrl_interface=$CTRL"
+		echo "network={"
+		echo "	ssid=$HEX"
+		echo "	scan_ssid=1"
+		if [ -n "$PSK" ]; then
+			echo "	psk=$PSK"
+		else
+			echo "	key_mgmt=NONE"
+		fi
+		echo "}"
+	} > "$RUN/wpa.conf"
+	chmod 600 "$RUN/wpa.conf"
+
+	wpa_start "$W" "$RUN/wpa.conf" || fail wifi-falhou
+	n=0
+	while [ "$n" -lt 25 ]; do
+		if wpa_cli -p "$CTRL" -i "$W" status 2>/dev/null | grep -q '^wpa_state=COMPLETED'; then
+			dhcp "$W" || fail dhcp
+			printf 'ok\t%s\t%s\t1\t%s\n' "$W" "$(ip_of "$W")" "$SSID"
+			return 0
+		fi
+		sleep 1
+		n=$((n + 1))
+	done
+	wpa_cli -p "$CTRL" -i "$W" status >> "$LOG" 2>&1
+	fail wifi-falhou
+}
+
+case "$1" in
+up)
+	down
+	: > "$LOG"
+	log "snespi-rede up"
+	if eth_carrier; then
+		log "cabo ligado em $ETH"
+		dhcp "$ETH" || fail dhcp
+		printf 'ok\t%s\t%s\t%s\t\n' "$ETH" "$(ip_of "$ETH")" "$(has_wifi)"
+		exit 0
+	fi
+	log "sem cabo em $ETH"
+	ip link set "$ETH" down 2>/dev/null
+	W=$(wlan_if)
+	[ -n "$W" ] || fail sem-rede
+	wifi_up "$W"
+	;;
+scan)
+	W=$(wlan_if)
+	if [ -z "$W" ]; then
+		printf 'erro\tsem-rede\t0\n'
+		exit 1
+	fi
+	# sem conexão Wi-Fi em andamento, sobe o wpa_supplicant só para procurar
+	if ! wpa_running "$W"; then
+		echo "ctrl_interface=$CTRL" > "$RUN/wpa-scan.conf"
+		wpa_start "$W" "$RUN/wpa-scan.conf"
+		sleep 1
+	fi
+	wpa_cli -p "$CTRL" -i "$W" scan > /dev/null 2>&1
+	n=0
+	while [ "$n" -lt 10 ]; do
+		sleep 1
+		n=$((n + 1))
+		R=$(wpa_cli -p "$CTRL" -i "$W" scan_results 2>/dev/null)
+		# a 1ª linha é o cabeçalho; dá pelo menos 3 s para a varredura
+		[ "$n" -ge 3 ] && [ "$(printf '%s\n' "$R" | wc -l)" -gt 1 ] && break
+	done
+	printf '%s\n' "$R"
+	;;
+down)
+	down
+	;;
+*)
+	echo "Uso: $0 {up|scan|down} [PASTA_ROMS]"
+	exit 1
+	;;
+esac
+
+exit 0
