@@ -28,7 +28,7 @@ O Debian 12 traz CMake 3.25, o que evita o problema do CMake ≥ 4 com o `rpi-us
 O workflow `.github/workflows/build.yml` tem dois jobs:
 
 - `check` (a cada push na `main` e em PRs, cerca de 1 min): `check-package` nos pacotes e validação da `snespi_defconfig`.
-- `image` (só manual, pelo botão "Run workflow", ou em tags `v*`): build completo no contêiner Debian 12, com cache de `dl/` e `ccache`. Publica `sdcard.img.xz` como artefato por 14 dias.
+- `image` (manual, pelo botão "Run workflow"; em tags `v*`; toda segunda; e em push na `main` que mude `external/`, `launcher/` ou os scripts do build): build completo no contêiner Debian 12, com cache de `dl/` e `ccache`. Publica `sdcard.img.xz` como artefato por 14 dias. As tags só leem o cache gravado na `main`.
 - Em tags `v*` (ex.: `git tag v0.1.0 && git push origin v0.1.0`), o mesmo job cria uma **Release pública** marcada como pré-lançamento, com `snes-pi-os-<tag>.img.xz`, o `.sha256` e as notas de `.github/release-notes.md`. É o link de download da página do projeto.
 - Em seguida, no mesmo job, o **teste de boot no QEMU** (`scripts/qemu-smoke.sh`): boota a imagem na máquina `raspi1ap` (mesmo SoC BCM2835), espera o login na serial e tira uma captura da tela, que deve mostrar o launcher. Publica `tela.png` e `serial.log` como artefato `qemu-boot-*`. Se falhar, o build fica vermelho, mas a imagem já foi publicada.
   - Pega: kernel e device tree, init, raiz somente leitura, montagem de `/roms`, `S99game` e o launcher desenhando no framebuffer.

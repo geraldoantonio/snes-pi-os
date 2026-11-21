@@ -24,7 +24,7 @@
 
 - [x] O patch do Makefile basta e o C antigo de `unzip/` compila com o GCC da 2025.02.
 - [x] O CMake do contêiner (3.25) compila o `rpi-userland`.
-- [x] Espaço em disco e tempo do build no GitHub Actions: cabe depois do passo "Liberar disco"; ~25–30 min com cache.
+- [x] Espaço em disco e tempo do build no GitHub Actions: cabe depois do passo "Liberar disco"; ~1 h 30 sem cache (até a `v1.0.0` as tags nunca achavam o cache; agora a `main` o grava, tempo com cache a medir).
 
 ## Resultado do primeiro teste no hardware (v0.1.0)
 
