@@ -3,7 +3,7 @@ name: build
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ['v*', 'arcade-v*']
   pull_request:
   workflow_dispatch:
 
@@ -35,10 +35,22 @@ jobs:
           grep -q '^BR2_PACKAGE_PISNES=y' /tmp/out/.config
 
   # Rápido (~2 min): testa e compila o firmware do controle arcade (Pico).
+  # Em tags arcade-v*, cria a Release do firmware (separada da imagem).
   firmware:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # criar a Release nas tags arcade-v*
     steps:
       - uses: actions/checkout@v7
+
+      - name: Conferir a tag com o arquivo VERSION
+        if: startsWith(github.ref, 'refs/tags/arcade-v')
+        run: |
+          version="$(cat firmware/arcade/VERSION)"
+          if [ "$GITHUB_REF_NAME" != "arcade-v$version" ]; then
+            echo "::error::a tag $GITHUB_REF_NAME não bate com firmware/arcade/VERSION ($version)"
+            exit 1
+          fi
 
       - name: Testes da lógica
         run: make -C firmware/arcade test
@@ -57,10 +69,26 @@ jobs:
           path: ${{ runner.temp }}/uf2/*.uf2
           retention-days: 14
 
+      # Release pública só do firmware. Com --latest=false, a imagem do
+      # sistema continua sendo a versão "mais recente" do repositório.
+      - name: Criar release do firmware
+        if: startsWith(github.ref, 'refs/tags/arcade-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(cat firmware/arcade/VERSION)"
+          cd "$RUNNER_TEMP/uf2"
+          sha256sum snespi-arcade-*.uf2 > "snespi-arcade-v$version.sha256"
+          gh release create "$GITHUB_REF_NAME" snespi-arcade-*.uf2 "snespi-arcade-v$version.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Controle arcade v$version" \
+            --notes-file "$GITHUB_WORKSPACE/.github/release-notes-arcade.md" \
+            --latest=false
+
   # Lento (1-3 h): só manual ou em tags, para não gastar à toa.
   image:
-    needs: [check, firmware]
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    needs: check
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     permissions:
@@ -113,16 +141,8 @@ jobs:
           retention-days: 14
           compression-level: 0
 
-      - name: Baixar firmware do controle arcade
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/download-artifact@v8
-        with:
-          name: snespi-arcade-${{ github.sha }}
-          path: ${{ runner.temp }}/uf2
-
-      # Em tags v*: Release pública (pré-lançamento) com a imagem, o hash e o
-      # firmware do controle arcade. Fica antes do teste no QEMU para não
-      # depender dele.
+      # Em tags v*: Release pública com a imagem e o hash.
+      # Fica antes do teste no QEMU para não depender dele.
       - name: Criar release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -133,7 +153,6 @@ jobs:
           cp sdcard.img.xz "$img"
           sha256sum "$img" > "$img.sha256"
           gh release create "$GITHUB_REF_NAME" "$img" "$img.sha256" \
-            "$RUNNER_TEMP"/uf2/snespi-arcade-*.uf2 \
             --repo "$GITHUB_REPOSITORY" \
             --title "snes-pi-os $GITHUB_REF_NAME" \
             --notes-file "$GITHUB_WORKSPACE/.github/release-notes.md"

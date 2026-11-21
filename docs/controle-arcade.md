@@ -55,7 +55,7 @@ GP0 e GP1 (pinos 1 e 2) ficam livres. Para mudar os pinos, edite `firmware/arcad
    cd firmware/arcade
    make uf2        # gera build/snespi-arcade-1p-v<versão>.uf2 e build/snespi-arcade-2p-v<versão>.uf2
    ```
-   O CI também compila os dois arquivos a cada push (artefato `snespi-arcade-<sha>`) e os anexa às Releases.
+   Para só usar, baixe os arquivos prontos na Release "Controle arcade" da [página de versões](https://github.com/geraldoantonio/snes-pi-os/releases). O CI também os compila a cada push (artefato `snespi-arcade-<sha>`).
 2. Segure o botão **BOOTSEL** do Pico e ligue o cabo USB no computador. Aparece a unidade `RPI-RP2`.
 3. Copie o `.uf2` para a unidade. O Pico reinicia sozinho já como controle.
 
@@ -86,7 +86,7 @@ Regra (`MAIOR.MENOR.CORREÇÃO`, um dígito cada, limite do `bcdDevice`):
 - **MENOR:** recurso novo que não quebra painéis já montados.
 - **CORREÇÃO:** só correções.
 
-Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abaixo e faça o commit. Os `.uf2` saem no artefato do CI e são anexados à próxima Release da imagem; não há tag própria do firmware.
+Para lançar uma versão: edite o `VERSION`, acrescente uma linha na tabela abaixo, faça o commit e, com o merge na `main`, crie a tag `arcade-v<versão>` (ex.: `arcade-v1.0.0`). O CI confere se a tag bate com o `VERSION` e publica a Release "Controle arcade v<versão>" com os `.uf2`. Ela é separada das Releases da imagem (`v*`): mudar o firmware não gera versão nova do sistema.
 
 | Versão | Data | O que mudou |
 |---|---|---|
