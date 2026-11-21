@@ -11,9 +11,11 @@ set -eu
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-# Dependências do Buildroot (manual, seção "System requirements")
+# Dependências do Buildroot (manual, seção "System requirements"). O cmake
+# é opcional: com ele (3.25 no Debian 12; o Buildroot pede 3.18 ou mais), o
+# Buildroot não compila o host-cmake, que levava uns 9 min.
 apt-get install -y -qq --no-install-recommends \
-	build-essential bash bc bzip2 ca-certificates cpio diffutils file \
+	build-essential bash bc bzip2 ca-certificates cmake cpio diffutils file \
 	findutils git gzip patch perl python3 rsync sed tar unzip wget xz-utils \
 	>/dev/null
 
