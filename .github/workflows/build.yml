@@ -125,7 +125,7 @@ jobs:
             --notes-file "$GITHUB_WORKSPACE/.github/release-notes-arcade.md" \
             --latest=false
 
-  # Lento (~1 h 30 sem cache). Roda em tags v* (cria a Release), manual,
+  # Lento (~22 min com cache, ~1 h 30 sem). Roda em tags v* (cria a Release), manual,
   # e em push na main que mude a imagem. O cache só é lido
   # entre refs a partir da main: os builds na main é que gravam o cache
   # que as tags usam (o de uma tag só serve para a própria tag).

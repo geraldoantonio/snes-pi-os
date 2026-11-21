@@ -66,7 +66,7 @@ Releases são **públicas** e viram o download da página do projeto. Só crie u
    git tag -a v0.2.0 -m "snes-pi-os v0.2.0"
    git push origin v0.2.0
    ```
-5. Acompanhe o build da tag (`gh run list --limit 3`; ~1 h 30 sem cache, menos quando a `main` já gravou o cache com o mesmo `external/` (verificar o tempo)) e confira a Release:
+5. Acompanhe o build da tag (`gh run list --limit 3`; ~22 min com o cache da `main`, ~1 h 30 sem cache) e confira a Release:
    ```sh
    gh release view v0.2.0
    ```
