@@ -75,6 +75,8 @@ Fluxo:
 4. No celular ou no PC, a página permite arrastar ou escolher arquivos. A tela do Pi mostra cada arquivo recebido.
 5. "Concluir" para o servidor, derruba a rede, faz `sync` e volta à lista, que é relida.
 
+**Wi-Fi USB (decidido em 2026-11-21, a implementar):** além do cabo, o modo rede deve aceitar um adaptador Wi-Fi USB. O kernel já traz os drivers (`cfg80211`, `mac80211` e os de chips USB comuns, como `rtl8xxxu`, `rt2800usb`, `mt7601u`, `brcmfmac` e `ath9k_htc`). Faltam na imagem: o `wpa_supplicant`, o firmware dos chips (pacote `linux-firmware`, só os arquivos desses chips, para não inchar a imagem) e uma tela para escolher a rede e digitar a senha com o controle (ou ler de um arquivo na partição ROMS, ex.: `/roms/wifi.txt`). Qual adaptador testar: **(verificar)**.
+
 Servidor de upload: programa próprio em C (`snespi-upload`), separado do launcher. Ele atende uma conexão por vez, serve a página embutida e recebe `multipart/form-data` em streaming direto para o disco. O `httpd` do BusyBox não está na config padrão do Buildroot, e de qualquer forma o tratamento do upload teria de ser escrito em C.
 
 Regras do upload:
