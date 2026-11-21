@@ -3,6 +3,7 @@
 #define SNESPI_UI_H
 
 #include "gfx.h"
+#include "net.h"
 #include "rom.h"
 
 #define UI_W 1280
@@ -17,12 +18,13 @@ typedef enum {
 	SCR_NOMOUNT,	/* partição de ROMs não montou */
 	SCR_MENU,	/* menu do sistema (Start), sobre a tela de baixo */
 	SCR_POWER,	/* desligando / reiniciando */
+	SCR_NET,	/* modo rede: receber jogos (a fase está em net->phase) */
 } screen_t;
 
 typedef enum { FILTER_ALL, FILTER_FAV, FILTER_RECENT, FILTER_COUNT } filter_t;
 
 /* itens do menu do sistema, na ordem da tela */
-enum { MENU_OFF, MENU_REBOOT, MENU_DEBUG, MENU_BACK, MENU_COUNT };
+enum { MENU_OFF, MENU_REBOOT, MENU_NET, MENU_DEBUG, MENU_BACK, MENU_COUNT };
 
 typedef struct {
 	const rom_list_t *roms;
@@ -40,6 +42,7 @@ typedef struct {
 	int menu_sel;		/* item escolhido em SCR_MENU (MENU_*) */
 	int power_reboot;	/* SCR_POWER: 1 reiniciando, 0 desligando */
 	int debug;		/* monitor do emulador ligado (/roms/.snespi/depurar) */
+	const net_state_t *net;	/* SCR_NET */
 } ui_state_t;
 
 int ui_init(const char *fonts_dir);

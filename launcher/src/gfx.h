@@ -73,5 +73,7 @@ extern const pixmap_t ICON_STAR;	/* estrela (favorito) 9x9 */
 extern const pixmap_t ICON_SDCARD;	/* cartão SD 14x16 */
 extern const pixmap_t ICON_SDCARD_X;	/* cartão SD com X 14x16 */
 extern const pixmap_t ICON_POWER;	/* liga/desliga 13x13 */
+extern const pixmap_t ICON_NET;		/* rede sem fio 15x10 */
+extern const pixmap_t ICON_LOCK;	/* cadeado 7x8 */
 
 #endif

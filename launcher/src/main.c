@@ -7,6 +7,7 @@
  *   snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR]
  *                   [--scanlines | --no-scanlines] [--list]
  *                   [--shot ARQ.png --screen NOME --select N]
+ *                   [--net-cmd CAMINHO] [--upload-cmd CAMINHO] [--net-port N]
  *   snespi-launcher --splash PCT [--splash-msg TEXTO]
  *
  * --splash desenha a tela de abertura (logo + carregamento em PCT %) e sai
@@ -78,7 +79,10 @@ static int is_mountpoint(const char *path)
 typedef struct {
 	const char *roms_dir, *emu, *fonts_dir, *music, *shot, *shot_screen, *shot_filter;
 	const char *splash_msg;
-	int shot_select, shot_pads, scanlines, require_mount, list, splash, shot_debug;
+	/* modo rede: script que sobe a rede, servidor de envio e porta (80 no Pi) */
+	const char *net_cmd, *upload_cmd, *shot_net_err;
+	int net_port;
+	int shot_select, shot_pads, scanlines, require_mount, list, splash, shot_debug, shot_net;
 	char saves_dir[600], covers_dir[600];
 } config_t;
 
@@ -87,7 +91,9 @@ static void usage(void)
 	fprintf(stderr,
 		"uso: snespi-launcher [--roms DIR] [--emu CAMINHO] [--fonts DIR] [--music ARQ | --no-music]\n"
 		"                     [--scanlines | --no-scanlines] [--list]\n"
-		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|menu|power|reboot|splash\n"
+		"                     [--net-cmd CAMINHO] [--upload-cmd CAMINHO] [--net-port N]\n"
+		"                     [--shot ARQ.png --screen list|warn|launch|empty|nomount|menu|power|reboot|splash|\n"
+		"                      net|net-conectando|net-erro|net-wifi|net-senha [--net-err MOTIVO]\n"
 		"                      --select N --filter todos|favoritos|recentes]\n"
 		"       snespi-launcher --splash PCT [--splash-msg TEXTO]\n");
 }
@@ -123,6 +129,11 @@ static int parse_args(config_t *c, int argc, char **argv)
 		else if (!strcmp(a, "--splash") && v) { c->splash = atoi(v); i++; }
 		else if (!strcmp(a, "--splash-msg") && v) { c->splash_msg = v; i++; }
 		else if (!strcmp(a, "--shot-debug")) c->shot_debug = 1;
+		else if (!strcmp(a, "--shot-net")) c->shot_net = 1;
+		else if (!strcmp(a, "--net-cmd") && v) { c->net_cmd = v; i++; }
+		else if (!strcmp(a, "--upload-cmd") && v) { c->upload_cmd = v; i++; }
+		else if (!strcmp(a, "--net-port") && v) { c->net_port = atoi(v); i++; }
+		else if (!strcmp(a, "--net-err") && v) { c->shot_net_err = v; i++; }
 		else { usage(); return -1; }
 	}
 	c->require_mount = strcmp(c->roms_dir, "/roms") == 0;
@@ -387,6 +398,77 @@ static void view_to_state(ui_state_t *st, const view_t *v, filter_t f)
 		st->sel = v->n ? v->n - 1 : 0;
 }
 
+/*
+ * Relê /roms (jogos, saves e capas novos) e refaz a lista filtrada, mantendo
+ * o jogo keep selecionado se ele ainda existir. Devolve a tela a mostrar.
+ */
+static screen_t reload_list(const config_t *c, rom_list_t *roms, view_t *v, ui_state_t *st,
+			    filter_t f, const char *keep)
+{
+	if (c->require_mount && !is_mountpoint(c->roms_dir))
+		return SCR_NOMOUNT;
+	rom_scan(roms, c->roms_dir, c->saves_dir);
+	apply_favs(roms);
+	view_build(v, roms, f);
+	if (keep && *keep)
+		st->sel = view_find(v, roms, keep);
+	view_to_state(st, v, f);
+	return roms->count ? SCR_LIST : SCR_EMPTY;
+}
+
+/* Estado de exemplo do modo rede, para as capturas (--shot --screen net...) */
+static void shot_net_state(net_state_t *n, const char *screen, const char *err)
+{
+	static const struct { const char *name; int ok, cover; long long bytes; const char *why; } files[] = {
+		{ "Super Aventura (BR).sfc", 1, 0, 2097152, "" },
+		{ "Super Aventura (BR).jpg", 1, 1, 84211, "" },
+		{ "manual.pdf", 0, 0, 0, "tipo" },
+		{ "Corrida Turbo.smc", 1, 0, 1048576, "" },
+	};
+	static const net_ap_t aps[] = {
+		{ "Rede de Casa", -48, 1 }, { "VIVO-FIBRA-2G", -61, 1 }, { "Vizinho 2.4", -70, 1 },
+		{ "Cafeteria (visitantes)", -74, 0 }, { "TP-Link_8F2C", -83, 1 },
+	};
+	memset(n, 0, sizeof(*n));
+	n->has_wifi = 1;
+	n->port = 80;
+	snprintf(n->pin, sizeof(n->pin), "4821");
+	snprintf(n->ip, sizeof(n->ip), "192.168.0.42");
+	snprintf(n->url, sizeof(n->url), "http://%s/%s", n->ip, n->pin);
+	snprintf(n->ssid, sizeof(n->ssid), "Rede de Casa");
+	n->naps = (int)(sizeof(aps) / sizeof(aps[0]));
+	memcpy(n->aps, aps, sizeof(aps));
+	n->ap_sel = 0;
+	if (!strcmp(screen, "net")) {
+		n->phase = NET_READY;
+		for (size_t i = 0; i < sizeof(files) / sizeof(files[0]); i++) {
+			net_file_t *f = &n->files[n->nfiles++];
+			snprintf(f->name, sizeof(f->name), "%s", files[i].name);
+			snprintf(f->why, sizeof(f->why), "%s", files[i].why);
+			f->ok = files[i].ok;
+			f->cover = files[i].cover;
+			f->bytes = files[i].bytes;
+			n->ok_count += f->ok;
+			n->err_count += !f->ok;
+		}
+		snprintf(n->receiving, sizeof(n->receiving), "Luta Final II.sfc");
+	} else if (!strcmp(screen, "net-erro")) {
+		n->phase = NET_ERROR;
+		snprintf(n->err, sizeof(n->err), "%s", err ? err : "sem-rede");
+	} else if (!strcmp(screen, "net-wifi")) {
+		n->phase = NET_WIFI_LIST;
+		n->ap_sel = 1;
+	} else if (!strcmp(screen, "net-senha")) {
+		n->phase = NET_WIFI_KEY;
+		snprintf(n->key, sizeof(n->key), "minha-Senha_2");
+		n->kb_row = 2;
+		n->kb_col = 4;
+	} else {
+		n->phase = NET_CONNECTING;
+		n->tick = 4;
+	}
+}
+
 /* ---- tela de abertura ---- */
 
 typedef struct {
@@ -473,6 +555,8 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 		{ "list", SCR_LIST }, { "warn", SCR_WARN }, { "launch", SCR_LAUNCH },
 		{ "empty", SCR_EMPTY }, { "nomount", SCR_NOMOUNT }, { "menu", SCR_MENU },
 		{ "power", SCR_POWER }, { "reboot", SCR_POWER },
+		{ "net", SCR_NET }, { "net-conectando", SCR_NET }, { "net-erro", SCR_NET },
+		{ "net-wifi", SCR_NET }, { "net-senha", SCR_NET },
 	};
 	screen_t scr = SCR_LIST;
 	int found = 0;
@@ -506,10 +590,15 @@ static int shot_mode(config_t *c, rom_list_t *roms)
 	};
 	st.sel = c->shot_select < 0 ? 0 : c->shot_select;
 	if (scr == SCR_MENU) {	/* --select escolhe a linha da lista; o menu fica no 1º item */
-		st.menu_sel = c->shot_debug ? MENU_DEBUG : MENU_OFF;
+		st.menu_sel = c->shot_debug ? MENU_DEBUG : c->shot_net ? MENU_NET : MENU_OFF;
 		st.debug = c->shot_debug;
 	}
 	view_to_state(&st, &v, f);
+	net_state_t net;
+	if (scr == SCR_NET) {
+		shot_net_state(&net, c->shot_screen, c->shot_net_err);
+		st.net = &net;
+	}
 	if ((scr == SCR_WARN || scr == SCR_LAUNCH) && v.n == 0) {
 		fprintf(stderr, "snespi-launcher: filtro vazio\n");
 		free(v.idx);
@@ -593,7 +682,11 @@ int main(int argc, char **argv)
 	if (mounted)
 		music_play();
 
-	ui_state_t st = { .roms = &roms, .scanlines = cfg.scanlines, .retry_secs = MOUNT_RETRY_S };
+	net_state_t net;
+	memset(&net, 0, sizeof(net));
+	net_config(cfg.roms_dir, cfg.net_cmd, cfg.upload_cmd, cfg.net_port);
+	ui_state_t st = { .roms = &roms, .scanlines = cfg.scanlines, .retry_secs = MOUNT_RETRY_S,
+			  .net = &net };
 	filter_t filter = FILTER_ALL;
 	view_t view = { 0 };
 	view_build(&view, &roms, filter);
@@ -615,8 +708,32 @@ int main(int argc, char **argv)
 		dirty = 1; \
 	} while (0)
 
+	/* sai do modo rede: para o servidor, derruba a rede e relê os jogos */
+#define NET_LEAVE() do { \
+		int got = net.ok_count; \
+		char keep[256] = ""; \
+		if (view.n) \
+			snprintf(keep, sizeof(keep), "%s", roms.items[view.idx[st.sel]].stem); \
+		net_stop(&net); \
+		cover_shutdown();	/* capas novas: esquece as "sem capa" guardadas */ \
+		scr = reload_list(&cfg, &roms, &view, &st, filter, keep); \
+		if (got > 0) { \
+			snprintf(status, sizeof(status), "%d arquivo%s recebido%s", got, \
+				 got == 1 ? "" : "s", got == 1 ? "" : "s"); \
+			st.status = status; \
+			status_until = now_ms() + STATUS_MS; \
+		} \
+		cover_due = now_ms() + COVER_DELAY_MS; \
+		held = IN_NONE; \
+		dirty = 1; \
+	} while (0)
+
 	while (!quit_flag) {
 		long long t = now_ms();
+
+		/* modo rede: acompanha a conexão e os arquivos que chegam */
+		if (scr == SCR_NET && net_poll(&net))
+			dirty = 1;
 
 		/* partição ausente: tenta de novo a cada 10 s, com contagem na tela */
 		if (scr == SCR_NOMOUNT && t >= next_retry) {
@@ -667,6 +784,8 @@ int main(int argc, char **argv)
 			due = cover_due;
 		if (status_until && status_until < due)
 			due = status_until;
+		if (scr == SCR_NET && t + 150 < due)
+			due = t + 150;
 		int timeout = (int)(due - now_ms());
 		if (timeout < 0)
 			timeout = 0;
@@ -695,13 +814,16 @@ int main(int argc, char **argv)
 		if (btn == IN_POWER) {
 			if (scr == SCR_MENU)
 				scr = st.menu_under;
+			if (scr == SCR_NET)
+				NET_LEAVE();
 			DO_POWER(0);
 			continue;
 		}
 		/* Start abre o menu do sistema (desligar, reiniciar) */
 		if (btn == IN_START && (scr == SCR_LIST || scr == SCR_EMPTY || scr == SCR_NOMOUNT)) {
 			st.menu_under = scr;
-			st.menu_sel = MENU_OFF;
+			/* sem jogos, o mais provável é querer recebê-los */
+			st.menu_sel = scr == SCR_EMPTY ? MENU_NET : MENU_OFF;
 			st.debug = debug_enabled(&cfg);
 			scr = SCR_MENU;
 			held = IN_NONE;
@@ -720,10 +842,88 @@ int main(int argc, char **argv)
 			} else if (btn == IN_A && st.menu_sel == MENU_DEBUG) {
 				st.debug = debug_toggle(&cfg);
 				dirty = 1;
+			} else if (btn == IN_A && st.menu_sel == MENU_NET) {
+				/* sem a partição ROMS não há onde gravar: o item não faz nada */
+				if (st.menu_under != SCR_NOMOUNT) {
+					scr = SCR_NET;
+					net_start(&net);
+					held = IN_NONE;
+					dirty = 1;
+				}
 			} else if (btn == IN_A) {
 				int rb = st.menu_sel == MENU_REBOOT;
 				scr = st.menu_under;
 				DO_POWER(rb);
+			}
+			continue;
+		}
+
+		if (scr == SCR_NET) {
+			dirty = 1;
+			switch (net.phase) {
+			case NET_READY:
+				if (btn == IN_B)
+					NET_LEAVE();
+				else if (btn == IN_X && net.has_wifi)
+					net_scan(&net);
+				break;
+			case NET_ERROR:
+				if (btn == IN_B)
+					NET_LEAVE();
+				else if (btn == IN_A && strcmp(net.err, "sem-wifi") != 0)
+					net_start(&net);
+				else if ((btn == IN_A || btn == IN_X) && net.has_wifi)
+					net_scan(&net);
+				break;
+			case NET_WIFI_LIST:
+				if (btn == IN_UP && net.naps)
+					net.ap_sel = (net.ap_sel + net.naps - 1) % net.naps;
+				else if (btn == IN_DOWN && net.naps)
+					net.ap_sel = (net.ap_sel + 1) % net.naps;
+				else if (btn == IN_X)
+					net_scan(&net);
+				else if (btn == IN_B)
+					net_start(&net);	/* volta a conectar com o que já estava escolhido */
+				else if (btn == IN_A && net.naps) {
+					if (net.aps[net.ap_sel].secure) {
+						net.key[0] = 0;
+						net.kb_row = net.kb_col = net.kb_layer = 0;
+						net.phase = NET_WIFI_KEY;
+					} else {
+						net_wifi_connect(&net, net.aps[net.ap_sel].ssid, "");
+					}
+					held = IN_NONE;
+				}
+				break;
+			case NET_WIFI_KEY: {
+				size_t len = strlen(net.key);
+				if (btn == IN_UP)
+					net.kb_row = (net.kb_row + KB_ROWS - 1) % KB_ROWS;
+				else if (btn == IN_DOWN)
+					net.kb_row = (net.kb_row + 1) % KB_ROWS;
+				else if (btn == IN_LEFT)
+					net.kb_col = (net.kb_col + KB_COLS - 1) % KB_COLS;
+				else if (btn == IN_RIGHT)
+					net.kb_col = (net.kb_col + 1) % KB_COLS;
+				else if (btn == IN_Y)
+					net.kb_layer = (net.kb_layer + 1) % KB_LAYERS;
+				else if (btn == IN_A && len < NET_KEY_MAX) {
+					net.key[len] = net_kb_char(net.kb_layer, net.kb_row, net.kb_col);
+					net.key[len + 1] = 0;
+				} else if (btn == IN_B && len > 0)
+					net.key[len - 1] = 0;
+				else if (btn == IN_SELECT || (btn == IN_B && len == 0))
+					net.phase = NET_WIFI_LIST;
+				else if (btn == IN_START && (len == 0 || len >= 8)) {
+					net_wifi_connect(&net, net.aps[net.ap_sel].ssid, net.key);
+					held = IN_NONE;
+				}
+				break;
+			}
+			default:	/* conectando ou procurando redes */
+				if (btn == IN_B)
+					NET_LEAVE();
+				break;
 			}
 			continue;
 		}
@@ -855,7 +1055,10 @@ int main(int argc, char **argv)
 		}
 	}
 #undef DO_POWER
+#undef NET_LEAVE
 
+	if (net.phase != NET_OFF)
+		net_stop(&net);	/* launcher fechado no meio do modo rede: não deixa a rede ligada */
 	music_shutdown();
 	input_close();
 	video_close();
