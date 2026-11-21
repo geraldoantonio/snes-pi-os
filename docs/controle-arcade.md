@@ -2,12 +2,12 @@
 
 Um painel arcade (alavanca e botões) ligado a um **Raspberry Pi Pico (RP2040)**, que aparece no USB como joystick. O firmware fica em [`firmware/arcade/`](../firmware/arcade/) (C, pico-sdk 2.3.1 + TinyUSB).
 
-> **Estado:** gravado num Pico (2026-11-20, versão `2p`) e conferido no macOS, pino a pino, com um fio ao GND: os 24 pinos dão a direção ou o botão certo, o jogador 1 na interface USB 0 e o jogador 2 na 1. **Ainda sem teste no Pi e sem chaves de verdade (verificar)**.
+> **Estado:** funciona no Pi (2026-11-20, versão `2p`): no **Teste - Controles**, os dois jogadores respondem. Antes disso, os 24 pinos foram conferidos no macOS com um fio ao GND. **Ainda sem teste com chaves de verdade, no launcher e na saída do jogo com Select + Start (verificar)**.
 
 ## Como funciona
 
 - O Pico imita um **controle USB genérico estilo SNES** (como o Knup KP-3124): eixos X e Y para a alavanca e botões com a numeração X = 0, A = 1, B = 2, Y = 3, L = 4, R = 5, Select = 8, Start = 9. É o que o launcher (`input_evdev.c`) e o `snes9x.cfg` do overlay já esperam, então **nada muda na imagem** e os controles e o teclado atuais continuam funcionando.
-- Um Pico atende **dois jogadores**: o USB tem uma interface HID por jogador, e o Linux cria um joystick para cada uma (jogador 1 primeiro) **(verificar)**. Os dois ocupam uma só porta USB do Pi; a outra fica livre para teclado ou pendrive.
+- Um Pico atende **dois jogadores**: o USB tem uma interface HID por jogador, e o Linux cria um joystick para cada uma (funciona no Pi, 2026-11-20). Os dois ocupam uma só porta USB do Pi; a outra fica livre para teclado ou pendrive.
 - A coleção HID usa o tipo *Joystick*, não *Gamepad*: com *Gamepad* o Linux numeraria os botões pela convenção do Xbox (`BTN_SOUTH`...), e o jogo precisaria de outro `snes9x.cfg`.
 - As chaves são lidas a cada 1 ms e o USB é consultado a cada 1 ms. O aperto vale na primeira leitura; depois a entrada fica travada por 5 ms para ignorar o repique da chave.
 - Direções opostas ao mesmo tempo (painel com botões no lugar da alavanca) viram centro.
@@ -103,9 +103,9 @@ Não cobre o USB (o QEMU não recebe o Pico de verdade) nem o kernel da imagem d
 ## Lista de verificação (hardware)
 
 - [x] Cada pino dá a direção ou o botão certo, no jogador certo (macOS, lendo os relatórios HID, 2026-11-20).
-- [ ] No Linux, o Pico aparece como dois joysticks (`js0` e `js1`), o jogador 1 primeiro, e o LED acende.
+- [x] No Pi, o Pico aparece como dois controles e os dois jogadores respondem no Teste - Controles (2026-11-20).
 - [ ] Launcher: alavanca navega, A confirma, B volta, Start abre o menu.
-- [ ] Teste - Controles: todos os botões dos jogadores 1 e 2 acendem no lugar certo.
+- [ ] Teste - Controles: conferir botão a botão se cada um acende no lugar certo, nos dois jogadores.
 - [ ] Select + Start sai do jogo; Select + R e Select + L gravam e carregam o estado.
 - [ ] Sem toques duplos nem botão preso (repique); se houver, aumente `PAD_DEBOUNCE_MS` em `pad.h`.
 - [ ] Select + Start ao ligar o cabo entra no BOOTSEL.
