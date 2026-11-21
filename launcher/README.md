@@ -41,7 +41,7 @@ Guardados em `/roms/.snespi/favoritos.txt` e `recentes.txt` (um nome de ROM por 
 ```sh
 make run          # abre o launcher numa janela (precisa de SDL2: brew install sdl2)
 make preview      # binário que só gera capturas (macOS ou Linux)
-make test         # gera ROMs de teste e confere a leitura dos cabeçalhos
+make test         # cabeçalhos das ROMs, música, servidor de envio (ASan) e modo rede sem tela
 make shots        # capturas de todas as telas em build/shots/
 ```
 
@@ -49,12 +49,15 @@ As ROMs de teste (`tests/make-test-roms.py`) são arquivos falsos, só com o cab
 
 No `make run`, "jogar" executa `tests/fake-emu.sh`, que espera 2 s, grava um save falso e sai: dá para testar o ciclo completo (aviso de chip, iniciando, volta ao menu, save aparecendo). `SNESPI_FAKE_RC=1 make run` simula o emulador saindo com erro. Fechar a janela encerra o launcher. Com um controle conectado ao computador, o SDL o reconhece com o mesmo mapeamento do Pi (A do Xbox confirma).
 
+O item **Receber jogos** do menu (Espaço abre o menu) também funciona no `make run`: a rede é falsa (`tests/fake-rede.sh`, que só devolve o endereço do computador), mas o servidor `snespi-upload` é o de verdade, na porta 8080. Dá para abrir o endereço da tela no navegador e enviar arquivos para `build/test-roms`. `SNESPI_FAKE_WIFI=1 make run` finge um adaptador Wi-Fi (lista de redes e teclado da senha); `SNESPI_FAKE_REDE=sem-rede` (ou `sem-wifi`, `wifi-falhou`, `dhcp`) simula os erros.
+
 No Pi, o mesmo binário aceita `--list` (o que ele leu de cada ROM) e `--shot arquivo.png --screen list|warn|launch|empty|nomount` para depurar.
 
 ## Licenças
 
 - Código: MIT (`LICENSE`).
 - `third_party/stb_*.h`: domínio público (Sean Barrett), commit `4e9b368b` de nothings/stb.
+- `third_party/qrcodegen.[ch]`: MIT (Project Nayuki), versão 1.8.0 de nayuki/QR-Code-generator. Gera o QR code do modo rede.
 - Fontes (OFL 1.1): IBM Plex Mono (google/fonts `01d5d9f0`) e Pixelify Sans (eifetx/Pixelify-Sans `39df74ab`). Licenças em `fonts/`.
 - Música padrão (`music/menu.wav`): "rpgchip01_title_screen" de Aureolus_Omicron, *15 Melodic RPG Chiptunes* no OpenGameArt, **CC0**. Convertida para WAV mono 22 kHz. Detalhes em `music/LICENCA.txt`.
 

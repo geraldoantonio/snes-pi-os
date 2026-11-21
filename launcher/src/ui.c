@@ -2,6 +2,7 @@
 
 #include "cover.h"
 #include "font.h"
+#include "../third_party/qrcodegen.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -691,7 +692,11 @@ static void draw_empty(surface_t *s, const ui_state_t *st, int nomount)
 		y += step(s, x, y, 2, w, "Abra a unidade ROMS e copie os arquivos .sfc, .smc, .fig ou .swc.");
 		y += step(s, x, y, 3, w, "Opcional: crie a pasta capas com imagens .jpg ou .png de mesmo nome da ROM.");
 		y += step(s, x, y, 4, w, "Ejete o cart\xC3\xA3o, coloque de volta no Pi e ligue.");
-		txt(s, MONO_REG, 14, x, y + 8, C_MUTED, "Use apenas jogos que voc\xC3\xAA tem o direito de usar.", 0);
+		/* sem tirar o cartão: o modo rede, pelo menu do sistema */
+		int nx = x + txt(s, MONO_REG, 16, x, y + 4, C_TEXT2, "Ou envie pela rede: ", 0);
+		nx += keycap(s, nx, y + 4 + lh(MONO_REG, 16) / 2, st->pads > 0 ? "START" : "ESPAÇO") + 10;
+		txt(s, MONO_SEMI, 16, nx, y + 4, C_TEXT, "Receber jogos", 0);
+		txt(s, MONO_REG, 14, x, y + 44, C_MUTED, "Use apenas jogos que voc\xC3\xAA tem o direito de usar.", 0);
 	} else {
 		txt(s, MONO_SEMI, 18, x, y, C_ACCENT, "ERRO NO CART\xC3\x83O", 3);
 		y += 26 + 22;
@@ -737,11 +742,12 @@ static int hint(surface_t *s, int x, int cy, int kb, const char *key, const char
 static void draw_menu(surface_t *s, const ui_state_t *st)
 {
 	static const char *const title[MENU_COUNT] = {
-		"Desligar", "Reiniciar", "Depura\xC3\xA7\xC3\xA3o", "Voltar",
+		"Desligar", "Reiniciar", "Receber jogos", "Depura\xC3\xA7\xC3\xA3o", "Voltar",
 	};
 	static const char *const desc[MENU_COUNT] = {
 		"Grava tudo e desliga. Tire da tomada com o LED apagado.",
 		"Desliga e liga de novo, sem tirar da tomada.",
+		"Envia jogos e capas pela rede, do celular ou do PC.",
 		"Grava CPU e sistema durante o jogo no emulador.log.",
 		"Fecha este menu.",
 	};
@@ -817,6 +823,405 @@ static void draw_power(surface_t *s, const ui_state_t *st)
 	scan_overlay(s, st);
 }
 
+/* ---- telas do modo rede ---- */
+
+static void net_header(surface_t *s, const char *right)
+{
+	logo(s, 40, 36);
+	gfx_fill(s, 0, 70, UI_W, 2, C_LINE);
+	txt_mid(s, MONO_REG, 16, 1240 - tw(MONO_REG, 16, right, 0), 36, C_MUTED, right, 0);
+}
+
+/*
+ * Dica do rodapé: tecla (sem controle) ou botão do controle, redondo (A, B,
+ * X, Y) ou quadrado (START, SELECT), e o texto. Devolve o avanço em x.
+ */
+static int net_hint(surface_t *s, int x, int cy, int kb, const char *key, const char *pad,
+		    const char *label)
+{
+	int x0 = x;
+	if (kb || strlen(pad) > 1) {
+		x += keycap(s, x, cy, kb ? key : pad) + 10;
+	} else {
+		round_btn(s, x + 15, cy, pad, 0, C_TEXT);
+		x += 30 + 10;
+	}
+	x += txt_mid(s, MONO_REG, 16, x, cy, C_MUTED, label, 0);
+	return x - x0 + 32;
+}
+
+/* QR code do endereço, preto no branco, numa caixa quadrada de lado box */
+static void draw_qr(surface_t *s, int x, int y, int box, const char *text)
+{
+	static uint8_t qr[qrcodegen_BUFFER_LEN_FOR_VERSION(10)];
+	static uint8_t tmp[qrcodegen_BUFFER_LEN_FOR_VERSION(10)];
+	static char cached[128];
+	static int ok;
+	if (strcmp(cached, text) != 0) {
+		snprintf(cached, sizeof(cached), "%s", text);
+		ok = qrcodegen_encodeText(text, tmp, qr, qrcodegen_Ecc_MEDIUM, 1, 10,
+					  qrcodegen_Mask_AUTO, true);
+	}
+	gfx_fill(s, x, y, box, box, rgb(0xFFFFFF));
+	if (!ok)
+		return;
+	int n = qrcodegen_getSize(qr);
+	int sc = box / (n + 8);	/* 4 módulos de margem de cada lado */
+	if (sc < 1)
+		sc = 1;
+	int off = (box - n * sc) / 2;
+	for (int qy = 0; qy < n; qy++)
+		for (int qx = 0; qx < n; qx++)
+			if (qrcodegen_getModule(qr, qx, qy))
+				gfx_fill(s, x + off + qx * sc, y + off + qy * sc, sc, sc, rgb(0x000000));
+}
+
+static void fmt_size(char *out, size_t n, long long bytes)
+{
+	if (bytes >= 1024 * 1024) {
+		snprintf(out, n, "%.1f MB", (double)bytes / (1024.0 * 1024.0));
+		char *dot = strchr(out, '.');
+		if (dot)
+			*dot = ',';
+	} else {
+		snprintf(out, n, "%lld KB", bytes < 1024 ? 1 : bytes / 1024);
+	}
+}
+
+static const char *why_text(const char *why)
+{
+	static const char *const map[][2] = {
+		{ "tipo", "tipo não aceito" }, { "nome", "nome inválido" },
+		{ "grande", "maior que 16 MB" }, { "disco", "erro ao gravar" },
+		{ "corte", "envio interrompido" },
+	};
+	for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++)
+		if (!strcmp(map[i][0], why))
+			return map[i][1];
+	return "recusado";
+}
+
+static void draw_net_ready(surface_t *s, const ui_state_t *st)
+{
+	const net_state_t *n = st->net;
+	const int kb = st->pads == 0;
+	const int x = 64, w = 740;
+	net_header(s, "Modo rede ligado");
+
+	int y = 96;
+	txt(s, MONO_SEMI, 34, x, y, C_TEXT, "Receber jogos", 0);
+	y += 44 + 16;
+	y += step(s, x, y, 1, w, "No celular, aponte a câmera para o código ao lado. "
+				 "Ou abra este endereço, na mesma rede, e digite o PIN:");
+	/* endereço e, ao lado, o PIN em destaque (o QR code já leva o PIN) */
+	const int pw = 190, aw = w - 50 - 16 - pw;
+	gfx_fill(s, x + 50, y, aw, 60, C_PANEL);
+	gfx_frame(s, x + 50, y, aw, 60, 2, C_LINE2);
+	txt_fit(s, MONO_SEMI, 28, x + 50 + 20, y + 30, aw - 40, C_TEXT, n->url);
+	const int px = x + 50 + aw + 16;
+	gfx_fill(s, px, y, pw, 60, C_PANEL);
+	gfx_frame(s, px, y, pw, 60, 2, C_ACCENT);
+	int lw = txt_mid(s, MONO_SEMI, 14, px + 16, y + 30, C_MUTED, "PIN", 2);
+	txt_mid(s, MONO_SEMI, 30, px + 16 + lw + 14, y + 30, C_ACCENT, n->pin, 4);
+	y += 60 + 20;
+	y += step(s, x, y, 2, w, "Escolha os jogos (.sfc .smc .fig .swc) e as capas (.jpg .png).");
+	y += step(s, x, y, 3, w, kb ? "Quando terminar, aperte Esc aqui para voltar à lista."
+				    : "Quando terminar, aperte B aqui para voltar à lista.");
+
+	/* arquivos recebidos */
+	y += 2;
+	gfx_fill(s, x, y, w, 2, C_LINE);
+	y += 16;
+	txt(s, MONO_SEMI, 14, x, y, C_MUTED, "RECEBIDOS", 2);
+	if (n->ok_count || n->err_count) {
+		char cnt[96];
+		int k = snprintf(cnt, sizeof(cnt), "%d arquivo%s", n->ok_count, n->ok_count == 1 ? "" : "s");
+		if (n->err_count)
+			snprintf(cnt + k, sizeof(cnt) - (size_t)k, " · %d recusado%s", n->err_count,
+				 n->err_count == 1 ? "" : "s");
+		txt(s, MONO_REG, 14, x + w - tw(MONO_REG, 14, cnt, 0), y, C_TEXT2, cnt, 0);
+	}
+	y += 30;
+	int rows = NET_MAX_FILES;
+	if (n->receiving[0]) {
+		int lx = x + txt_mid(s, MONO_SEMI, 16, x, y + 15, C_ACCENT, "Recebendo", 0) + 14;
+		txt_fit(s, MONO_REG, 17, lx, y + 15, x + w - lx, C_TEXT, n->receiving);
+		y += 34;
+		rows--;
+	} else if (n->nfiles == 0) {
+		txt_mid(s, MONO_REG, 16, x, y + 15, C_MUTED,
+			"Nenhum arquivo ainda. Cada arquivo que chegar aparece aqui.", 0);
+	}
+	for (int i = 0; i < n->nfiles && i < rows; i++, y += 34) {
+		const net_file_t *f = &n->files[i];
+		char right[64];
+		if (f->ok) {
+			char sz[24];
+			fmt_size(sz, sizeof(sz), f->bytes);
+			snprintf(right, sizeof(right), "%s%s", f->cover ? "capa · " : "", sz);
+			gfx_pixmap(s, &ICON_CHECK, x, y + 15 - 8, 2, C_BLUE, 0);
+		} else {
+			snprintf(right, sizeof(right), "%s", why_text(f->why));
+			gfx_pixmap(s, &ICON_WARN, x + 1, y + 15 - 8, 1, C_ACCENT, C_BG);
+		}
+		int rw = tw(MONO_REG, 15, right, 0);
+		txt_mid(s, MONO_REG, 15, x + w - rw, y + 15, f->ok ? C_MUTED : C_ACCENT, right, 0);
+		txt_fit(s, MONO_REG, 17, x + 34, y + 15, w - 34 - rw - 24, f->ok ? C_TEXT : C_TEXT2, f->name);
+	}
+
+	/* direita: QR code e a conexão em uso */
+	const int qx = 880, qy = 96, qs = 336;
+	draw_qr(s, qx, qy, qs, n->qr);
+	char conn[80];
+	if (n->ssid[0])
+		snprintf(conn, sizeof(conn), "Wi-Fi · %s", n->ssid);
+	else
+		snprintf(conn, sizeof(conn), "Cabo de rede");
+	int cw = tw(MONO_SEMI, 16, conn, 0);
+	if (cw > qs - 40)
+		cw = qs - 40;
+	int cx = qx + (qs - cw - 40) / 2;
+	gfx_pixmap(s, &ICON_NET, cx, qy + qs + 30 - 10, 2, C_BLUE, 0);
+	txt_fit(s, MONO_SEMI, 16, cx + 40, qy + qs + 30, cw, C_TEXT, conn);
+	txt_mid(s, MONO_REG, 15, qx + (qs - tw(MONO_REG, 15, n->ip, 0)) / 2, qy + qs + 60, C_MUTED, n->ip, 0);
+	const char *lan = "Só funciona na rede da sua casa.";
+	txt_mid(s, MONO_REG, 14, qx + (qs - tw(MONO_REG, 14, lan, 0)) / 2, qy + qs + 96, C_DIM, lan, 0);
+
+	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
+	int hx = 40;
+	hx += net_hint(s, hx, 688, kb, "ESC", "B", "Concluir");
+	if (n->has_wifi)
+		net_hint(s, hx, 688, kb, "S", "X", "Trocar a rede Wi-Fi");
+}
+
+/* Conectando / procurando redes: ícone, título e barra que anda */
+static void draw_net_busy(surface_t *s, const ui_state_t *st)
+{
+	const net_state_t *n = st->net;
+	const int scan = n->phase == NET_SCANNING;
+	net_header(s, "Modo rede");
+	const int sc = 9, iw = 15 * sc, cy = 236;
+	gfx_pixmap(s, &ICON_NET, (UI_W - iw) / 2, cy - 5 * sc, sc, C_ACCENT, 0);
+	const char *t = scan ? "Procurando redes Wi-Fi" : "Conectando à rede";
+	const char *m = scan ? "Leva alguns segundos."
+			     : "Procurando o cabo de rede ou o Wi-Fi. Pode levar até um minuto.";
+	int y = cy + 5 * sc + 56;
+	txt_mid(s, MONO_SEMI, 40, (UI_W - tw(MONO_SEMI, 40, t, 0)) / 2, y, C_TEXT, t, 0);
+	y += 56;
+	txt_mid(s, MONO_REG, 18, (UI_W - tw(MONO_REG, 18, m, 0)) / 2, y, C_TEXT2, m, 0);
+	y += 52;
+	int bx = (UI_W - (12 * 24 + 11 * 8)) / 2, pos = n->tick % 12;
+	for (int i = 0; i < 12; i++) {
+		int lit = i == pos || i == (pos + 1) % 12 || i == (pos + 2) % 12;
+		gfx_fill(s, bx + i * 32, y, 24, 16, lit ? C_ACCENT : C_LINE);
+	}
+	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
+	net_hint(s, 40, 688, st->pads == 0, "ESC", "B", "Cancelar");
+}
+
+static void draw_net_error(surface_t *s, const ui_state_t *st)
+{
+	const net_state_t *n = st->net;
+	const int kb = st->pads == 0;
+	static const struct { const char *code, *title, *body; } msgs[] = {
+		{ "sem-rede", "Sem conexão de rede",
+		  "Ligue o cabo de rede no aparelho e no roteador, ou conecte um adaptador Wi-Fi USB, "
+		  "e tente de novo." },
+		{ "sem-wifi", "Escolha a rede Wi-Fi",
+		  "O adaptador Wi-Fi foi encontrado, mas ainda não há uma rede escolhida. "
+		  "Com cabo de rede não precisa: é só ligar o cabo e tentar de novo." },
+		{ "wifi-falhou", "Não deu para entrar no Wi-Fi",
+		  "Confira a senha e se o roteador está por perto. Redes só de 5 GHz ou com WPA3 "
+		  "puro podem não funcionar com o adaptador." },
+		{ "dhcp", "A rede não deu um endereço",
+		  "O aparelho conectou, mas o roteador não respondeu (DHCP). Confira o cabo ou o "
+		  "Wi-Fi e tente de novo." },
+		{ "servidor", "O envio de jogos não abriu",
+		  "A rede subiu, mas o programa que recebe os arquivos fechou. Tente de novo." },
+		{ "bloqueado", "PIN errado vezes demais",
+		  "Alguém na rede tentou muitos endereços errados e o envio foi fechado por "
+		  "segurança. Tente de novo para gerar outro PIN." },
+		{ "tempo", "A rede demorou demais",
+		  "A conexão não terminou a tempo. Confira o cabo ou o Wi-Fi e tente de novo." },
+		{ NULL, "O modo rede não abriu",
+		  "Algo falhou ao ligar a rede. Os detalhes ficam em .snespi/rede.log, no cartão." },
+	};
+	size_t k = 0;
+	while (msgs[k].code && strcmp(msgs[k].code, n->err) != 0)
+		k++;
+	const int need_wifi = !strcmp(n->err, "sem-wifi");
+
+	net_header(s, "Modo rede");
+	const int ix = 96, iy = 72 + (UI_H - 72 - 64 - 180) / 2;
+	gfx_pixmap(s, &ICON_NET, ix, iy, 18, C_LINE2, 0);
+	const int x = ix + 270 + 88, w = 1184 - x;
+	int y = iy - 20;
+	txt(s, MONO_SEMI, 18, x, y, C_ACCENT, "RECEBER JOGOS", 3);
+	y += 26 + 22;
+	txt(s, MONO_SEMI, 36, x, y, C_TEXT, msgs[k].title, 0);
+	y += 48 + 22;
+	y += txt_wrap(s, MONO_REG, 18, x, y, w, 28, C_TEXT2, msgs[k].body) * 28 + 16;
+	if (!strcmp(n->err, "wifi-falhou") || !strcmp(n->err, "dhcp")) {
+		txt(s, MONO_REG, 15, x, y, C_MUTED, "Detalhes em .snespi/rede.log, no cartão.", 0);
+	}
+
+	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
+	int hx = 40;
+	hx += net_hint(s, hx, 688, kb, "ENTER", "A", need_wifi ? "Escolher a rede Wi-Fi" : "Tentar de novo");
+	if (n->has_wifi && !need_wifi)
+		hx += net_hint(s, hx, 688, kb, "S", "X", "Escolher a rede Wi-Fi");
+	net_hint(s, hx, 688, kb, "ESC", "B", "Voltar");
+}
+
+static void draw_net_wifi_list(surface_t *s, const ui_state_t *st)
+{
+	const net_state_t *n = st->net;
+	const int kb = st->pads == 0;
+	const int x = 240, w = 800, row = 56;
+	net_header(s, "Modo rede");
+	int y = 100;
+	txt(s, MONO_SEMI, 34, x, y, C_TEXT, "Escolha a rede Wi-Fi", 0);
+	y += 44 + 20;
+	if (n->naps == 0) {
+		txt(s, MONO_SEMI, 20, x, y + 20, C_TEXT, "Nenhuma rede encontrada", 0);
+		txt_wrap(s, MONO_REG, 16, x, y + 56, w, 26, C_MUTED,
+			 "Chegue o aparelho mais perto do roteador e procure de novo. "
+			 "Redes ocultas ou só de 5 GHz podem não aparecer.");
+	}
+	for (int i = 0; i < n->naps; i++, y += row) {
+		const net_ap_t *ap = &n->aps[i];
+		int on = i == n->ap_sel, cy = y + row / 2 - 2;
+		uint16_t fg = on ? C_INK : C_TEXT, dim = on ? C_INK : C_MUTED;
+		if (on)
+			gfx_fill(s, x, y, w, row - 4, C_ACCENT);
+		else
+			gfx_fill(s, x, y + row - 3, w, 1, C_ROWLN);
+		if (on)
+			gfx_pixmap(s, &ICON_ARROW, x + 16, cy - 8, 2, C_INK, 0);
+		/* sinal: 4 barras */
+		int bars = ap->signal >= -55 ? 4 : ap->signal >= -67 ? 3 : ap->signal >= -78 ? 2 : 1;
+		int bx = x + w - 16 - 4 * 10;
+		for (int b = 0; b < 4; b++) {
+			int bh = 6 + b * 5;
+			gfx_fill(s, bx + b * 10, cy + 10 - bh, 6, bh, b < bars ? fg : (on ? rgb(0xB67E2A) : C_LINE2));
+		}
+		int right = bx - 20;
+		if (ap->secure) {
+			gfx_pixmap(s, &ICON_LOCK, right - 14, cy - 8, 2, dim, 0);
+			right -= 14 + 16;
+		} else {
+			const char *o = "aberta";
+			right -= tw(MONO_REG, 14, o, 0);
+			txt_mid(s, MONO_REG, 14, right, cy, dim, o, 0);
+			right -= 16;
+		}
+		txt_fit(s, on ? MONO_SEMI : MONO_REG, 20, x + 46, cy, right - (x + 46), fg, ap->ssid);
+	}
+
+	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
+	int hx = 40;
+	if (n->naps > 0) {
+		hx += hint(s, hx, 688, kb, "SETAS", NULL, "Escolher") + 32;
+		hx += net_hint(s, hx, 688, kb, "ENTER", "A", "Conectar");
+	}
+	hx += net_hint(s, hx, 688, kb, "S", "X", "Procurar de novo");
+	net_hint(s, hx, 688, kb, "ESC", "B", "Voltar");
+}
+
+static void draw_net_wifi_key(surface_t *s, const ui_state_t *st)
+{
+	const net_state_t *n = st->net;
+	const int kb = st->pads == 0;
+	const int kw = 64, kh = 56, gap = 8;
+	const int gw = KB_COLS * kw + (KB_COLS - 1) * gap, x = (UI_W - gw) / 2;
+	net_header(s, "Modo rede");
+
+	int y = 96;
+	txt(s, MONO_SEMI, 30, x, y, C_TEXT, "Senha do Wi-Fi", 0);
+	const char *ssid = n->naps > 0 && n->ap_sel < n->naps ? n->aps[n->ap_sel].ssid : "";
+	int sw = tw(MONO_REG, 18, ssid, 0);
+	if (sw > gw - 300)
+		sw = gw - 300;
+	txt_fit(s, MONO_REG, 18, x + gw - sw, y + 20, sw, C_BLUE, ssid);
+	y += 40 + 18;
+
+	/* campo: a senha aparece, para dar para conferir; se não couber, mostra o fim */
+	gfx_fill(s, x, y, gw, 64, C_PANEL);
+	gfx_frame(s, x, y, gw, 64, 2, C_ACCENT);
+	char cnt[16];
+	int len = (int)strlen(n->key);
+	snprintf(cnt, sizeof(cnt), "%d/%d", len, NET_KEY_MAX);
+	int cw = tw(MONO_REG, 14, cnt, 0);
+	txt_mid(s, MONO_REG, 14, x + gw - 16 - cw, y + 32, len >= 8 || len == 0 ? C_MUTED : C_ACCENT, cnt, 0);
+	const char *shown = n->key;
+	int maxw = gw - 16 - cw - 16 - 20 - 18;
+	while (*shown && tw(MONO_SEMI, 26, shown, 0) > maxw)
+		shown++;
+	int tx = x + 20;
+	if (shown != n->key)
+		tx += txt_mid(s, MONO_SEMI, 26, tx, y + 32, C_MUTED, "…", 0);
+	tx += txt_mid(s, MONO_SEMI, 26, tx, y + 32, C_TEXT, shown, 0);
+	gfx_fill(s, tx + 2, y + 16, 14, 32, C_ACCENT);	/* cursor */
+	y += 64 + 10;
+	const char *note = len == 0 ? "Sem senha, só para rede aberta."
+				    : len < 8 ? "A senha do Wi-Fi tem pelo menos 8 caracteres." : "";
+	txt(s, MONO_REG, 14, x, y, C_MUTED, note, 0);
+	y += 30;
+
+	/* teclado */
+	for (int r = 0; r < KB_ROWS; r++)
+		for (int c = 0; c < KB_COLS; c++) {
+			int bx = x + c * (kw + gap), by = y + r * (kh + gap);
+			int on = r == n->kb_row && c == n->kb_col;
+			char ch[2] = { net_kb_char(n->kb_layer, r, c), 0 };
+			if (on)
+				gfx_fill(s, bx, by, kw, kh, C_ACCENT);
+			else {
+				gfx_fill(s, bx, by, kw, kh, C_PANEL);
+				gfx_frame(s, bx, by, kw, kh, 2, C_LINE);
+			}
+			if (ch[0] == ' ') {	/* espaço: um traço largo */
+				gfx_fill(s, bx + 18, by + kh - 20, kw - 36, 3, on ? C_INK : C_TEXT);
+				continue;
+			}
+			txt_mid(s, MONO_SEMI, 24, bx + (kw - tw(MONO_SEMI, 24, ch, 0)) / 2, by + kh / 2,
+				on ? C_INK : C_TEXT, ch, 0);
+		}
+	y += KB_ROWS * (kh + gap) + 6;
+	static const char *const layers[KB_LAYERS] = { "abc", "ABC", "#+=" };
+	int lx = x;
+	for (int i = 0; i < KB_LAYERS; i++) {
+		int on = i == n->kb_layer;
+		int lw = tw(MONO_SEMI, 15, layers[i], 1);
+		txt_mid(s, MONO_SEMI, 15, lx, y + 10, on ? C_ACCENT : C_DIM, layers[i], 1);
+		if (on)
+			gfx_fill(s, lx, y + 22, lw, 2, C_ACCENT);
+		lx += lw + 24;
+	}
+
+	gfx_fill(s, 0, 656, UI_W, 2, C_LINE);
+	int hx = 40;
+	hx += net_hint(s, hx, 688, kb, "ENTER", "A", "Digitar");
+	hx += net_hint(s, hx, 688, kb, "ESC", "B", "Apagar");
+	hx += net_hint(s, hx, 688, kb, "X", "Y", "abc / ABC / #+=");
+	hx += net_hint(s, hx, 688, kb, "ESPAÇO", "START", "Conectar");
+	net_hint(s, hx, 688, kb, "TAB", "SELECT", "Cancelar");
+}
+
+static void draw_net(surface_t *s, const ui_state_t *st)
+{
+	gfx_clear(s, C_BG);
+	if (!st->net)
+		return;
+	switch (st->net->phase) {
+	case NET_READY: draw_net_ready(s, st); break;
+	case NET_ERROR: draw_net_error(s, st); break;
+	case NET_WIFI_LIST: draw_net_wifi_list(s, st); break;
+	case NET_WIFI_KEY: draw_net_wifi_key(s, st); break;
+	default: draw_net_busy(s, st); break;
+	}
+}
+
 /* ---- tela de abertura ---- */
 
 void ui_draw_splash(surface_t *s, int percent, const char *msg, int scanlines)
@@ -878,6 +1283,10 @@ void ui_draw(surface_t *s, screen_t scr, const ui_state_t *st)
 		break;
 	case SCR_POWER:
 		draw_power(s, st);
+		break;
+	case SCR_NET:
+		draw_net(s, st);
+		scan_overlay(s, st);
 		break;
 	}
 }

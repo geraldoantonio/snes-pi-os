@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang='pt-BR'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>snes-pi-os · Enviar jogos</title>
+<link rel='icon' href='data:,'>
+<style>
+:root { --bg: #0E1116; --panel: #161B22; --line: #2A313C; --line2: #3A4350; --text: #E8E6E1;
+  --muted: #9AA3AE; --accent: #F2A93B; --ink: #14100A; --blue: #6CB6FF; --red: #FF7B72; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 ui-monospace, 'IBM Plex Mono', Menlo, Consolas, monospace; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+h1 span { color: var(--accent); }
+p { color: var(--muted); margin: 0 0 16px; }
+#drop { display: block; border: 2px dashed var(--line2); background: var(--panel); padding: 32px 16px;
+  text-align: center; cursor: pointer; }
+#drop.over { border-color: var(--accent); }
+#drop strong { display: block; font-size: 18px; color: var(--text); }
+#drop small { color: var(--muted); }
+input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+#drop:focus-within { border-color: var(--blue); }
+ul { list-style: none; margin: 24px 0 0; padding: 0; }
+li { border-bottom: 1px solid var(--line); padding: 10px 0; }
+li .row { display: flex; gap: 12px; justify-content: space-between; }
+li .name { overflow-wrap: anywhere; }
+li .st { color: var(--muted); white-space: nowrap; }
+li.ok .st { color: var(--blue); }
+li.erro .st { color: var(--red); }
+li .bar { height: 4px; background: var(--line); margin-top: 6px; }
+li .bar i { display: block; height: 4px; width: 0; background: var(--accent); }
+li.ok .bar, li.erro .bar { display: none; }
+li .why { color: var(--muted); font-size: 14px; }
+#pinbox { border: 2px solid var(--line2); background: var(--panel); padding: 24px 16px; text-align: center; }
+#pinbox label { display: block; font-size: 18px; margin-bottom: 12px; }
+#pin { width: 6.2em; font: inherit; font-size: 34px; font-weight: 600; letter-spacing: .3em; text-align: center;
+  padding: 8px 0 8px .3em; background: var(--bg); color: var(--accent); border: 2px solid var(--accent); border-radius: 0; }
+#pin:focus { outline: 2px solid var(--blue); outline-offset: 2px; }
+#pinmsg { min-height: 1.5em; margin: 12px 0 0; color: var(--muted); }
+#pinmsg.erro { color: var(--red); }
+#envio { display: none; }
+#fim { display: none; margin-top: 24px; border: 2px solid var(--blue); padding: 12px 16px; color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+<h1><span>snes-pi-os</span> · Enviar jogos</h1>
+<p>Jogos: .sfc .smc .fig .swc · Capas: .jpg .png com o mesmo nome do jogo · at&eacute; 16 MB por arquivo.</p>
+<div id='pinbox'>
+<label for='pin'>Digite o PIN que aparece na TV</label>
+<input id='pin' type='text' inputmode='numeric' pattern='[0-9]*' maxlength='4' autocomplete='off' aria-describedby='pinmsg'>
+<p id='pinmsg' aria-live='polite'></p>
+</div>
+<div id='envio'>
+<label id='drop'>
+<input id='pick' type='file' multiple accept='.sfc,.smc,.fig,.swc,.jpg,.jpeg,.png'>
+<strong>Escolher arquivos</strong>
+<small>ou arraste para c&aacute;</small>
+</label>
+<ul id='lista' aria-live='polite'></ul>
+<div id='fim'>Pronto. No aparelho, aperte B para concluir e voltar &agrave; lista de jogos.</div>
+</div>
+<p style='margin-top:24px'>Use apenas jogos que voc&ecirc; tem o direito de usar.</p>
+</main>
+<script>
+(function () {
+  var MAX = 16 * 1024 * 1024;
+  var EXT = /\.(sfc|smc|fig|swc|jpg|jpeg|png)$/i;
+  var WHY = { tipo: 'tipo de arquivo não aceito', nome: 'nome inválido', grande: 'maior que 16 MB',
+    disco: 'não foi possível gravar no cartão (cheio?)', corte: 'envio interrompido' };
+  var pin = '';
+  var pinbox = document.getElementById('pinbox');
+  var pinin = document.getElementById('pin');
+  var pinmsg = document.getElementById('pinmsg');
+  var envio = document.getElementById('envio');
+
+  function aviso(texto, erro) {
+    pinmsg.textContent = texto;
+    pinmsg.className = erro ? 'erro' : '';
+  }
+  // Mostra o campo do PIN de novo (PIN errado, ou o modo rede foi reaberto na TV)
+  function pedePin(texto) {
+    pin = '';
+    envio.style.display = 'none';
+    pinbox.style.display = 'block';
+    pinin.disabled = false;
+    pinin.value = '';
+    aviso(texto, true);
+    pinin.focus();
+  }
+  function conferePin(valor) {
+    pinin.disabled = true;
+    aviso('Conferindo...', false);
+    var x = new XMLHttpRequest();
+    x.open('GET', 'pin?pin=' + valor);
+    x.onload = function () {
+      if (x.status === 200) {
+        pin = valor;
+        pinbox.style.display = 'none';
+        envio.style.display = 'block';
+      } else {
+        pedePin('PIN incorreto. Confira o n\u00famero na TV.');
+      }
+    };
+    x.onerror = function () { pedePin('Sem resposta: o modo rede ainda est\u00e1 aberto no aparelho?'); };
+    x.send();
+  }
+  pinin.addEventListener('input', function () {
+    var v = pinin.value.replace(/[^0-9]/g, '').slice(0, 4);
+    pinin.value = v;
+    if (v.length === 4) conferePin(v);
+    else aviso('', false);
+  });
+  // O QR code da TV traz o PIN: /?pin=1234
+  var m = /[?&]pin=([0-9]{4})(&|$)/.exec(location.search);
+  if (m) { pinin.value = m[1]; conferePin(m[1]); }
+  else pinin.focus();
+
+  var lista = document.getElementById('lista');
+  var drop = document.getElementById('drop');
+  var pick = document.getElementById('pick');
+  var fila = [], ocupado = false;
+
+  function item(f) {
+    var li = document.createElement('li');
+    li.innerHTML = '<div class=row><span class=name></span><span class=st>na fila</span></div>' +
+      '<div class=bar><i></i></div><div class=why></div>';
+    li.querySelector('.name').textContent = f.name;
+    lista.appendChild(li);
+    return li;
+  }
+  function fim(li, ok, texto, porque) {
+    li.className = ok ? 'ok' : 'erro';
+    li.querySelector('.st').textContent = texto;
+    li.querySelector('.why').textContent = porque || '';
+  }
+  function proximo() {
+    if (ocupado) return;
+    var job = fila.shift();
+    if (!job) {
+      if (lista.querySelector('.ok')) document.getElementById('fim').style.display = 'block';
+      return;
+    }
+    ocupado = true;
+    var li = job.li, st = li.querySelector('.st'), bar = li.querySelector('.bar i');
+    var fd = new FormData();
+    fd.append('arquivo', job.f, job.f.name);
+    var x = new XMLHttpRequest();
+    x.open('POST', 'enviar?pin=' + pin);
+    x.upload.onprogress = function (e) {
+      if (!e.lengthComputable) return;
+      var p = Math.round(100 * e.loaded / e.total);
+      bar.style.width = p + '%';
+      st.textContent = p < 100 ? p + ' %' : 'gravando';
+    };
+    x.onload = function () {
+      var l = (x.responseText || '').split('\n')[0].split('\t');
+      if (x.status === 200 && l[0] === 'ok') fim(li, true, 'recebido');
+      else if (x.status === 403) {
+        fim(li, false, 'falhou', 'o PIN mudou');
+        fila = [];
+        pedePin('O PIN mudou. Digite o que aparece na TV agora.');
+      }
+      else fim(li, false, 'falhou', l[0] === 'erro' ? (WHY[l[1]] || l[1]) : 'o aparelho recusou o envio');
+    };
+    x.onerror = function () { fim(li, false, 'falhou', 'sem resposta: o modo rede ainda está aberto no aparelho?'); };
+    x.onloadend = function () { ocupado = false; proximo(); };
+    st.textContent = '0 %';
+    x.send(fd);
+  }
+  function add(files) {
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i], li = item(f);
+      if (!EXT.test(f.name)) fim(li, false, 'recusado', WHY.tipo);
+      else if (f.size > MAX) fim(li, false, 'recusado', WHY.grande);
+      else if (f.size === 0) fim(li, false, 'recusado', 'arquivo vazio');
+      else fila.push({ f: f, li: li });
+    }
+    proximo();
+  }
+  pick.addEventListener('change', function () { add(pick.files); pick.value = ''; });
+  ['dragenter', 'dragover'].forEach(function (n) {
+    drop.addEventListener(n, function (e) { e.preventDefault(); drop.className = 'over'; });
+  });
+  ['dragleave', 'drop'].forEach(function (n) {
+    drop.addEventListener(n, function (e) { e.preventDefault(); drop.className = ''; });
+  });
+  drop.addEventListener('drop', function (e) { if (e.dataTransfer) add(e.dataTransfer.files); });
+})();
+</script>
+</body>
+</html>

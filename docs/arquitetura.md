@@ -2,7 +2,7 @@
 
 ## Princípio
 
-Um Linux mínimo que sobe direto no emulador. Nada de login, shell interativo, gerenciador de janelas ou serviços de rede.
+Um Linux mínimo que sobe direto no emulador. Nada de login, shell interativo, gerenciador de janelas ou serviços de rede no boot: a rede só sobe sob demanda, no modo "Receber jogos" do launcher, e cai ao sair dele.
 
 ```
 Boot ROM do Pi → bootloader (start.elf) → kernel → BusyBox init → rcS (S00splash, S01roms … S99game) 

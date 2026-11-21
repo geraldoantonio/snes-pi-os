@@ -13,4 +13,5 @@ config BR2_PACKAGE_SNES_LAUNCHER
 	  ou a música padrão (CC0) em /usr/share/snespi/musica.
 
 	  Instala /usr/bin/snespi-launcher, as fontes em
-	  /usr/share/snespi/fonts e a música padrão.
+	  /usr/share/snespi/fonts e a música padrão, e o servidor de
+	  envio de jogos do modo rede (/usr/bin/snespi-upload).

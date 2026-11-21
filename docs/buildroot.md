@@ -60,7 +60,7 @@ Primeira compilação: estimativa de 1 a 3 horas (toolchain + kernel + pacotes) 
 Parte do `raspberrypi_defconfig` da 2025.02.19 e ajusta:
 
 - Pacotes: `rpi-userland`, `rpi-firmware`, `sdl` (1.2, driver fbcon), `alsa-lib`, `libglib2`, `jpeg`, `zlib`, `pisnes`
-- Sem DHCP, rede ou SSH; sem ferramentas de desenvolvimento no alvo
+- Sem DHCP ou rede no boot e sem SSH; sem ferramentas de desenvolvimento no alvo. A rede sobe só no modo "Receber jogos" (script `snespi-rede`: `udhcpc` do BusyBox pelo cabo; `wpa_supplicant` e firmware do `linux-firmware` para adaptadores Wi-Fi USB)
 - Raiz somente leitura (`BR2_TARGET_GENERIC_REMOUNT_ROOTFS_RW` desligado)
 - Overlay: `board/snespi/overlay/` (passo 3)
 
