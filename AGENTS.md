@@ -51,7 +51,7 @@ Linux mínimo (Buildroot) para o **Raspberry Pi 1 Model B rev 2** que liga diret
 
 Releases são **públicas** e viram o download da página do projeto. Só crie uma quando o dono pedir.
 
-**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256` e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (só geram um artefato temporário de 14 dias). O job `image` também roda em push na `main` que mude a imagem (`external/`, `launcher/`, scripts do build) e toda segunda: é ele que grava o cache que as tags leem, porque o GitHub só compartilha cache entre refs a partir da `main` (o cache salvo por uma tag só serve para ela; até a `v1.0.0`, toda tag compilava do zero, ~1 h 30).
+**Como funciona:** push de uma tag `v*` → o job `image` do `build.yml` compila a imagem e cria a Release com `snes-pi-os-<tag>.img.xz`, `snes-pi-os-<tag>.img.xz.sha256` e as notas de `.github/release-notes.md`. Push na `main` e "Run workflow" manual **não** criam Release (só geram um artefato temporário de 14 dias). O job `image` também roda em push na `main` que mude a imagem (`external/`, `launcher/`, scripts do build): é ele que grava o cache que as tags leem, porque o GitHub só compartilha cache entre refs a partir da `main` (o cache salvo por uma tag só serve para ela; até a `v1.0.0`, toda tag compilava do zero, ~1 h 30). O GitHub apaga caches sem uso há 7 dias: se a `main` ficou mais de uma semana sem build da imagem, rode `gh workflow run build.yml --ref main` e espere terminar antes de criar a tag.
 
 **Firmware do controle arcade:** tem Release própria, separada da imagem, para uma mudança só no firmware não gerar versão nova do sistema (e vice-versa). Push de uma tag `arcade-v<versão>` → o job `firmware` confere se a tag bate com `firmware/arcade/VERSION` e cria a Release "Controle arcade v<versão>" com `snespi-arcade-1p-v<versão>.uf2`, `snespi-arcade-2p-v<versão>.uf2`, o `.sha256` e as notas de `.github/release-notes-arcade.md`. Ela sai com `--latest=false`, para a imagem continuar sendo a versão "mais recente" (o `releases/latest`). Para lançar: suba o `VERSION` e a tabela em `docs/controle-arcade.md`, faça o merge na `main`, crie a tag `arcade-v<versão>` e atualize o link do firmware no site (`site/public/index.html`, seção `#arcade`). Vale a mesma regra: só com o dono pedindo.
 
@@ -59,6 +59,7 @@ Releases são **públicas** e viram o download da página do projeto. Só crie u
 
 1. Confirme com o dono a versão e se pode publicar.
 2. Garanta a `main` verde (`gh run list --branch main --limit 3`) e os docs em dia.
+   Se o último build da imagem na `main` tem mais de 7 dias, o cache já expirou: rode `gh workflow run build.yml --ref main` e espere terminar antes da tag.
 3. Se precisar, ajuste `.github/release-notes.md` (texto genérico, vale para qualquer versão) e faça commit.
 4. Crie e envie a tag anotada:
    ```sh

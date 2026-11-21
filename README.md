@@ -70,7 +70,7 @@ A imagem já vem configurada (overlays `gpio-shutdown` e `gpio-led` no `config.t
 
 ### Imagem
 
-O build roda no GitHub Actions (workflow `build`): manual pelo botão "Run workflow", toda segunda, em push na `main` que mude a imagem ou ao criar uma tag `v*`, que também publica a Release. Localmente, com Docker:
+O build roda no GitHub Actions (workflow `build`): manual pelo botão "Run workflow", em push na `main` que mude a imagem ou ao criar uma tag `v*`, que também publica a Release. Localmente, com Docker:
 
 ```sh
 docker run --rm -e HOST_UID=$(id -u) -v "$PWD":/src:ro -v snespi-work:/work \
