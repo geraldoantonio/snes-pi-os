@@ -90,6 +90,16 @@ No Pi, o **Teste - Controles** do menu mostra os dois jogadores.
 
 O firmware usa o identificador USB `1209:0001`, o PID de teste do [pid.codes](https://pid.codes/1209/0001/): serve para uso próprio, não para vender o painel.
 
+## Teste no Linux sem o Pi
+
+```sh
+make -C firmware/arcade linux-test   # Docker + QEMU, uns 2 minutos
+```
+
+Sobe um kernel Linux (Debian 12) no QEMU e entrega a ele, pelo `uhid`, o mesmo descritor HID do firmware. O teste confere o joystick criado (10 botões de `BTN_TRIGGER` a `BTN_BASE4`, eixos X e Y de 0 a 255) e, para cada entrada, o código que o launcher espera e o número de botão do `snes9x.cfg`. Passou em 2026-11-20.
+
+Não cobre o USB (o QEMU não recebe o Pico de verdade) nem o kernel da imagem do Pi; para isso, só o teste no hardware.
+
 ## Lista de verificação (hardware)
 
 - [x] Cada pino dá a direção ou o botão certo, no jogador certo (macOS, lendo os relatórios HID, 2026-11-20).
