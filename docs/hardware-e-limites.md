@@ -38,6 +38,16 @@ Esquema: [`site/public/img/ligacao-gpio.svg`](../site/public/img/ligacao-gpio.sv
 - **Reset sem GPIO:** a placa rev 2 tem os furos **P6** perto do HDMI; um botão soldado ali reinicia na hora (equivale a tirar da tomada: pode perder save). Não faz parte da imagem.
 - Os overlays vão para a partição de boot com `BR2_PACKAGE_RPI_FIRMWARE_INSTALL_DTB_OVERLAYS=y` (pasta `overlays/`, ~1,8 MB).
 
+## Alimentação
+
+Tensão baixa na placa derruba o hub USB (LAN951x): os controles morrem no meio do jogo e só voltam ao sair dele, enquanto vídeo e som seguem normais. Aconteceu em 2026-11-24 com uma fonte de 3 A e um cabo emendado (3,8 a 4,8 V na placa); com cabo curto e outra fonte (4,8 V estável), nenhuma queda. Ver [pendencias.md](pendencias.md).
+
+- Use fonte de 5 V e 2 A ou mais, de boa marca, com cabo **curto e grosso**, sem emenda. Os ampères do rótulo não garantem a tensão na placa.
+- **Como medir:** multímetro em tensão contínua, escala de 20 V, com o jogo rodando. Vermelho no pino 2 (5 V) e preto no pino 14 (GND) do conector P1, com fios jumper fêmea encaixados e retirados com o Pi **fora da tomada**. O pino 1 (3,3 V) fica ao lado do 2: encostar um no outro pode queimar a placa. Os pontos TP1 (5 V) e TP2 (GND) servem se estiverem identificados na placa (posição **(verificar)**).
+- **Como ler:** abaixo de 4,75 V, insuficiente; de 4,75 a 4,90 V, pouca folga; de 4,90 a 5,25 V, bom; acima de 5,25 V, não use a fonte. O multímetro não mostra quedas muito rápidas: uma leitura boa não descarta o problema.
+- **Adaptador Wi-Fi USB:** puxa mais corrente; meça com ele conectando à rede. Abaixo de 4,75 V, use um hub com fonte própria **(verificar)**. Se o LED PWR continuar aceso com a fonte do Pi fora da tomada, o hub está devolvendo energia: não use esse hub.
+- **Sinal no menu:** o rodapé alternando entre as dicas de controle e de teclado indica o hub caindo.
+
 ## Desempenho esperado
 
 O PiSNES roda a maioria dos jogos em velocidade total no Pi 1, e o readme do projeto recomenda overclock para isso. Pontos do próprio readme:
